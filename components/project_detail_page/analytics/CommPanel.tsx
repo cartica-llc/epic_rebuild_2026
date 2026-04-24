@@ -302,7 +302,7 @@ export function CommPanel({
                         />
                         <Tooltip
                             contentStyle={TTS}
-                            formatter={(v: number) => [v, 'Projects']}
+                            formatter={(v) => [v as number, 'Projects']}
                         />
                         <Bar dataKey="count" radius={[0, 3, 3, 0]} barSize={18}>
                             {counts.map((e, i) => (
