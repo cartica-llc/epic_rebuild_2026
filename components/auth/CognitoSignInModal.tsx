@@ -42,7 +42,7 @@ function PasswordInput({
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+                className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 pr-10 text-base text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
             />
             <button
                 type="button"
@@ -305,7 +305,8 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
 
                         <p className="mt-2 text-sm leading-6 text-slate-500">
                             {view === 'sign-in' && 'Use your EPIC account to continue to the dashboard.'}
-                            {view === 'change-password' && 'Your temporary password has expired. Please create a new password to continue.'}
+                            {view === 'change-password' &&
+                                'Your temporary password has expired. Please create a new password to continue.'}
                             {view === 'forgot' && "Enter your email and we'll send you a verification code."}
                             {view === 'reset' && 'Enter the code from your email and your new password.'}
                         </p>
@@ -327,11 +328,31 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                     {view === 'sign-in' && (
                         <form onSubmit={handleSignIn} className="mt-6 space-y-4">
                             <div>
-                                <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
-                                <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@host.com" className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20" />
+                                <label
+                                    htmlFor="email"
+                                    className="mb-1.5 block text-sm font-medium text-slate-700"
+                                >
+                                    Email
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    required
+                                    autoComplete="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="name@host.com"
+                                    className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+                                />
                             </div>
+
                             <div>
-                                <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+                                <label
+                                    htmlFor="password"
+                                    className="mb-1.5 block text-sm font-medium text-slate-700"
+                                >
+                                    Password
+                                </label>
                                 <PasswordInput
                                     id="password"
                                     value={password}
@@ -341,12 +362,25 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                                     autoComplete="current-password"
                                 />
                             </div>
+
                             <div className="flex justify-end">
-                                <button type="button" onClick={() => { resetState(); setView('forgot'); }} className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-700">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        resetState();
+                                        setView('forgot');
+                                    }}
+                                    className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-700"
+                                >
                                     Forgot password?
                                 </button>
                             </div>
-                            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
                                 {loading ? 'Signing in...' : 'Sign In'}
                             </button>
                         </form>
@@ -356,7 +390,12 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                     {view === 'change-password' && (
                         <form onSubmit={handleChangePassword} className="mt-6 space-y-4">
                             <div>
-                                <label htmlFor="new-pw" className="mb-1.5 block text-sm font-medium text-slate-700">New password</label>
+                                <label
+                                    htmlFor="new-pw"
+                                    className="mb-1.5 block text-sm font-medium text-slate-700"
+                                >
+                                    New password
+                                </label>
                                 <PasswordInput
                                     id="new-pw"
                                     value={newPassword}
@@ -366,8 +405,14 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                                     autoComplete="new-password"
                                 />
                             </div>
+
                             <div>
-                                <label htmlFor="confirm-pw" className="mb-1.5 block text-sm font-medium text-slate-700">Confirm password</label>
+                                <label
+                                    htmlFor="confirm-pw"
+                                    className="mb-1.5 block text-sm font-medium text-slate-700"
+                                >
+                                    Confirm password
+                                </label>
                                 <PasswordInput
                                     id="confirm-pw"
                                     value={confirmPassword}
@@ -377,10 +422,23 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                                     autoComplete="new-password"
                                 />
                             </div>
-                            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
                                 {loading ? 'Setting password...' : 'Set Password & Sign In'}
                             </button>
-                            <button type="button" onClick={() => { resetState(); setView('sign-in'); }} className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700">
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    resetState();
+                                    setView('sign-in');
+                                }}
+                                className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+                            >
                                 <ArrowLeft className="h-4 w-4" /> Back to sign in
                             </button>
                         </form>
@@ -390,13 +448,40 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                     {view === 'forgot' && (
                         <form onSubmit={handleForgotPassword} className="mt-6 space-y-4">
                             <div>
-                                <label htmlFor="forgot-email" className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
-                                <input id="forgot-email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@host.com" className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20" />
+                                <label
+                                    htmlFor="forgot-email"
+                                    className="mb-1.5 block text-sm font-medium text-slate-700"
+                                >
+                                    Email
+                                </label>
+                                <input
+                                    id="forgot-email"
+                                    type="email"
+                                    required
+                                    autoComplete="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="name@host.com"
+                                    className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+                                />
                             </div>
-                            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
                                 {loading ? 'Sending...' : 'Send Code'}
                             </button>
-                            <button type="button" onClick={() => { resetState(); setView('sign-in'); }} className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700">
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    resetState();
+                                    setView('sign-in');
+                                }}
+                                className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+                            >
                                 <ArrowLeft className="h-4 w-4" /> Back to sign in
                             </button>
                         </form>
@@ -406,11 +491,31 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                     {view === 'reset' && (
                         <form onSubmit={handleResetPassword} className="mt-6 space-y-4">
                             <div>
-                                <label htmlFor="code" className="mb-1.5 block text-sm font-medium text-slate-700">Verification code</label>
-                                <input id="code" type="text" required inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20" />
+                                <label
+                                    htmlFor="code"
+                                    className="mb-1.5 block text-sm font-medium text-slate-700"
+                                >
+                                    Verification code
+                                </label>
+                                <input
+                                    id="code"
+                                    type="text"
+                                    required
+                                    inputMode="numeric"
+                                    value={code}
+                                    onChange={(e) => setCode(e.target.value)}
+                                    placeholder="123456"
+                                    className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+                                />
                             </div>
+
                             <div>
-                                <label htmlFor="new-password" className="mb-1.5 block text-sm font-medium text-slate-700">New password</label>
+                                <label
+                                    htmlFor="new-password"
+                                    className="mb-1.5 block text-sm font-medium text-slate-700"
+                                >
+                                    New password
+                                </label>
                                 <PasswordInput
                                     id="new-password"
                                     value={newPassword}
@@ -420,10 +525,23 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                                     autoComplete="new-password"
                                 />
                             </div>
-                            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
                                 {loading ? 'Resetting...' : 'Reset Password'}
                             </button>
-                            <button type="button" onClick={() => { resetState(); setView('sign-in'); }} className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700">
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    resetState();
+                                    setView('sign-in');
+                                }}
+                                className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+                            >
                                 <ArrowLeft className="h-4 w-4" /> Back to sign in
                             </button>
                         </form>
