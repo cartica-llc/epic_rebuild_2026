@@ -9,7 +9,7 @@ interface NavLinksProps {
 const links = [
     { href: '/', label: 'Home' },
     { href: '/projects', label: 'Projects' },
-    { href: '#', label: 'FAQ' },
+    // { href: '#', label: 'FAQ' },
 ] as const;
 
 function isActive(href: string, activePath: string) {
@@ -26,7 +26,7 @@ export function NavLinks({ activePath }: NavLinksProps) {
                     <Link
                         key={href}
                         href={href}
-                        className={`text-sm font-medium transition-colors ${
+                        className={`text-sm font-bold transition-colors ${
                             active ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
                         }`}
                     >

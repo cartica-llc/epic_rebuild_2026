@@ -2,41 +2,42 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
 
-// The Cognito modal bundle is fetched from the server only after the
-// user clicks "Sign In" — nothing Cognito-related ships in the initial JS.
 const CognitoSignInModal = dynamic(
-    () =>
-        import('@/components/auth/CognitoSignInModal').then(
-            (mod) => mod.CognitoSignInModal,
-        ),
+    () => import('@/components/auth/CognitoSignInModal'),
     {
-        ssr: false,   // Auth modal is client-only
+        ssr: false,
         loading: () => null,
     },
 );
 
-export function SignInButton() {
+interface SignInButtonProps {
+    fullWidth?: boolean;
+    onBeforeOpen?: () => void;
+}
+
+export function SignInButton({ fullWidth, onBeforeOpen }: SignInButtonProps) {
     const [modalOpen, setModalOpen] = useState(false);
 
-    const handleOpen = useCallback(() => setModalOpen(true), []);
+    const handleOpen = useCallback(() => {
+        onBeforeOpen?.();
+        setModalOpen(true);
+    }, [onBeforeOpen]);
+
     const handleClose = useCallback(() => setModalOpen(false), []);
 
     return (
         <>
-            <Button
-                size="sm"
-                className="bg-slate-900 text-white hover:bg-slate-800"
+            <button
                 onClick={handleOpen}
+                className={[
+                    'rounded-lg bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-700',
+                    fullWidth ? 'w-full py-2' : 'py-1.5',
+                ].join(' ')}
             >
                 Sign In
-            </Button>
+            </button>
 
-            {/*
-        CognitoSignInModal is only imported (and its bundle downloaded)
-        after modalOpen becomes true for the first time.
-      */}
             {modalOpen && (
                 <CognitoSignInModal isOpen={modalOpen} onClose={handleClose} />
             )}
