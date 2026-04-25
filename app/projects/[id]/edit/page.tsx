@@ -7,8 +7,8 @@ import { ProjectForm } from '@/components/project_forms/ProjectForm';
 import { query } from '@/lib/snowflake';
 import { canEditProject, isMasterAdmin } from '@/lib/permissions';
 
-const DB = process.env.SNOWFLAKE_DATABASE;
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 interface EditProjectPageProps {
     params: Promise<{ id: string }>;

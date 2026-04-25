@@ -6,8 +6,8 @@ import { query } from '@/lib/snowflake';
 import { orgToAdminId } from '@/components/project_forms/types';
 import { ProgramAdminDashboard } from '@/components/dashboard/programAdmin/ProgramAdminDashboard';
 
-const DB = process.env.SNOWFLAKE_DATABASE;
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 export interface DashboardKPIs {
     activeProjects: number;

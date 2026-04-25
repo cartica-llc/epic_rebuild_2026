@@ -3,8 +3,8 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
 
-const DB = process.env.SNOWFLAKE_DATABASE;
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 interface ProjectRow {
     PROJECT_ID: number;

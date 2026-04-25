@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
 import ExcelJS from 'exceljs';
 
-const DB = process.env.SNOWFLAKE_DATABASE;
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 function safeStr(v: string) { return v.replace(/'/g, "''"); }
 function safeInt(v: string) { const n = parseInt(v, 10); return isNaN(n) ? null : n; }

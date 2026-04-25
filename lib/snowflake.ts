@@ -9,13 +9,13 @@ function getConnection(): Promise<snowflake.Connection> {
     if (!connectionPromise) {
         connectionPromise = new Promise((resolve, reject) => {
             const conn = snowflake.createConnection({
-                account: process.env.SNOWFLAKE_ACCOUNT!,
-                username: process.env.SNOWFLAKE_USER!,
-                password: process.env.SNOWFLAKE_PASSWORD!,
-                database: process.env.SNOWFLAKE_DATABASE!,
-                schema: process.env.SNOWFLAKE_SCHEMA!,
-                warehouse: process.env.SNOWFLAKE_WAREHOUSE!,
-                role: process.env.SNOWFLAKE_ROLE!,
+                account: process.env.DEV_SNOWFLAKE_ACCOUNT!,
+                username: process.env.DEV_SNOWFLAKE_USER!,
+                password: process.env.DEV_SNOWFLAKE_PASSWORD!,
+                database: process.env.DEV_SNOWFLAKE_DATABASE!,
+                schema: process.env.DEV_SNOWFLAKE_SCHEMA!,
+                warehouse: process.env.DEV_SNOWFLAKE_WAREHOUSE!,
+                role: process.env.DEV_SNOWFLAKE_ROLE!,
             });
             conn.connect((err) => {
                 if (err) {

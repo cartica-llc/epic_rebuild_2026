@@ -7,8 +7,8 @@ import { auth } from '@/auth';
 import { query } from '@/lib/snowflake';
 import { canEditProject, isMasterAdmin } from '@/lib/permissions';
 
-const DB = process.env.SNOWFLAKE_DATABASE;
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 function safeStr(v: unknown): string {
     return String(v ?? '').replace(/'/g, "''");

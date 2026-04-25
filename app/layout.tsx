@@ -28,7 +28,7 @@ export default function RootLayout({
         <body className="min-h-full flex flex-col">
         <SessionProvider>
             <Header />
-            <main className="flex-1 pt-[67px]">{children}</main>
+            <main className="flex-1 ">{children}</main>
             <Footer />
         </SessionProvider>
         </body>

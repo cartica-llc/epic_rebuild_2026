@@ -5,8 +5,8 @@ import { redirect } from 'next/navigation';
 import { query } from '@/lib/snowflake';
 import { MasterAdminDashboard } from '@/components/dashboard/masterAdmin/MasterAdminDashboard';
 
-const DB = process.env.SNOWFLAKE_DATABASE;
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 // Banner still needs these counts even though the KPI grid is gone.
 export interface MasterDashboardBannerStats {

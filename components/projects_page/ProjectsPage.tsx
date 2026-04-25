@@ -6,7 +6,7 @@ import { AnimatePresence } from 'motion/react';
 import { ProjectFilters } from './ProjectFilters';
 import { ProjectsListContainer } from './projectsList/ProjectsListContainer';
 import { QuickQueryVisualization } from './QuickQueryVisualization';
-import { ProjectsPageHeader } from './ProjectsPageHeader';
+// import { ProjectsPageHeader } from './ProjectsPageHeader';
 
 /**
  * VIEW PARAM VALUES (defined in URL as ?view=<value>):
@@ -59,9 +59,9 @@ export function ProjectsPage() {
     }, [activePrefilter]);
 
     return (
-        <div className="min-h-screen bg-white pb-16 pt-24">
+        <div className="min-h-screen bg-white pb-16 pt-32">
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-                <ProjectsPageHeader viewParam={viewParam} />
+                {/*<ProjectsPageHeader viewParam={viewParam} />*/}
 
                 <div className="lg:flex lg:gap-6">
                     <aside className="lg:w-[280px] lg:flex-shrink-0">

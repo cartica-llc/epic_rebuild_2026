@@ -24,7 +24,7 @@ export function MasterAdminDashboard({ userName, userEmail, data }: Props) {
     return (
         <main className="mx-auto mt-6 max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8">
             {/* Header */}
-            <div className="mb-8 flex items-center justify-between gap-4">
+            <div className="mb-8 flex items-center justify-between gap-4 pt-20 ">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">{userName}</h1>
                     <p className="mt-0.5 text-sm text-slate-500">{userEmail}</p>

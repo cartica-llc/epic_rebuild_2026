@@ -29,8 +29,8 @@ import { query } from '@/lib/snowflake';
 import { s3Client, S3_BUCKET } from '@/lib/s3';
 import { canEditProject, isMasterAdmin } from '@/lib/permissions';
 
-const DB = process.env.SNOWFLAKE_DATABASE;
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 const REPORTS_BUCKET = 'epic-final-reports';
 
 const reportsS3 = new S3Client({

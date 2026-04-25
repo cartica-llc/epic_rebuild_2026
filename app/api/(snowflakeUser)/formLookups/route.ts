@@ -6,8 +6,8 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { query } from '@/lib/snowflake';
 
-const DB = process.env.SNOWFLAKE_DATABASE;
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 interface LookupRow { ID: number; NAME: string; }
 interface AdminRow { ID: number; NAME: string; SHORT_NAME: string; }

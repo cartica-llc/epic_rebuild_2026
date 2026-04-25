@@ -2,8 +2,8 @@
 // Mirrors the patterns in app/api/projectsList/route.ts (safeInt, safeStr)
 // since lib/snowflake.ts's query() takes SQL only — values are inlined.
 
-export const DB = process.env.SNOWFLAKE_DATABASE;
-export const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
+export const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+export const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 export const T = `${DB}.${SCHEMA}`;
 
 export function safeStr(v: string) {
