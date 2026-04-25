@@ -1,3 +1,6 @@
+//@/lib/snowflake.ts
+
+
 import snowflake from 'snowflake-sdk';
 
 let connectionPromise: Promise<snowflake.Connection> | null = null;

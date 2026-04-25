@@ -8,14 +8,14 @@ import {
 const COGNITO_REGION =
     process.env.AUTH_COGNITO_REGION ??
     process.env.COGNITO_REGION ??
-    process.env.AWS_REGION
+    process.env.AW_S_REGION
 
-const AWS_ACCESS_KEY = process.env.AWS_ACCESS_KEY_ID
-const AWS_SECRET_KEY = process.env.AWS_SECRET_ACCESS_KEY
+const AW_S_ACCESS_KEY = process.env.AW_S_ACCESS_KEY_ID
+const AW_S_SECRET_KEY = process.env.AW_S_SECRET_ACCESS_KEY
 
 if (!COGNITO_REGION) {
     throw new Error(
-        "Missing AUTH_COGNITO_REGION, COGNITO_REGION, or AWS_REGION environment variable",
+        "Missing AUTH_COGNITO_REGION, COGNITO_REGION, or AW_S_REGION environment variable",
     )
 }
 
@@ -27,12 +27,12 @@ export const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID
 
 export const cognitoClient = new CognitoIdentityProviderClient({
     region: COGNITO_REGION,
-    ...(AWS_ACCESS_KEY && AWS_SECRET_KEY
-        ? { credentials: { accessKeyId: AWS_ACCESS_KEY, secretAccessKey: AWS_SECRET_KEY } }
+    ...(AW_S_ACCESS_KEY && AW_S_SECRET_KEY
+        ? { credentials: { accessKeyId: AW_S_ACCESS_KEY, secretAccessKey: AW_S_SECRET_KEY } }
         : {}),
 })
 
-export const HAS_CREDENTIALS = Boolean(AWS_ACCESS_KEY && AWS_SECRET_KEY)
+export const HAS_CREDENTIALS = Boolean(AW_S_ACCESS_KEY && AW_S_SECRET_KEY)
 
 // ── Types ──
 

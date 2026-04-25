@@ -21,7 +21,7 @@ import type { CognitoUser } from "./config"
 
 export async function fetchUsers(): Promise<CognitoUser[]> {
     if (!HAS_CREDENTIALS) {
-        console.warn("AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are required to fetch Cognito users")
+        console.warn("AW_S_ACCESS_KEY_ID and AW_S_SECRET_ACCESS_KEY are required to fetch Cognito users")
         return []
     }
 

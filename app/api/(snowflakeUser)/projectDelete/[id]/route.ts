@@ -34,10 +34,10 @@ const SCHEMA = process.env.SNOWFLAKE_SCHEMA;
 const REPORTS_BUCKET = 'epic-final-reports';
 
 const reportsS3 = new S3Client({
-    region: process.env.AWS_S3_REGION!,
+    region: process.env.AW_S_S3_REGION!,
     credentials: {
-        accessKeyId: process.env.AWS_S3_ACCESS_KEY!,
-        secretAccessKey: process.env.AWS_S3_SECRET_KEY!,
+        accessKeyId: process.env.AW_S_S3_ACCESS_KEY!,
+        secretAccessKey: process.env.AW_S_S3_SECRET_KEY!,
     },
 });
 
