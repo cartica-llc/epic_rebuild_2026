@@ -1,9 +1,12 @@
-//app/api/projectImages/projectImagethumbnails/route.ts
+// app/api/projectImages/projectImagethumbnails/route.ts
 
 import { NextResponse } from 'next/server';
 import { GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client, S3_BUCKET } from '@/lib/s3';
+
+const S_MAX_AGE              = 1800;
+const STALE_WHILE_REVALIDATE = 300;
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -22,11 +25,20 @@ export async function GET(request: Request) {
         const url = await getSignedUrl(
             s3Client,
             new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
-            { expiresIn: 3600 }
+            { expiresIn: 3600 },
         );
 
-        return NextResponse.json({ url });
+        const res = NextResponse.json({ url });
+
+        res.headers.set(
+            'Cache-Control',
+            `public, s-maxage=${S_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
+        );
+
+        return res;
+
     } catch {
+
         return NextResponse.json({ url: null });
     }
 }

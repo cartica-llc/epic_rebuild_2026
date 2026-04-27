@@ -48,14 +48,18 @@ const CARD_BG_STYLE = {
 };
 
 const BLUR_MASK_STYLE = {
-    backdropFilter: 'blur(2px)',
-    WebkitBackdropFilter: 'blur(2px)',
-    maskImage:
-        'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
-    WebkitMaskImage:
-        'linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%)',
-};
+    backdropFilter: 'blur(6px)',
+    WebkitBackdropFilter: 'blur(6px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
 
+    maskImage:
+        'linear-gradient(to right, transparent 0%, transparent 20%, black 42%, black 82%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 18%, black 100%)',
+    WebkitMaskImage:
+        'linear-gradient(to right, transparent 0%, transparent 20%, black 42%, black 82%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 18%, black 100%)',
+
+    maskComposite: 'intersect',
+    WebkitMaskComposite: 'source-in',
+};
 function formatAmount(amount?: string) {
     if (!amount) return '—';
 
@@ -183,7 +187,7 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                             imageKey={project.imageKey}
                             alt={projectName}
                             className="absolute inset-0"
-                            imageClassName="blur-[2px]"
+                            imageClassName=""
                         />
 
                         <div
@@ -197,7 +201,7 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                             />
 
                             <div className="relative z-10 text-right">
-                                <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-700/80">
+                                <div className="hidden text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-700/80">
                                     Committed
                                 </div>
                                 <div className="mt-1 text-[24px] leading-none font-semibold text-slate-950 drop-shadow-sm md:text-[36px]">
