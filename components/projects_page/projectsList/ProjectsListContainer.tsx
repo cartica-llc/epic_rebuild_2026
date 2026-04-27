@@ -17,12 +17,7 @@ import { ProjectExport } from './ProjectsList_Export';
 import type { FilterValues, LookupData } from './ProjectsList_Filters';
 import type { Project } from './ProjectsList';
 
-// ─── Tuning knobs ─────────────────────────────────────────────────────
-const ITEMS_PER_PAGE   = 100;
-const INITIAL_VISIBLE  = 15;
-const INITIAL_DEFERRED = 85;
-
-const DEFERRED_LOAD_DELAY_MS = 3000;
+const ITEMS_PER_PAGE = 100;
 
 // ── Filter keys for URL sync ─────────────────────────────────────────
 const FILTER_PARAM_KEYS: (keyof FilterValues)[] = [
@@ -67,17 +62,10 @@ function buildApiParams(
     search: string,
     filters: FilterValues,
     inactiveScopeAdminId?: string | null,
-    overrideLimit?: number,
-    overrideOffset?: number,
 ): URLSearchParams {
-    const limit  = overrideLimit  ?? ITEMS_PER_PAGE;
-    const offset = overrideOffset ?? (page - 1) * ITEMS_PER_PAGE;
-
     const params = new URLSearchParams({
-        page:     String(page),
-        limit:    String(limit),
-        offset:   String(offset),
-        pageSize: String(ITEMS_PER_PAGE),
+        page:  String(page),
+        limit: String(ITEMS_PER_PAGE),
     });
 
     if (search.trim()) params.set('search', search.trim());
@@ -92,6 +80,7 @@ function buildApiParams(
     return params;
 }
 
+// ─── Props ───────────────────────────────────────────────────────────
 interface ProjectsListContainerProps {
     categoryFilter?: string | null;
     onClearFilter?: () => void;
@@ -110,6 +99,7 @@ export function ProjectsListContainer({
     const searchParams  = useSearchParams();
     const { data: session } = useSession();
 
+    // ── Admin visibility ─────────────────────────────────────────────
     const userGroups: string[] = (session?.user as { groups?: string[] })?.groups ?? [];
     const userOrg: string | null = (session?.user as { organization?: string | null })?.organization ?? null;
     const isMasterAdmin   = userGroups.includes('MasterAdmin');
@@ -119,16 +109,19 @@ export function ProjectsListContainer({
     const inactiveScopeAdminId: string | null =
         isProgramAdmin && !isMasterAdmin ? userOrg ?? null : null;
 
+    // ── Local state ──────────────────────────────────────────────────
     const [filters,        setFilters]       = useState<FilterValues>(() => filtersFromUrl(searchParams));
     const [inputValue,     setInputValue]    = useState(searchParams.get('search') ?? searchTerm);
     const [searchKeyword,  setSearchKeyword] = useState(searchParams.get('search') ?? searchTerm);
+
     const [projects,    setProjects]    = useState<Project[]>([]);
     const [loading,     setLoading]     = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages,  setTotalPages]  = useState(1);
     const [totalCount,  setTotalCount]  = useState(0);
+
     const [lookups, setLookups] = useState<LookupData | null>(null);
-    const isFirstFetch          = useRef(true);
+
     const isInitialMount        = useRef(true);
     const prevSearchTerm        = useRef(searchTerm);
     const onSearchTermChangeRef = useRef(onSearchTermChange);
@@ -137,6 +130,7 @@ export function ProjectsListContainer({
         onSearchTermChangeRef.current = onSearchTermChange;
     }, [onSearchTermChange]);
 
+    // ── Fetch lookups once ───────────────────────────────────────────
     useEffect(() => {
         let cancelled = false;
 
@@ -150,6 +144,7 @@ export function ProjectsListContainer({
         return () => { cancelled = true; };
     }, []);
 
+    // ── Sync external searchTerm prop → local input ──────────────────
     useEffect(() => {
         if (searchTerm === prevSearchTerm.current) return;
         prevSearchTerm.current = searchTerm;
@@ -158,6 +153,7 @@ export function ProjectsListContainer({
         return () => window.cancelAnimationFrame(frame);
     }, [searchTerm]);
 
+    // ── Debounced search ─────────────────────────────────────────────
     useEffect(() => {
         const timer = setTimeout(() => {
             setSearchKeyword(inputValue);
@@ -167,6 +163,7 @@ export function ProjectsListContainer({
         return () => clearTimeout(timer);
     }, [inputValue]);
 
+    // ── Sync state → URL (skip first render) ────────────────────────
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
@@ -191,76 +188,38 @@ export function ProjectsListContainer({
         }
     }, [searchKeyword, filters, pathname, router]);
 
+    // ── Fetch helper ─────────────────────────────────────────────────
     const fetchProjects = useCallback(
-        async (
-            page: number,
-            search: string,
-            f: FilterValues,
-            overrideLimit?: number,
-            overrideOffset?: number,
-        ) => {
+        async (page: number, search: string, f: FilterValues) => {
             const res = await fetch(
-                `/api/projectsList?${buildApiParams(page, search, f, inactiveScopeAdminId, overrideLimit, overrideOffset)}`,
+                `/api/projectsList?${buildApiParams(page, search, f, inactiveScopeAdminId)}`,
             );
             return res.json();
         },
         [inactiveScopeAdminId],
     );
 
+    // ── Fetch projects ───────────────────────────────────────────────
     useEffect(() => {
         let cancelled = false;
 
         const frame = window.requestAnimationFrame(() => {
             setLoading(true);
 
-            const useProgressiveLoad = isFirstFetch.current && currentPage === 1;
-            isFirstFetch.current = false;
+            void fetchProjects(currentPage, searchKeyword, filters)
+                .then((data) => {
+                    if (cancelled) return;
 
-            if (useProgressiveLoad) {
-                void fetchProjects(1, searchKeyword, filters, INITIAL_VISIBLE, 0)
-                    .then((data) => {
-                        if (cancelled) return;
-
-                        if (data.projects && Array.isArray(data.projects)) {
-                            setProjects(data.projects);
-                            setTotalPages(data.totalPages ?? 1);
-                            setTotalCount(data.total ?? 0);
-                        }
-
-                        setLoading(false);
-
-                        return new Promise<void>((resolve) => {
-                            setTimeout(resolve, DEFERRED_LOAD_DELAY_MS);
-                        }).then(() => {
-                            if (cancelled) return;
-                            return fetchProjects(1, searchKeyword, filters, INITIAL_DEFERRED, INITIAL_VISIBLE);
-                        });
-                    })
-                    .then((data) => {
-                        if (cancelled || !data) return;
-
-                        if (data.projects && Array.isArray(data.projects)) {
-                            // Functional update avoids racing on stale prev state
-                            setProjects((prev) => [...prev, ...data.projects]);
-                        }
-                    })
-                    .catch(console.error);
-            } else {
-                void fetchProjects(currentPage, searchKeyword, filters)
-                    .then((data) => {
-                        if (cancelled) return;
-
-                        if (data.projects && Array.isArray(data.projects)) {
-                            setProjects(data.projects);
-                            setTotalPages(data.totalPages ?? 1);
-                            setTotalCount(data.total ?? 0);
-                        }
-                    })
-                    .catch(console.error)
-                    .finally(() => {
-                        if (!cancelled) setLoading(false);
-                    });
-            }
+                    if (data.projects && Array.isArray(data.projects)) {
+                        setProjects(data.projects);
+                        setTotalPages(data.totalPages ?? 1);
+                        setTotalCount(data.total ?? 0);
+                    }
+                })
+                .catch(console.error)
+                .finally(() => {
+                    if (!cancelled) setLoading(false);
+                });
         });
 
         return () => {
@@ -269,12 +228,9 @@ export function ProjectsListContainer({
         };
     }, [currentPage, searchKeyword, filters, fetchProjects]);
 
+    // ── Reset to page 1 on filter/search/category change ────────────
     useEffect(() => {
-        const frame = window.requestAnimationFrame(() => {
-            isFirstFetch.current = true;
-            setCurrentPage(1);
-        });
-
+        const frame = window.requestAnimationFrame(() => setCurrentPage(1));
         return () => window.cancelAnimationFrame(frame);
     }, [searchKeyword, categoryFilter, filters]);
 
@@ -290,6 +246,7 @@ export function ProjectsListContainer({
         }));
     };
 
+    // ── Toolbar ──────────────────────────────────────────────────────
     const toolbar = (
         <>
             <div className="relative flex-1">
