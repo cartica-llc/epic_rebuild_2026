@@ -1,17 +1,19 @@
 // ─── components/project_forms/FormPrimitives.tsx ─────────────────────
-// Low-level reusable form building blocks.
 
 'use client';
 
 import { inputClass, selectClass, textareaClass } from './types';
 
-// ─── Field wrapper ───────────────────────────────────────────────────
-
-export function Field({ label, tooltip, children, full, required }: {
-    label: string; tooltip?: string; children: React.ReactNode; full?: boolean; required?: boolean;
+export function Field({ label, tooltip, children, span = 'half', required }: {
+    label: string;
+    tooltip?: string;
+    children: React.ReactNode;
+    span?: 'half' | 'full';
+    required?: boolean;
 }) {
+    const widthClass = span === 'full' ? 'w-full' : 'w-full sm:w-[calc(50%-10px)]';
     return (
-        <div className={full ? 'col-span-2' : ''}>
+        <div className={widthClass}>
             <label className="block text-[13px] font-medium text-slate-500 mb-1.5 tracking-wide">
                 {label}
                 {required && <span className="text-red-400 ml-0.5">*</span>}
@@ -33,6 +35,7 @@ export function Field({ label, tooltip, children, full, required }: {
 }
 
 // ─── Text input ──────────────────────────────────────────────────────
+// (unchanged)
 
 export function TextInput({ placeholder, value, onChange, disabled, prefix, type = 'text', ...rest }: {
     placeholder?: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -77,6 +80,7 @@ export function Textarea({ value, onChange, placeholder, rows = 5 }: {
 }
 
 // ─── Checkbox ────────────────────────────────────────────────────────
+// (unchanged)
 
 export function Checkbox({ label, checked, onChange, tooltip }: {
     label: string; checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; tooltip?: string;
@@ -113,7 +117,7 @@ export function Checkbox({ label, checked, onChange, tooltip }: {
 
 export function SectionDivider({ title }: { title: string }) {
     return (
-        <div className="col-span-2 mt-4 mb-1">
+        <div className="w-full mt-4 mb-1">
             <div className="flex items-center gap-3">
                 <div className="h-px flex-1 bg-slate-200" />
                 <span className="text-xs font-semibold tracking-widest uppercase text-slate-400">{title}</span>

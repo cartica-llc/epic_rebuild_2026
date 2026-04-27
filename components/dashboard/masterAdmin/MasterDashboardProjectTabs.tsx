@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import type { MasterDashboardProject } from '@/app/(dashboard)/dashboard/master/page';
 
@@ -16,22 +16,22 @@ function formatDateOnly(dateStr: string | null): string {
     return `${months[m]} ${parseInt(day, 10)}, ${year}`;
 }
 
+function useIsClient() {
+    return useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false,
+    );
+}
+
 function LocalTime({ dateStr }: { dateStr: string | null }) {
-    const [mounted, setMounted] = useState(false);
-    const mountedRef = useRef(false);
+    const isClient = useIsClient();
 
-    useEffect(() => {
-        if (mountedRef.current) return;
-        mountedRef.current = true;
-        setMounted(true);
-    }, []);
-
-    if (!mounted || !dateStr) return null;
+    if (!isClient || !dateStr) return null;
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return null;
     const h = d.getHours();
     const m = String(d.getMinutes()).padStart(2, '0');
-    const s = String(d.getSeconds()).padStart(2, '0');
     const ampm = h >= 12 ? 'PM' : 'AM';
     const h12 = h % 12 === 0 ? 12 : h % 12;
     const tz =
@@ -41,24 +41,7 @@ function LocalTime({ dateStr }: { dateStr: string | null }) {
     return (
         <span className="text-slate-400">
             {' '}
-            {h12}:{m}:{s} {ampm} {tz}
-        </span>
-    );
-}
-
-// Color-code each org's badge so the table is scannable.
-const ORG_BADGE_STYLES: Record<string, string> = {
-    EPC: 'bg-indigo-50 text-indigo-700 ring-indigo-600/10',
-    SCE: 'bg-sky-50 text-sky-700 ring-sky-600/10',
-    SDGE: 'bg-orange-50 text-orange-700 ring-orange-600/10',
-    PGE: 'bg-emerald-50 text-emerald-700 ring-emerald-600/10',
-};
-
-function OrgBadge({ org }: { org: string }) {
-    const style = ORG_BADGE_STYLES[org] ?? 'bg-slate-100 text-slate-700 ring-slate-500/10';
-    return (
-        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${style}`}>
-            {org}
+            {h12}:{m} {ampm} {tz}
         </span>
     );
 }
@@ -79,7 +62,6 @@ function ProjectTable({ projects, emptyMessage, hideStatus = false }: ProjectTab
             <table className="w-full text-left text-sm">
                 <thead>
                 <tr className="border-b border-slate-200">
-                    <th className="px-3 py-3 text-xs font-semibold text-slate-500">Org</th>
                     <th className="px-3 py-3 text-xs font-semibold text-slate-500">Project Number</th>
                     <th className="px-3 py-3 text-xs font-semibold text-slate-500">Project Name</th>
                     {!hideStatus && (
@@ -97,45 +79,44 @@ function ProjectTable({ projects, emptyMessage, hideStatus = false }: ProjectTab
                             idx % 2 === 0 ? 'bg-slate-50/40' : 'bg-white'
                         }`}
                     >
-                        <td className="px-3 py-3">
-                            <OrgBadge org={project.organizationName} />
-                        </td>
                         <td className="px-3 py-3 font-mono text-xs font-medium text-slate-900">
-                            {project.projectNumber}
-                        </td>
-                        <td className="max-w-xs px-3 py-3">
                             <Link
                                 href={`/projects/${project.projectId}`}
-                                className="line-clamp-1 font-medium text-slate-700 hover:text-slate-950"
+                                className="truncate hover:text-slate-600 hover:underline"
+                            >
+                                {project.projectNumber}
+                            </Link>
+                        </td>
+                        <td className="w-48 max-w-[10rem] px-3 py-3">
+                            <Link
+                                href={`/projects/${project.projectId}`}
+                                className="block truncate font-medium text-slate-700 hover:text-slate-950"
+                                title={project.projectName}
                             >
                                 {project.projectName}
                             </Link>
                         </td>
                         {!hideStatus && (
                             <td className="px-3 py-3">
-                                    <span
-                                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                            project.isActive
-                                                ? 'bg-emerald-50 text-emerald-700'
-                                                : 'bg-amber-50 text-amber-700'
-                                        }`}
-                                    >
-                                        {project.projectStatus || (project.isActive ? 'Active' : 'Inactive')}
-                                    </span>
+                                <span
+                                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                        project.isActive
+                                            ? 'bg-emerald-50 text-emerald-700'
+                                            : 'bg-amber-50 text-amber-700'
+                                    }`}
+                                >
+                                    {project.projectStatus || (project.isActive ? 'Active' : 'Inactive')}
+                                </span>
                             </td>
                         )}
-                        <td className="px-3 py-3 text-xs text-slate-500">
-                            {formatDateOnly(project.createDate)}
-                            <LocalTime dateStr={project.createDate} />
+                        <td className="w-32 max-w-[8rem] px-3 py-3 text-xs text-slate-500">
+                            <span className="block truncate">
+                                {formatDateOnly(project.createDate)}
+                                <LocalTime dateStr={project.createDate} />
+                            </span>
                         </td>
                         <td className="px-3 py-3">
-                            <div className="flex items-center justify-end gap-2">
-                                <Link
-                                    href={`/projects/${project.projectId}`}
-                                    className="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
-                                >
-                                    View
-                                </Link>
+                            <div className="flex items-center justify-end">
                                 <Link
                                     href={`/projects/${project.projectId}/edit`}
                                     className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
@@ -167,7 +148,6 @@ export function MasterDashboardProjectTabs({ activeProjects, inactiveProjects }:
 
     return (
         <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70">
-            {/* Tab header */}
             <div className="flex items-center justify-between border-b border-slate-200 px-5 pt-5">
                 <div className="flex gap-1">
                     {tabs.map((tab) => (
@@ -198,11 +178,8 @@ export function MasterDashboardProjectTabs({ activeProjects, inactiveProjects }:
                         </button>
                     ))}
                 </div>
-                {activeTab === 'active' && <p className="pb-2.5 text-xs text-slate-400">5 most recent across all orgs</p>}
-                {activeTab === 'inactive' && <p className="pb-2.5 text-xs text-slate-400">All orgs</p>}
             </div>
 
-            {/* Tab body */}
             <div className="p-2">
                 {activeTab === 'active' ? (
                     <ProjectTable

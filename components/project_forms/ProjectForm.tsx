@@ -1,7 +1,6 @@
 // ─── components/project_forms/ProjectForm.tsx ────────────────────────
 // Shared tabbed form for Create and Edit project pages.
 
-
 'use client';
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
@@ -70,7 +69,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
     const lockedAdminId = !isMaster && userOrg ? orgToAdminId(userOrg) : null;
     const lockedPrefix = lockedAdminId !== null ? prefixForAdminId(lockedAdminId) : '';
 
-    // Derive the effective admin ID instead of setting it inside an effect.
     const effectiveProgramAdminId =
         mode === 'create' && lockedAdminId !== null
             ? lockedAdminId
@@ -89,7 +87,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
         [data, mode, lockedAdminId]
     );
 
-    // ── Live project number uniqueness check (used to block save) ──
     const currentPrefix = effectiveProgramAdminId !== null ? prefixForAdminId(effectiveProgramAdminId) : '';
     const pnCheck = useProjectNumberCheck(currentPrefix, data.projectNumber, mode === 'edit' ? projectId : undefined);
 
@@ -319,8 +316,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
             const url = mode === 'create' ? '/api/projectCreate' : `/api/projectEdit/${projectId}`;
             const method = mode === 'create' ? 'POST' : 'PUT';
 
-            // Strip transient PDF state — these are never persisted by the project
-            // save routes; the finalReport API routes handle them separately below.
             const { pendingReportFile: _prf, reportMarkedForDeletion: _rmd, ...savePayload } = effectiveData;
 
             const res = await fetch(url, {
@@ -391,8 +386,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                 }
 
                 // ── Deferred final report delete ──────────────────────────────
-                // User clicked "Remove" — wipe S3 object (new-style keys only)
-                // and clear FINAL_REPORT_URL in PROJECT_DETAIL.
                 if ((data.reportMarkedForDeletion as boolean) && data.finalReportUrl) {
                     try {
                         await fetch('/api/finalReport/delete', {
@@ -409,8 +402,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                 }
 
                 // ── Deferred final report upload ──────────────────────────────
-                // User picked a PDF — read it as a data-URL and POST to the
-                // upload route, which handles S3 + updating FINAL_REPORT_URL.
                 if (data.pendingReportFile) {
                     try {
                         const fileData = await new Promise<string>((resolve, reject) => {
@@ -454,7 +445,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
     const handleSave = () => {
         setError('');
 
-        // ── Entry stage validation (required fields) ──
         const missingEntry = validateEntryStage(effectiveData);
         if (missingEntry.length > 0) {
             const count = missingEntry.length;
@@ -471,7 +461,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
             return;
         }
 
-        // ── Project number uniqueness check ──
         if (pnCheck.status === 'taken') {
             setError('This project number already exists. Please enter a different number before saving.');
             setActiveTab('project');
@@ -516,9 +505,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
         if (mode === 'edit') {
             const changes = computeChanges();
 
-            // Pending report file and deletion flag are in SKIP_FIELDS so they
-            // don't appear in the diff — add a synthetic entry when either is set
-            // so the change dialog opens and executeSave is reached.
             if (data.pendingReportFile) {
                 const file = data.pendingReportFile as File;
                 changes.push({ label: 'Final Report', from: data.finalReportUrl || '(none)', to: `Upload: ${file.name}` });
@@ -582,12 +568,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
         additional: <AdditionalTab data={effectiveData} set={set} />,
     };
 
-    // Danger Zone tab is edit-only — the project must exist to delete it,
-    // and we need both the projectId and the current project number.
     if (mode === 'edit' && projectId !== undefined) {
-        // Rebuild the full project number for display: PREFIX-bareNumber.
-        // data.projectNumber holds the bare suffix at this point; prepend the
-        // resolved prefix so users see the full identifier they need to type.
         const fullProjectNumber = currentPrefix && data.projectNumber
             ? `${currentPrefix}-${data.projectNumber}`
             : data.projectNumber;
@@ -605,7 +586,9 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
 
     return (
         <div className="min-h-screen bg-slate-50">
-            <div className="mt-6 mx-auto max-w-5xl px-6 py-8">
+            {/* MOBILE: px-4 on mobile → px-6 on sm+ */}
+            <div className="mt-6 mx-auto max-w-5xl px-4 sm:px-6 py-8 overflow-hidden">
+
                 <div className="mb-6 flex items-center gap-3">
                     <button
                         type="button"
@@ -626,7 +609,8 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                             <polyline points="12 19 5 12 12 5" />
                         </svg>
                     </button>
-                    <h1 className="text-2xl font-bold text-slate-900">
+                    {/* MOBILE: slightly smaller heading on mobile */}
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
                         {mode === 'create' ? 'Create Project' : 'Edit Project'}
                     </h1>
                 </div>
@@ -647,7 +631,12 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                     className="mb-6"
                     showDanger={mode === 'edit'}
                 />
-                <div className="rounded-xl border border-slate-200 bg-white p-6">{tabContent[activeTab]}</div>
+
+                {/* MOBILE: p-4 on mobile → p-6 on sm+ */}
+                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+                    {tabContent[activeTab]}
+                </div>
+
                 <FormTabs
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
@@ -655,18 +644,22 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                     showDanger={mode === 'edit'}
                 />
 
-                <div className="mt-6 flex items-center justify-end gap-3 pb-8">
+                {/*
+                    MOBILE: stack buttons vertically (col-reverse puts Save on top),
+                    full-width each; on sm+ revert to right-aligned row.
+                */}
+                <div className="mt-6 pb-8 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-white"
+                        className="w-full sm:w-auto rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-white"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={saveOverlay?.phase === 'saving'}
-                        className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                     >
                         {saveOverlay?.phase === 'saving' && <Loader2 className="h-4 w-4 animate-spin" />}
                         {saveOverlay?.phase === 'saving'

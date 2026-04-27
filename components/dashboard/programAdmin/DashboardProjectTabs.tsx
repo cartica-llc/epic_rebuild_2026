@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import type { DashboardProject } from '@/app/(dashboard)/dashboard/program/page';
 
@@ -16,31 +16,28 @@ function formatDateOnly(dateStr: string | null): string {
     return `${months[m]} ${parseInt(day, 10)}, ${year}`;
 }
 
+function useIsClient() {
+    return useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false,
+    );
+}
 
 function LocalTime({ dateStr }: { dateStr: string | null }) {
+    const isClient = useIsClient();
 
-    const [mounted, setMounted] = useState(false);
-    const mountedRef = useRef(false);
-
-    useEffect(() => {
-        if (mountedRef.current) return;
-        mountedRef.current = true;
-        setMounted(true);
-    }, []);
-
-    if (!mounted || !dateStr) return null;
+    if (!isClient || !dateStr) return null;
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return null;
     const h = d.getHours();
     const m = String(d.getMinutes()).padStart(2, '0');
-    const s = String(d.getSeconds()).padStart(2, '0');
     const ampm = h >= 12 ? 'PM' : 'AM';
     const h12 = h % 12 === 0 ? 12 : h % 12;
-    // Get short timezone abbreviation (e.g. PST, CST, EST) from the browser's locale
     const tz = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' })
         .formatToParts(d)
         .find((p) => p.type === 'timeZoneName')?.value ?? '';
-    return <span className="text-slate-400"> {h12}:{m}:{s} {ampm} {tz}</span>;
+    return <span className="text-slate-400"> {h12}:{m} {ampm} {tz}</span>;
 }
 
 interface ProjectTableProps {
@@ -79,12 +76,18 @@ function ProjectTable({ projects, emptyMessage, hideStatus = false }: ProjectTab
                         }`}
                     >
                         <td className="px-3 py-3 font-mono text-xs font-medium text-slate-900">
-                            {project.projectNumber}
-                        </td>
-                        <td className="px-3 py-3 max-w-xs">
                             <Link
                                 href={`/projects/${project.projectId}`}
-                                className="font-medium text-slate-700 hover:text-slate-950 line-clamp-1"
+                                className="truncate hover:text-slate-600 hover:underline"
+                            >
+                                {project.projectNumber}
+                            </Link>
+                        </td>
+                        <td className="w-48 max-w-[10rem] px-3 py-3">
+                            <Link
+                                href={`/projects/${project.projectId}`}
+                                className="block truncate font-medium text-slate-700 hover:text-slate-950"
+                                title={project.projectName}
                             >
                                 {project.projectName}
                             </Link>
@@ -100,18 +103,14 @@ function ProjectTable({ projects, emptyMessage, hideStatus = false }: ProjectTab
                                 </span>
                             </td>
                         )}
-                        <td className="px-3 py-3 text-xs text-slate-500">
-                            {formatDateOnly(project.modifiedDate)}
-                            <LocalTime dateStr={project.modifiedDate} />
+                        <td className="w-32 max-w-[8rem] px-3 py-3 text-xs text-slate-500">
+                            <span className="block truncate">
+                                {formatDateOnly(project.modifiedDate)}
+                                <LocalTime dateStr={project.modifiedDate} />
+                            </span>
                         </td>
                         <td className="px-3 py-3">
-                            <div className="flex items-center justify-end gap-2">
-                                <Link
-                                    href={`/projects/${project.projectId}`}
-                                    className="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
-                                >
-                                    View
-                                </Link>
+                            <div className="flex items-center justify-end">
                                 <Link
                                     href={`/projects/${project.projectId}/edit`}
                                     className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
@@ -172,7 +171,7 @@ export function DashboardProjectTabs({ activeProjects, inactiveProjects }: Props
                         </button>
                     ))}
                 </div>
-                {activeTab === 'active' && <p className="pb-2.5 text-xs text-slate-400">5 most recent</p>}
+                {/*{activeTab === 'active' && <p className="pb-2.5 text-xs text-slate-400">5 most recent</p>}*/}
             </div>
 
             {/* Tab body */}

@@ -93,7 +93,7 @@ export function UsersPageClient({
 
     return (
         <div className=" bg-slate-50 text-slate-900">
-            <div className="pt-24 pb-16">
+            <div className="pt-34 pb-16">
                 <div className="mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8">
                     <div className="mb-8">
                         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
