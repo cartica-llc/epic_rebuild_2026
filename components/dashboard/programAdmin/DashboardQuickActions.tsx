@@ -3,7 +3,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutGrid, PlusCircle, BarChart2, EyeOff } from 'lucide-react';
+import { LayoutGrid, PlusCircle, EyeOff } from 'lucide-react';
 
 interface QuickActionProps {
     href: string;

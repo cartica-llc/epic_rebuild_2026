@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
 import { Zap } from 'lucide-react';
@@ -28,16 +28,38 @@ export function ProjectFilters({
     const wrapperRef = useRef<HTMLDivElement | null>(null);
     const sidebarRef = useRef<HTMLDivElement | null>(null);
 
+    const clearPrefilter = useCallback(() => {
+        onPrefilterChange('all-projects');
+    }, [onPrefilterChange]);
+
+    const handlePrefilter = useCallback(
+        (id: string) => {
+            if (activePrefilter === id) {
+                clearPrefilter();
+                return;
+            }
+
+            onPrefilterChange(id);
+            setShowFilters(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        [activePrefilter, clearPrefilter, onPrefilterChange],
+    );
+
     // Sticky sidebar scroll logic
     useEffect(() => {
         const topOffset = 96;
+
         const handleScroll = () => {
             const wrapper = wrapperRef.current;
             const sidebar = sidebarRef.current;
+
             if (!wrapper || !sidebar) return;
+
             const wrapperRect = wrapper.getBoundingClientRect();
             const sidebarHeight = sidebar.offsetHeight;
             const scrolledPast = topOffset - wrapperRect.top;
+
             if (scrolledPast <= 0) {
                 sidebar.style.transform = 'translateY(0px)';
             } else {
@@ -46,7 +68,9 @@ export function ProjectFilters({
                 sidebar.style.transform = `translateY(${translate}px)`;
             }
         };
+
         const mediaQuery = window.matchMedia('(min-width: 1024px)');
+
         const setup = () => {
             if (mediaQuery.matches) {
                 window.addEventListener('scroll', handleScroll, { passive: true });
@@ -58,8 +82,10 @@ export function ProjectFilters({
                 window.removeEventListener('resize', handleScroll);
             }
         };
+
         setup();
         mediaQuery.addEventListener('change', setup);
+
         return () => {
             window.removeEventListener('scroll', handleScroll);
             window.removeEventListener('resize', handleScroll);
@@ -69,34 +95,46 @@ export function ProjectFilters({
 
     useEffect(() => {
         document.body.style.overflow = showFilters ? 'hidden' : 'unset';
-        return () => { document.body.style.overflow = 'unset'; };
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
     }, [showFilters]);
 
     useEffect(() => {
-        if (initialPrefilter && !activePrefilter) handlePrefilter(initialPrefilter);
-    }, [initialPrefilter, activePrefilter]);
+        if (!initialPrefilter || activePrefilter) return;
 
-    const handlePrefilter = (id: string) => {
-        if (activePrefilter === id) { clearPrefilter(); return; }
-        onPrefilterChange(id);
-        setShowFilters(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+        const frame = window.requestAnimationFrame(() => {
+            handlePrefilter(initialPrefilter);
+        });
 
-    const clearPrefilter = () => {
-        onPrefilterChange('all-projects');
-    };
+        return () => {
+            window.cancelAnimationFrame(frame);
+        };
+    }, [initialPrefilter, activePrefilter, handlePrefilter]);
 
     const filterContent = (
         <div className="space-y-3 pr-2">
             <div>
                 <div className="mb-3 hidden lg:block">
                     <div className="flex items-start gap-2">
-                        <Zap className="mt-0.5 h-6 w-6 flex-shrink-0" style={{ stroke: 'url(#zapGradientDesktop)', fill: 'url(#zapGradientDesktop)' }} />
+                        <Zap
+                            className="mt-0.5 h-6 w-6 flex-shrink-0"
+                            style={{
+                                stroke: 'url(#zapGradientDesktop)',
+                                fill: 'url(#zapGradientDesktop)',
+                            }}
+                        />
+
                         <div className="flex-1">
-                            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-900">Quick Insights</h3>
-                            <p className="mt-0.5 text-[0.625rem] text-slate-600">Select a view</p>
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-900">
+                                Quick Insights
+                            </h3>
+                            <p className="mt-0.5 text-[0.625rem] text-slate-600">
+                                Select a view
+                            </p>
                         </div>
+
                         <svg width="0" height="0" className="absolute">
                             <defs>
                                 <linearGradient id="zapGradientDesktop" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -107,6 +145,7 @@ export function ProjectFilters({
                         </svg>
                     </div>
                 </div>
+
                 <div className="grid grid-cols-1 gap-3">
                     {prefilterQueries.map((query) => (
                         <button
@@ -119,18 +158,40 @@ export function ProjectFilters({
                             {activePrefilter === query.id && (
                                 <span className="absolute left-0 top-1/2 h-12 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-sky-600 via-emerald-600 to-rose-600" />
                             )}
+
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex-1">
-                                    <div className={`mb-1 text-sm font-bold ${activePrefilter === query.id ? 'text-slate-900' : 'text-slate-700 group-hover:text-slate-900'}`}>
+                                    <div
+                                        className={`mb-1 text-sm font-bold ${
+                                            activePrefilter === query.id
+                                                ? 'text-slate-900'
+                                                : 'text-slate-700 group-hover:text-slate-900'
+                                        }`}
+                                    >
                                         {query.label}
                                     </div>
-                                    <div className={`text-xs ${activePrefilter === query.id ? 'text-slate-600' : 'text-slate-500 group-hover:text-slate-600'}`}>
+
+                                    <div
+                                        className={`text-xs ${
+                                            activePrefilter === query.id
+                                                ? 'text-slate-600'
+                                                : 'text-slate-500 group-hover:text-slate-600'
+                                        }`}
+                                    >
                                         {query.description}
                                     </div>
                                 </div>
+
                                 {activePrefilter === query.id && (
                                     <div className="flex-shrink-0">
-                                        <Zap className="h-5 w-5" style={{ stroke: 'url(#zapGradientActive)', fill: 'url(#zapGradientActive)' }} />
+                                        <Zap
+                                            className="h-5 w-5"
+                                            style={{
+                                                stroke: 'url(#zapGradientActive)',
+                                                fill: 'url(#zapGradientActive)',
+                                            }}
+                                        />
+
                                         <svg width="0" height="0" className="absolute">
                                             <defs>
                                                 <linearGradient id="zapGradientActive" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -166,21 +227,34 @@ export function ProjectFilters({
                 {showFilters && (
                     <>
                         <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
                             onClick={() => setShowFilters(false)}
                             className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm lg:hidden"
                         />
+
                         <motion.div
-                            initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="fixed bottom-0 left-0 top-0 z-[70] h-screen w-64 overflow-y-auto rounded-r-2xl bg-white shadow-2xl lg:hidden"
                         >
                             <div className="flex h-full flex-col">
                                 <div className="relative bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-6">
                                     <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600" />
+
                                     <div className="flex items-start gap-3">
-                                        <Zap className="mt-0.5 h-8 w-8" style={{ stroke: 'url(#zapGradientMobile)', fill: 'url(#zapGradientMobile)' }} />
+                                        <Zap
+                                            className="mt-0.5 h-8 w-8"
+                                            style={{
+                                                stroke: 'url(#zapGradientMobile)',
+                                                fill: 'url(#zapGradientMobile)',
+                                            }}
+                                        />
+
                                         <svg width="0" height="0" className="absolute">
                                             <defs>
                                                 <linearGradient id="zapGradientMobile" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -189,19 +263,37 @@ export function ProjectFilters({
                                                 </linearGradient>
                                             </defs>
                                         </svg>
+
                                         <div className="flex-1 text-left">
-                                            <h2 className="text-xs font-semibold leading-tight text-slate-900">Quick Insights</h2>
-                                            <p className="mt-0.5 text-[0.625rem] text-slate-600">Select a view</p>
+                                            <h2 className="text-xs font-semibold leading-tight text-slate-900">
+                                                Quick Insights
+                                            </h2>
+                                            <p className="mt-0.5 text-[0.625rem] text-slate-600">
+                                                Select a view
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
+
                                 <div className="flex-1 p-4 pb-4">{filterContent}</div>
+
                                 <div className="mt-auto border-t border-slate-200 bg-slate-50 p-4">
                                     <div className="flex flex-col items-center gap-2">
-                                        <Image src="/logo/CAgov-logo.svg" alt="California Government Logo" width={40} height={40} className="h-10 w-auto object-contain" />
+                                        <Image
+                                            src="/logo/CAgov-logo.svg"
+                                            alt="California Government Logo"
+                                            width={40}
+                                            height={40}
+                                            className="h-10 w-auto object-contain"
+                                        />
+
                                         <div className="text-center">
-                                            <p className="text-[0.625rem] font-semibold text-slate-900">California Energy Commission</p>
-                                            <p className="mt-0.5 text-[0.625rem] text-slate-600">Infrastructure Portfolio</p>
+                                            <p className="text-[0.625rem] font-semibold text-slate-900">
+                                                California Energy Commission
+                                            </p>
+                                            <p className="mt-0.5 text-[0.625rem] text-slate-600">
+                                                Infrastructure Portfolio
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -213,7 +305,10 @@ export function ProjectFilters({
 
             {/* Desktop sidebar */}
             <div ref={wrapperRef} className="hidden h-full lg:block">
-                <div ref={sidebarRef} className="will-change-transform flex flex-col rounded-2xl border-2 border-slate-200 bg-white/50 p-6 backdrop-blur-sm">
+                <div
+                    ref={sidebarRef}
+                    className="will-change-transform flex flex-col rounded-2xl border-2 border-slate-200 bg-white/50 p-6 backdrop-blur-sm"
+                >
                     <div className="flex-1">{filterContent}</div>
                 </div>
             </div>

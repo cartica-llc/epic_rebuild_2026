@@ -10,7 +10,7 @@ const DB = process.env.DEV_SNOWFLAKE_DATABASE;
 const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 interface LookupRow { ID: number; NAME: string; }
-interface AdminRow { ID: number; NAME: string; SHORT_NAME: string; }
+// interface AdminRow { ID: number; NAME: string; SHORT_NAME: string; }
 
 export async function GET() {
     try {

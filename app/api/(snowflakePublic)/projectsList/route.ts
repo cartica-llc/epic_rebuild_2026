@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
 
-const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const DB     = process.env.DEV_SNOWFLAKE_DATABASE;
 const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 interface ProjectRow {
@@ -46,8 +46,8 @@ function safeFloat(v: string) {
 // ─── Dynamic query builder ────────────────────────────────────────────
 
 function buildQuery(sp: URLSearchParams) {
-    const t = `${DB}.${SCHEMA}`;
-    const joins: string[] = [];
+    const t      = `${DB}.${SCHEMA}`;
+    const joins: string[]  = [];
     const wheres: string[] = [];
 
     // ── IS_ACTIVE scoping ──
@@ -59,10 +59,9 @@ function buildQuery(sp: URLSearchParams) {
     //   inactive results to their PROGRAM_ADMIN_PROGRAM_ADMIN_ID. MasterAdmins
     //   send no scope and see all orgs.
     const inactiveFilter = sp.get('inactiveFilter')?.trim() ?? '';
-    const inactiveScope = sp.get('inactiveScope')?.trim() ?? null;
+    const inactiveScope  = sp.get('inactiveScope')?.trim()  ?? null;
 
     if (inactiveFilter === 'all') {
-        // No IS_ACTIVE filter — return every project regardless of visibility
         if (inactiveScope) {
             const orgToAdminId: Record<string, number> = { epc: 0, cec: 0, sce: 1, sdge: 2, sdg: 2, pge: 3, 'pg&e': 3 };
             const scopedId = orgToAdminId[inactiveScope.toLowerCase()];
@@ -123,8 +122,8 @@ function buildQuery(sp: URLSearchParams) {
         wheres.push(`p.LEGISLATIVE_DISTRICT_SENATE_DISTRICT_AFTER_REDISTRICTED_ID = ${senateDistrictId}`);
     }
 
-    if (sp.get('disadvantaged') === '1') wheres.push(`p.CPUC_DAC = 1`);
-    if (sp.get('lowIncome') === '1') wheres.push(`p.CPUC_LI = 1`);
+    if (sp.get('disadvantaged')    === '1') wheres.push(`p.CPUC_DAC = 1`);
+    if (sp.get('lowIncome')         === '1') wheres.push(`p.CPUC_LI = 1`);
     if (sp.get('communityBenefits') === '1') wheres.push(`p.COMMUNITY_BENEFITS = 1`);
 
     // ── Funding range ──
@@ -179,29 +178,28 @@ function buildQuery(sp: URLSearchParams) {
     }
 
     return {
-        joinClause: joins.join('\n        '),
+        joinClause:  joins.join('\n        '),
         whereClause: wheres.length > 0 ? wheres.join('\n            AND ') : '1=1',
-
     };
 }
 
 function mapRow(r: ProjectRow) {
     return {
-        id: r.PROJECT_ID,
-        code: r.PROJECT_NUMBER ?? '',
-        name: r.PROJECT_NAME ?? '',
-        location: '',
+        id:                r.PROJECT_ID,
+        code:              r.PROJECT_NUMBER ?? '',
+        name:              r.PROJECT_NAME   ?? '',
+        location:          '',
         organizationShort: ADMIN_MAP[r.PROGRAM_ADMIN_ID ?? -1] ?? '',
-        investmentArea: r.INVESTMENT_AREAS ?? '',
-        status: r.PROJECT_STATUS ?? '',
-        committed: r.COMMITED_FUNDING_AMT
+        investmentArea:    r.INVESTMENT_AREAS ?? '',
+        status:            r.PROJECT_STATUS  ?? '',
+        committed:         r.COMMITED_FUNDING_AMT
             ? `$${r.COMMITED_FUNDING_AMT.toLocaleString()}`
             : '',
-        projectLead: r.COMPANY_NAME ?? '',
-        imageKey: r.PROJECT_NUMBER
+        projectLead:       r.COMPANY_NAME ?? '',
+        imageKey:          r.PROJECT_NUMBER
             ? `${r.PROJECT_NUMBER.toLowerCase()}/${r.PROJECT_NUMBER.toLowerCase()}_main`
             : '',
-        programAdminId: r.PROGRAM_ADMIN_ID,
+        programAdminId:    r.PROGRAM_ADMIN_ID,
         INVESTMENT_PROGRAM_PERIOD_PERIOD_ID: r.INVESTMENT_PROGRAM_PERIOD_PERIOD_ID,
     };
 }
@@ -209,9 +207,25 @@ function mapRow(r: ProjectRow) {
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+
+        const page  = Math.max(1, parseInt(searchParams.get('page')  ?? '1',   10));
         const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '100', 10)));
-        const offset = (page - 1) * limit;
+
+        // Read explicit offset from client (supports the progressive 15+85 split).
+        // Falls back to standard page-based offset when not supplied.
+        const offset = Math.max(0, parseInt(
+            searchParams.get('offset') ?? String((page - 1) * limit),
+            10,
+        ));
+
+        // pageSize is always ITEMS_PER_PAGE (100) — used only for totalPages math.
+        // This ensures the first 15-row progressive fetch doesn't report 1/5 pages
+        // instead of the correct 1/8 (or whatever the real total is at 100/page).
+        const pageSize = Math.min(100, Math.max(1, parseInt(
+            searchParams.get('pageSize') ?? String(limit),
+            10,
+        )));
+
         const t = `${DB}.${SCHEMA}`;
 
         const { joinClause, whereClause } = buildQuery(searchParams);
@@ -259,18 +273,18 @@ export async function GET(request: Request) {
         const total = countRows[0]?.TOTAL ?? 0;
 
         return NextResponse.json({
-            projects: rows.map(mapRow),
+            projects:   rows.map(mapRow),
             total,
             page,
             limit,
-            totalPages: Math.ceil(total / limit),
+            totalPages: Math.ceil(total / pageSize),
         });
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('Snowflake query error:', message);
         return NextResponse.json(
             { projects: [], total: 0, page: 1, limit: 100, totalPages: 0 },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }

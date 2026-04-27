@@ -11,7 +11,6 @@ import { MultiSelectDropdown } from '../MultiSelectDropdown';
 // ─── ReportLink ───────────────────────────────────────────────────────────────
 
 function ReportLink({ storedKey }: { storedKey: string }) {
-
     const [url, setUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -33,8 +32,7 @@ function ReportLink({ storedKey }: { storedKey: string }) {
         return () => {
             cancelled = true;
         };
-
-    }, []);
+    }, [storedKey]);
 
     const displayName = storedKey.includes('/') ? storedKey.split('/').pop()! : storedKey;
 
@@ -79,12 +77,18 @@ interface FinalReportUploadProps {
     onPendingChange: (file: File | null, markedForDeletion: boolean) => void;
 }
 
-function FinalReportUpload({ storedKey, pendingFile, markedForDeletion, onPendingChange }: FinalReportUploadProps) {
+function FinalReportUpload({
+                               storedKey,
+                               pendingFile,
+                               markedForDeletion,
+                               onPendingChange,
+                           }: FinalReportUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] ?? null;
         if (!file) return;
+
         onPendingChange(file, false);
         e.target.value = '';
     };
@@ -113,10 +117,13 @@ function FinalReportUpload({ storedKey, pendingFile, markedForDeletion, onPendin
     // ── 2. Existing report marked for deletion ────────────────────────────────
     if (markedForDeletion && storedKey) {
         const displayName = storedKey.includes('/') ? storedKey.split('/').pop() : storedKey;
+
         return (
             <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
                 <FileText className="h-5 w-5 shrink-0 text-red-400 line-through" />
-                <span className="flex-1 truncate text-sm text-red-500 line-through">{displayName}</span>
+                <span className="flex-1 truncate text-sm text-red-500 line-through">
+                    {displayName}
+                </span>
                 <span className="shrink-0 text-xs text-red-400">(will be removed on save)</span>
                 <button
                     type="button"
@@ -130,7 +137,6 @@ function FinalReportUpload({ storedKey, pendingFile, markedForDeletion, onPendin
     }
 
     // ── 3. Existing report on record ─────────────────────────────────────────
-
     if (storedKey) {
         return (
             <div className="flex flex-col gap-2">
@@ -138,6 +144,7 @@ function FinalReportUpload({ storedKey, pendingFile, markedForDeletion, onPendin
                     <FileText className="h-5 w-5 shrink-0 text-slate-400" />
                     <ReportLink key={storedKey} storedKey={storedKey} />
                 </div>
+
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
@@ -147,6 +154,7 @@ function FinalReportUpload({ storedKey, pendingFile, markedForDeletion, onPendin
                         <UploadCloud className="h-3.5 w-3.5" />
                         Replace report
                     </button>
+
                     <button
                         type="button"
                         onClick={() => onPendingChange(null, true)}
@@ -155,6 +163,7 @@ function FinalReportUpload({ storedKey, pendingFile, markedForDeletion, onPendin
                         <X className="h-3.5 w-3.5" />
                         Remove
                     </button>
+
                     <input
                         ref={fileInputRef}
                         type="file"
@@ -178,6 +187,7 @@ function FinalReportUpload({ storedKey, pendingFile, markedForDeletion, onPendin
                 <UploadCloud className="h-5 w-5" />
                 Upload final report (PDF)
             </button>
+
             <input
                 ref={fileInputRef}
                 type="file"
@@ -191,7 +201,12 @@ function FinalReportUpload({ storedKey, pendingFile, markedForDeletion, onPendin
 
 // ─── DetailsTab ───────────────────────────────────────────────────────────────
 
-export function DetailsTab({ data, set, lookups, requiredKeys }: {
+export function DetailsTab({
+                               data,
+                               set,
+                               lookups,
+                               requiredKeys,
+                           }: {
     data: ProjectFormData;
     set: FormSetter;
     lookups: LookupData | null;
@@ -199,50 +214,94 @@ export function DetailsTab({ data, set, lookups, requiredKeys }: {
 }) {
     const req = (key: keyof ProjectFormData) => requiredKeys?.has(key) ?? false;
 
-    const fields: [string, string, string | null][] = [
+    const fields: [keyof ProjectFormData, string, string | null][] = [
         ['detailedDescription', 'Detailed project description', null],
         ['projectSummary', 'Project summary', null],
         ['projectUpdate', 'Project update', null],
         ['deliverables', 'Deliverables', null],
-        ['statePolicySupport', 'How it supports state policy', "How the project leads to technological advancement or breakthroughs to achieve the state's statutory energy goals."],
+        [
+            'statePolicySupport',
+            'How it supports state policy',
+            "How the project leads to technological advancement or breakthroughs to achieve the state's statutory energy goals.",
+        ],
         ['technicalBarriers', 'Technical barriers', 'How the project will overcome technical challenges.'],
-        ['marketBarriers', 'Market barriers', 'How the project addresses economic, social, environmental, political, and other non-technical barriers.'],
-        ['policyAndRegulatoryBarriers', 'Policy & regulatory barriers', 'Any policy and regulatory barriers to the adoption of the project or innovation.'],
-        ['gettingToScale', 'Getting to scale', 'What is needed to get the project to scale, next steps, or implementation by utilities.'],
-        ['keyInnovations', 'Key innovations', 'Key innovations anticipated at launch vs. state of the art in comparable technology.'],
-        ['keyLearnings', 'Key learnings', 'Key learnings and innovations realized from the project at completion.'],
-        ['scalability', 'Scalability', 'How well the innovation scales up or down and can be duplicated or adapted to other settings.'],
-        ['cyberSecurityNarrative', 'Cyber security narrative', 'Cybersecurity considerations confronted by the project and how they were addressed.'],
+        [
+            'marketBarriers',
+            'Market barriers',
+            'How the project addresses economic, social, environmental, political, and other non-technical barriers.',
+        ],
+        [
+            'policyAndRegulatoryBarriers',
+            'Policy & regulatory barriers',
+            'Any policy and regulatory barriers to the adoption of the project or innovation.',
+        ],
+        [
+            'gettingToScale',
+            'Getting to scale',
+            'What is needed to get the project to scale, next steps, or implementation by utilities.',
+        ],
+        [
+            'keyInnovations',
+            'Key innovations',
+            'Key innovations anticipated at launch vs. state of the art in comparable technology.',
+        ],
+        [
+            'keyLearnings',
+            'Key learnings',
+            'Key learnings and innovations realized from the project at completion.',
+        ],
+        [
+            'scalability',
+            'Scalability',
+            'How well the innovation scales up or down and can be duplicated or adapted to other settings.',
+        ],
+        [
+            'cyberSecurityNarrative',
+            'Cyber security narrative',
+            'Cybersecurity considerations confronted by the project and how they were addressed.',
+        ],
     ];
 
     return (
         <div className="grid grid-cols-1 gap-y-4">
             {/* ── Utility service areas ─────────────────────────────────────── */}
-            <Field label="Utility service areas" full required={req('utilityServiceAreaIds')}>
+            <Field
+                label="Utility service areas"
+                span="full"
+                required={req('utilityServiceAreaIds')}
+            >
                 <MultiSelectDropdown
                     value={data.utilityServiceAreaIds}
                     onChange={(v) => set('utilityServiceAreaIds', v)}
-                    options={(lookups?.utilityServiceAreas ?? []).map((u) => ({ value: u.id, label: u.name }))}
+                    options={(lookups?.utilityServiceAreas ?? []).map((u) => ({
+                        value: u.id,
+                        label: u.name,
+                    }))}
                     placeholder="Select utility service areas..."
                 />
             </Field>
 
             {fields.map(([key, label, tooltip]) => (
-                <Field key={key} label={label} tooltip={tooltip ?? undefined} full>
+                <Field
+                    key={String(key)}
+                    label={label}
+                    tooltip={tooltip ?? undefined}
+                    span="full"
+                >
                     <Textarea
                         placeholder={`Enter ${label.toLowerCase()}...`}
-                        value={data[key as keyof ProjectFormData] as string}
+                        value={(data[key] as string) ?? ''}
                         onChange={(e) => set(key, e.target.value)}
                     />
                 </Field>
             ))}
 
             {/* ── Final report ─────────────────────────────────────────────── */}
-            <Field label="Final report" full>
+            <Field label="Final report" span="full">
                 <FinalReportUpload
-                    storedKey={data.finalReportUrl}
+                    storedKey={(data.finalReportUrl as string) ?? ''}
                     pendingFile={data.pendingReportFile as File | null}
-                    markedForDeletion={data.reportMarkedForDeletion as boolean}
+                    markedForDeletion={Boolean(data.reportMarkedForDeletion)}
                     onPendingChange={(file, del) => {
                         set('pendingReportFile', file as FormValue);
                         set('reportMarkedForDeletion', del as FormValue);

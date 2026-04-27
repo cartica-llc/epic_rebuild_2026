@@ -11,13 +11,12 @@ import {
 
 interface QuickQueryVisualizationProps {
     activeQuery: string;
-    onCategoryFilter?: (category: string | null) => void;
     onClose?: () => void;
+    onCategoryFilter?: (category: string | null) => void;
 }
 
 export function QuickQueryVisualization({
                                             activeQuery,
-                                            onCategoryFilter,
                                             onClose,
                                         }: QuickQueryVisualizationProps) {
     if (!activeQuery) return null;
@@ -26,12 +25,16 @@ export function QuickQueryVisualization({
         switch (activeQuery) {
             case 'spending':
                 return <Insight_SpendingAnalysis />;
+
             case 'market':
                 return <Insight_StagesCommercialization />;
+
             case 'technology':
                 return <Insight_TechnologySearch />;
+
             case 'map':
                 return <Insight_LocationInsights />;
+
             default:
                 return (
                     <div className="py-12 text-center text-slate-500">
@@ -46,23 +49,31 @@ export function QuickQueryVisualization({
             case 'spending':
                 return {
                     title: 'Spending Analysis',
-                    description: 'Explore EPIC spending across time, administrators, plan periods, and investment areas.',
+                    description:
+                        'Explore EPIC spending across time, administrators, plan periods, and investment areas.',
                 };
+
             case 'market':
                 return {
                     title: 'Market Maturity Analysis',
-                    description: 'See where projects are in development and which ones show signs of being close to market.',
+                    description:
+                        'See where projects are in development and which ones show signs of being close to market.',
                 };
+
             case 'technology':
                 return {
                     title: 'Technology & Learnings Search',
-                    description: 'Search similar EPIC projects by topic, innovation, or barrier.',
+                    description:
+                        'Search similar EPIC projects by topic, innovation, or barrier.',
                 };
+
             case 'map':
                 return {
                     title: 'Project Map',
-                    description: 'Explore projects by location and see funding distribution across regions.',
+                    description:
+                        'Explore projects by location and see funding distribution across regions.',
                 };
+
             default:
                 return {
                     title: 'Quick Insights',
@@ -84,9 +95,14 @@ export function QuickQueryVisualization({
             <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white/50 backdrop-blur-sm">
                 <div className="flex items-center justify-between border-b-2 border-slate-200 px-6 py-4">
                     <div>
-                        <h3 className="text-lg font-bold text-slate-900">{headerInfo.title}</h3>
-                        <p className="mt-0.5 text-sm text-slate-600">{headerInfo.description}</p>
+                        <h3 className="text-lg font-bold text-slate-900">
+                            {headerInfo.title}
+                        </h3>
+                        <p className="mt-0.5 text-sm text-slate-600">
+                            {headerInfo.description}
+                        </p>
                     </div>
+
                     <motion.button
                         type="button"
                         onClick={onClose}
@@ -98,6 +114,7 @@ export function QuickQueryVisualization({
                         <X className="h-5 w-5" />
                     </motion.button>
                 </div>
+
                 <div className="px-1 sm:px-0">{renderInsightContent()}</div>
             </div>
         </motion.div>

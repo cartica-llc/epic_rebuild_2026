@@ -1,6 +1,9 @@
+// components/projects_page/projectsList/ProjectThumbnail.tsx
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useEffect, useMemo, useState } from 'react';
 
 function buildThumbnailKey(imageKey: string): string {
     if (!imageKey) return '';
@@ -18,40 +21,50 @@ export function ProjectThumbnail({
     className?: string;
     imageClassName?: string;
 }) {
-    // Derive null synchronously — no effect needed for the reset case
     const [src, setSrc] = useState<string | null>(null);
 
+    const thumbnailKey = useMemo(() => {
+        return imageKey ? buildThumbnailKey(imageKey) : '';
+    }, [imageKey]);
+
+    const displaySrc = thumbnailKey ? src : null;
+
     useEffect(() => {
-        const thumbnailKey = imageKey ? buildThumbnailKey(imageKey) : '';
-        if (!thumbnailKey) return; // nothing to fetch — src stays null
+        if (!thumbnailKey) return;
 
         let cancelled = false;
 
         fetch(`/api/projectImages/projectImagethumbnails?key=${encodeURIComponent(thumbnailKey)}`)
             .then((r) => r.json())
             .then((data) => {
-                if (!cancelled) setSrc(data?.url ?? null);
+                if (!cancelled) {
+                    setSrc(data?.url ?? null);
+                }
             })
             .catch(() => {
-                if (!cancelled) setSrc(null);
+                if (!cancelled) {
+                    setSrc(null);
+                }
             });
 
         return () => {
             cancelled = true;
-            setSrc(null); // reset on cleanup so stale src doesn't flash on imageKey change
         };
-    }, [imageKey]);
+    }, [thumbnailKey]);
 
     return (
         <div className={`relative h-full w-full overflow-hidden ${className}`}>
-            {src ? (
+            {displaySrc ? (
                 <>
-                    <img
-                        src={src}
+                    <Image
+                        src={displaySrc}
                         alt={alt}
-                        className={`absolute inset-0 h-full w-full object-cover rounded-xl overflow-hidden ${imageClassName}`}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className={`object-cover rounded-xl overflow-hidden ${imageClassName}`}
                         onError={() => setSrc(null)}
                     />
+
                     <div
                         className="pointer-events-none absolute inset-0"
                         style={{

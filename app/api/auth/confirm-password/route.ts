@@ -1,3 +1,5 @@
+//app/api/auth/confirm-password/route.ts
+
 import { NextResponse } from "next/server"
 import {
     CognitoIdentityProviderClient,
@@ -16,6 +18,20 @@ function computeSecretHash(username: string): string {
         .digest("base64")
 }
 
+function getErrorInfo(err: unknown): { name: string; message: string } {
+    if (err instanceof Error) {
+        return {
+            name: err.name,
+            message: err.message,
+        }
+    }
+
+    return {
+        name: "UnknownError",
+        message: "Unknown error",
+    }
+}
+
 export async function POST(req: Request) {
     const { email, code, newPassword } = await req.json()
 
@@ -29,9 +45,13 @@ export async function POST(req: Request) {
                 SecretHash: computeSecretHash(email),
             })
         )
+
         return NextResponse.json({ success: true })
-    } catch (err: any) {
-        console.error("ConfirmForgotPassword error:", err.name, err.message)
+    } catch (err: unknown) {
+        const { name, message } = getErrorInfo(err)
+
+        console.error("ConfirmForgotPassword error:", name, message)
+
         return NextResponse.json(
             { error: "Invalid code or password doesn't meet requirements." },
             { status: 400 }

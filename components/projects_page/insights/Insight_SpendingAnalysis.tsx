@@ -1,10 +1,6 @@
 'use client';
 
 import React from 'react';
-import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, Legend, ReferenceLine,
-} from 'recharts';
 import { ChevronDown, BarChart3 } from 'lucide-react';
 
 // ─── Types (matches Snowflake schema) ────────────────────────────────
@@ -41,7 +37,15 @@ const formatMoneyShort = (n: number) => {
     return `$${Math.round(n).toLocaleString()}`;
 };
 
-function SummaryCard({ label, value, subvalue }: { label: string; value: string; subvalue?: string }) {
+function SummaryCard({
+                         label,
+                         value,
+                         subvalue,
+                     }: {
+    label: string;
+    value: string;
+    subvalue?: string;
+}) {
     return (
         <div className="rounded-md border border-slate-200 bg-white p-4">
             <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
@@ -51,7 +55,13 @@ function SummaryCard({ label, value, subvalue }: { label: string; value: string;
     );
 }
 
-function PlaceholderSection({ title, description }: { title: string; description: string }) {
+function PlaceholderSection({
+                                title,
+                                description,
+                            }: {
+    title: string;
+    description: string;
+}) {
     return (
         <section className="rounded-md border border-slate-200 bg-white p-4 md:p-5">
             <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
@@ -71,27 +81,37 @@ export function Insight_SpendingAnalysis() {
     const [activeTab, setActiveTab] = React.useState<InsightTab>('spending');
 
     const rows = React.useMemo(
-        () => PROJECT_DATA.filter((r) => {
-            if (period !== 'All' && r.period !== period) return false;
-            if (area !== 'All' && !r.investmentAreas.includes(area)) return false;
-            return true;
-        }),
+        () =>
+            PROJECT_DATA.filter((r) => {
+                if (period !== 'All' && r.period !== period) return false;
+                if (area !== 'All' && !r.investmentAreas.includes(area)) return false;
+                return true;
+            }),
         [period, area],
     );
 
-    const totals = React.useMemo(() => ({
-        committed: rows.reduce((s, r) => s + r.committedAmount, 0),
-        contracted: rows.reduce((s, r) => s + r.contractedAmount, 0),
-        expended: rows.reduce((s, r) => s + r.expendedAmount, 0),
-        count: rows.length,
-    }), [rows]);
+    const totals = React.useMemo(
+        () => ({
+            committed: rows.reduce((s, r) => s + r.committedAmount, 0),
+            contracted: rows.reduce((s, r) => s + r.contractedAmount, 0),
+            expended: rows.reduce((s, r) => s + r.expendedAmount, 0),
+            count: rows.length,
+        }),
+        [rows],
+    );
 
     const primaryValue =
-        metric === 'Committed Amount' ? totals.committed
-            : metric === 'Contracted Amount' ? totals.contracted
+        metric === 'Committed Amount'
+            ? totals.committed
+            : metric === 'Contracted Amount'
+                ? totals.contracted
                 : totals.expended;
 
-    const reset = () => { setMetric('Committed Amount'); setPeriod('All'); setArea('All'); };
+    const reset = () => {
+        setMetric('Committed Amount');
+        setPeriod('All');
+        setArea('All');
+    };
 
     return (
         <div className="bg-white">
@@ -107,7 +127,12 @@ export function Insight_SpendingAnalysis() {
                                 Filters persist across every analysis tab. Adjust metric, period, or area to refine the view.
                             </p>
                         </div>
-                        <button onClick={reset} className="self-start rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-900">
+
+                        <button
+                            type="button"
+                            onClick={reset}
+                            className="self-start rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
+                        >
                             Reset filters
                         </button>
                     </div>
@@ -115,16 +140,53 @@ export function Insight_SpendingAnalysis() {
                     {/* Filter controls */}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         {([
-                            { value: metric, onChange: (v: string) => setMetric(v as MetricMode), label: 'Metric', options: [{ value: 'Committed Amount', label: 'Committed' }, { value: 'Contracted Amount', label: 'Contracted' }, { value: 'Expended Amount', label: 'Expended' }] },
-                            { value: period, onChange: setPeriod, label: 'EPIC Period', options: [{ value: 'All', label: 'All Periods' }, ...ALL_PERIODS.map((p) => ({ value: p, label: p }))] },
-                            { value: area, onChange: setArea, label: 'Investment Area', options: [{ value: 'All', label: 'All Areas' }, ...ALL_INVESTMENT_AREAS.map((a) => ({ value: a, label: a }))] },
+                            {
+                                value: metric,
+                                onChange: (v: string) => setMetric(v as MetricMode),
+                                label: 'Metric',
+                                options: [
+                                    { value: 'Committed Amount', label: 'Committed' },
+                                    { value: 'Contracted Amount', label: 'Contracted' },
+                                    { value: 'Expended Amount', label: 'Expended' },
+                                ],
+                            },
+                            {
+                                value: period,
+                                onChange: setPeriod,
+                                label: 'EPIC Period',
+                                options: [
+                                    { value: 'All', label: 'All Periods' },
+                                    ...ALL_PERIODS.map((p) => ({ value: p, label: p })),
+                                ],
+                            },
+                            {
+                                value: area,
+                                onChange: setArea,
+                                label: 'Investment Area',
+                                options: [
+                                    { value: 'All', label: 'All Areas' },
+                                    ...ALL_INVESTMENT_AREAS.map((a) => ({ value: a, label: a })),
+                                ],
+                            },
                         ] as const).map((f) => (
                             <div key={f.label}>
-                                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">{f.label}</label>
+                                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                                    {f.label}
+                                </label>
+
                                 <div className="relative">
-                                    <select value={f.value} onChange={(e) => f.onChange(e.target.value)} className="w-full appearance-none rounded-md border border-slate-200 bg-white px-3 py-2.5 pr-8 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200">
-                                        {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                    <select
+                                        value={f.value}
+                                        onChange={(e) => f.onChange(e.target.value)}
+                                        className="w-full appearance-none rounded-md border border-slate-200 bg-white px-3 py-2.5 pr-8 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                                    >
+                                        {f.options.map((o) => (
+                                            <option key={o.value} value={o.value}>
+                                                {o.label}
+                                            </option>
+                                        ))}
                                     </select>
+
                                     <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                 </div>
                             </div>
@@ -139,16 +201,23 @@ export function Insight_SpendingAnalysis() {
                             <BarChart3 className="h-4 w-4 text-slate-400" />
                             <span className="text-xs font-medium text-slate-500">Analysis view</span>
                         </div>
+
                         <div className="flex flex-wrap gap-2">
-                            {([
+                            {[
                                 { key: 'spending' as InsightTab, label: 'Spending Overview' },
                                 { key: 'leverage' as InsightTab, label: 'Leverage & Match' },
                                 { key: 'awards' as InsightTab, label: 'Award Size' },
                                 { key: 'community' as InsightTab, label: 'Community Requirements' },
-                            ]).map((tab) => (
+                            ].map((tab) => (
                                 <button
-                                    key={tab.key} type="button" onClick={() => setActiveTab(tab.key)}
-                                    className={`rounded-md px-4 py-2.5 text-sm font-medium transition ${activeTab === tab.key ? 'bg-slate-900 text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'}`}
+                                    key={tab.key}
+                                    type="button"
+                                    onClick={() => setActiveTab(tab.key)}
+                                    className={`rounded-md px-4 py-2.5 text-sm font-medium transition ${
+                                        activeTab === tab.key
+                                            ? 'bg-slate-900 text-white shadow-sm'
+                                            : 'border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+                                    }`}
                                 >
                                     {tab.label}
                                 </button>
@@ -156,8 +225,15 @@ export function Insight_SpendingAnalysis() {
                         </div>
                     </div>
                 </div>
+
                 <div className="absolute bottom-0 left-0 right-0 px-4 md:px-6">
-                    <div className="h-[2px] w-full" style={{ background: 'linear-gradient(90deg, transparent, #0f172a 8%, #64748b 40%, #cbd5e1 70%, transparent)' }} />
+                    <div
+                        className="h-[2px] w-full"
+                        style={{
+                            background:
+                                'linear-gradient(90deg, transparent, #0f172a 8%, #64748b 40%, #cbd5e1 70%, transparent)',
+                        }}
+                    />
                 </div>
             </div>
 
@@ -172,14 +248,41 @@ export function Insight_SpendingAnalysis() {
 
                 {activeTab === 'spending' && (
                     <div className="space-y-5">
-                        <PlaceholderSection title="Spending by investment area" description="Layered bars: committed, contracted, expended." />
-                        <PlaceholderSection title="Spending by EPIC period" description="Bar chart by period." />
-                        <PlaceholderSection title="Top project leads" description="Horizontal bar chart." />
+                        <PlaceholderSection
+                            title="Spending by investment area"
+                            description="Layered bars: committed, contracted, expended."
+                        />
+                        <PlaceholderSection
+                            title="Spending by EPIC period"
+                            description="Bar chart by period."
+                        />
+                        <PlaceholderSection
+                            title="Top project leads"
+                            description="Horizontal bar chart."
+                        />
                     </div>
                 )}
-                {activeTab === 'leverage' && <PlaceholderSection title="Leverage & Match Funding" description="Match funding, leveraged funds, and ratio." />}
-                {activeTab === 'awards' && <PlaceholderSection title="Award Size Distribution" description="Performance by award size band." />}
-                {activeTab === 'community' && <PlaceholderSection title="Community Requirements (DAC/LI)" description="DAC/LI share by period and investment area." />}
+
+                {activeTab === 'leverage' && (
+                    <PlaceholderSection
+                        title="Leverage & Match Funding"
+                        description="Match funding, leveraged funds, and ratio."
+                    />
+                )}
+
+                {activeTab === 'awards' && (
+                    <PlaceholderSection
+                        title="Award Size Distribution"
+                        description="Performance by award size band."
+                    />
+                )}
+
+                {activeTab === 'community' && (
+                    <PlaceholderSection
+                        title="Community Requirements (DAC/LI)"
+                        description="DAC/LI share by period and investment area."
+                    />
+                )}
             </div>
         </div>
     );

@@ -22,13 +22,19 @@ export function ProjectExport({ buildFilterParams }: ProjectExportProps) {
         params.delete('page');
         params.delete('limit');
         window.open(`/api/projectsList/export?${params}`, '_blank');
-        setTimeout(() => { setLoading(null); setShowModal(false); }, 1500);
+        setTimeout(() => {
+            setLoading(null);
+            setShowModal(false);
+        }, 1500);
     };
 
     const handleFullExport = () => {
         setLoading('all');
         window.open('/api/projectsList/exportAll', '_blank');
-        setTimeout(() => { setLoading(null); setShowModal(false); }, 1500);
+        setTimeout(() => {
+            setLoading(null);
+            setShowModal(false);
+        }, 1500);
     };
 
     return (
@@ -77,7 +83,9 @@ export function ProjectExport({ buildFilterParams }: ProjectExportProps) {
                                 </div>
 
                                 <div className="p-6">
-                                    <p className="mb-6 text-slate-600">Choose what you'd like to export:</p>
+                                    <p className="mb-6 text-slate-600">
+                                        Choose what you&apos;d like to export:
+                                    </p>
 
                                     <div className="space-y-3">
                                         <button

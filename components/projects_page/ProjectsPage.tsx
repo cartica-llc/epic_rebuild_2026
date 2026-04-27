@@ -8,15 +8,6 @@ import { ProjectsListContainer } from './projectsList/ProjectsListContainer';
 import { QuickQueryVisualization } from './QuickQueryVisualization';
 // import { ProjectsPageHeader } from './ProjectsPageHeader';
 
-/**
- * VIEW PARAM VALUES (defined in URL as ?view=<value>):
- *   - spending        → Insight_SpendingAnalysis
- *   - technology      → Insight_TechnologySearch
- *   - map             → Insight_LocationInsights
- *   - market          → Insight_StagesCommercialization
- *   - all-projects    → ProjectsList (default, no ?view param)
- */
-
 export function ProjectsPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -25,27 +16,19 @@ export function ProjectsPage() {
     const viewParam = searchParams.get('view');
     const searchParam = searchParams.get('search');
 
-    const [activePrefilter, setActivePrefilter] = useState('');
+    const [activePrefilter, setActivePrefilter] = useState(() =>
+        searchParam ? 'all-projects' : viewParam ?? 'all-projects',
+    );
+
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
 
-    // Hydrate from URL after mount (avoids SSR mismatch)
+    const [searchTerm, setSearchTerm] = useState(() => searchParam ?? '');
+
+    // Sync activePrefilter to URL when it changes.
     useEffect(() => {
-        if (searchParam) {
-            setSearchTerm(searchParam);
-            setActivePrefilter('all-projects');
-        } else {
-            setActivePrefilter(viewParam ?? 'all-projects');
-        }
-        // Only run once on mount
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+        if (!activePrefilter) return;
 
-    // Sync activePrefilter → URL (only when activePrefilter changes)
-    useEffect(() => {
-        if (!activePrefilter) return; // skip before hydration
-
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(window.location.search);
 
         if (activePrefilter !== 'all-projects') {
             params.set('view', activePrefilter);
@@ -53,15 +36,21 @@ export function ProjectsPage() {
             params.delete('view');
         }
 
-        const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+        const queryString = params.toString();
+        const nextUrl = queryString ? `${pathname}?${queryString}` : pathname;
+        const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+        if (nextUrl === currentUrl) {
+            return;
+        }
+
         router.replace(nextUrl, { scroll: false });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activePrefilter]);
+    }, [activePrefilter, pathname, router]);
 
     return (
         <div className="min-h-screen bg-white pb-16 pt-32">
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-                {/*<ProjectsPageHeader viewParam={viewParam} />*/}
+                {/* <ProjectsPageHeader viewParam={viewParam} /> */}
 
                 <div className="lg:flex lg:gap-6">
                     <aside className="lg:w-[280px] lg:flex-shrink-0">
@@ -74,15 +63,17 @@ export function ProjectsPage() {
 
                     <div className="flex min-w-0 flex-1 flex-col">
                         <AnimatePresence mode="wait">
-                            {activePrefilter && activePrefilter !== 'all-projects' && (
-                                <div className="mb-6">
-                                    <QuickQueryVisualization
-                                        activeQuery={activePrefilter}
-                                        onCategoryFilter={setCategoryFilter}
-                                        onClose={() => setActivePrefilter('all-projects')}
-                                    />
-                                </div>
-                            )}
+                            {activePrefilter &&
+                                activePrefilter !== 'all-projects' && (
+                                    <div className="mb-6">
+                                        <QuickQueryVisualization
+                                            activeQuery={activePrefilter}
+                                            onClose={() =>
+                                                setActivePrefilter('all-projects')
+                                            }
+                                        />
+                                    </div>
+                                )}
 
                             {activePrefilter === 'all-projects' && (
                                 <ProjectsListContainer

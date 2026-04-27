@@ -16,6 +16,20 @@ function computeSecretHash(username: string): string {
         .digest("base64")
 }
 
+function getErrorInfo(err: unknown): { name: string; message: string } {
+    if (err instanceof Error) {
+        return {
+            name: err.name,
+            message: err.message,
+        }
+    }
+
+    return {
+        name: "UnknownError",
+        message: "Unknown error",
+    }
+}
+
 export async function POST(req: Request) {
     const { email } = await req.json()
 
@@ -27,9 +41,13 @@ export async function POST(req: Request) {
                 SecretHash: computeSecretHash(email),
             })
         )
+
         return NextResponse.json({ success: true })
-    } catch (err: any) {
-        console.error("ForgotPassword error:", err.name, err.message)
+    } catch (err: unknown) {
+        const { name, message } = getErrorInfo(err)
+
+        console.error("ForgotPassword error:", name, message)
+
         return NextResponse.json(
             { error: "Unable to process request. Please try again." },
             { status: 400 }

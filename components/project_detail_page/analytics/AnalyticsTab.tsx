@@ -9,9 +9,7 @@ import {
     useProjectDetails,
 } from '../shared/useProjectData';
 import { AreaPanel } from './AreaPanel';
-import { CommPanel } from './CommPanel';
 import { DacPanel, MIN_DAC } from './DacPanel';
-import { FundingScores } from './FundingScores';
 
 type Props = {
     projectId: number | string;
@@ -24,7 +22,6 @@ export function AnalyticsTab({ projectId, cpucDac, cpucLi }: Props) {
     const detailsState = useProjectDetails(projectId);
     const financeState = useFinanceDetails(projectId);
 
-    // Still loading core analytics
     if (analyticsState.status === 'loading') {
         return (
             <div className="flex items-center justify-center py-24">
@@ -44,39 +41,16 @@ export function AnalyticsTab({ projectId, cpucDac, cpucLi }: Props) {
     const ctx = analyticsState.data;
     const areas =
         detailsState.status === 'ready' ? detailsState.data.investmentAreas : [];
+
     const committed =
         financeState.status === 'ready'
             ? financeState.data.commitedFundingAmt ?? 0
-            : 0;
-    const contracted =
-        financeState.status === 'ready'
-            ? financeState.data.contractAmount ?? 0
-            : 0;
-    const expended =
-        financeState.status === 'ready'
-            ? financeState.data.expendedToDate ?? 0
             : 0;
 
     const avg = ctx.tot.count > 0 ? ctx.tot.committed / ctx.tot.count : 0;
 
     return (
         <div className="space-y-16">
-            {/*<section>*/}
-            {/*    <STitle c="Funding Position" />*/}
-            {/*    <p className="mt-1 mb-6 text-sm text-slate-500">*/}
-            {/*        How this project&apos;s funding compares to the{' '}*/}
-            {/*        {ctx.tot.count.toLocaleString()}-project portfolio average*/}
-            {/*    </p>*/}
-            {/*    <FundingScores*/}
-            {/*        committed={committed}*/}
-            {/*        contracted={contracted}*/}
-            {/*        expended={expended}*/}
-            {/*        tot={ctx.tot}*/}
-            {/*    />*/}
-            {/*</section>*/}
-
-            {/*<HR />*/}
-
             {avg > 0 && (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-6 py-5">
                     <FieldLabel c="Portfolio Context" />
@@ -114,30 +88,6 @@ export function AnalyticsTab({ projectId, cpucDac, cpucLi }: Props) {
             )}
 
             <HR />
-
-            {/*<section>*/}
-            {/*    <STitle c="Commercialization Position" />*/}
-            {/*    <p className="mt-1 mb-6 text-sm text-slate-500">*/}
-            {/*        Market readiness and maturity pipeline*/}
-            {/*    </p>*/}
-            {/*    {ctx.commercialization ? (*/}
-            {/*        <CommPanel*/}
-            {/*            commercialization={ctx.commercialization}*/}
-            {/*            maturityCounts={ctx.maturityCounts}*/}
-            {/*            sameStageSignalCounts={ctx.sameStageSignalCounts}*/}
-            {/*        />*/}
-            {/*    ) : (*/}
-            {/*        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center">*/}
-            {/*            <p className="text-sm font-medium text-slate-500">*/}
-            {/*                No commercialization assessment available*/}
-            {/*            </p>*/}
-            {/*            <p className="mt-1 max-w-xs text-xs text-slate-400">*/}
-            {/*                Signal scores are available for projects in the*/}
-            {/*                commercialization dataset.*/}
-            {/*            </p>*/}
-            {/*        </div>*/}
-            {/*    )}*/}
-            {/*</section>*/}
 
             <HR />
 

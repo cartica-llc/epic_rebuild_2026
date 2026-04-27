@@ -1,7 +1,4 @@
 // ─── components/projects_page/projectsList/ProjectsListContainer.tsx ───
-// Data-fetching container: owns search, filters, pagination, export.
-// Syncs filter + search state to URL for shareable links.
-// Renders filter pills between toolbar and project list.
 
 'use client';
 
@@ -20,19 +17,37 @@ import { ProjectExport } from './ProjectsList_Export';
 import type { FilterValues, LookupData } from './ProjectsList_Filters';
 import type { Project } from './ProjectsList';
 
-const ITEMS_PER_PAGE = 100;
+// ─── Tuning knobs ─────────────────────────────────────────────────────
+const ITEMS_PER_PAGE   = 100;
+const INITIAL_VISIBLE  = 15;
+const INITIAL_DEFERRED = 85;
+
+const DEFERRED_LOAD_DELAY_MS = 3000;
 
 // ── Filter keys for URL sync ─────────────────────────────────────────
 const FILTER_PARAM_KEYS: (keyof FilterValues)[] = [
-    'investmentAreaId', 'projectTypeId', 'developmentStageId', 'status',
-    'programAdminId', 'investmentPeriodId', 'cpucProceedingId',
-    'businessClassId', 'utilityServiceId', 'assemblyDistrictId',
-    'senateDistrictId', 'contractMin', 'contractMax',
-    'disadvantaged', 'lowIncome', 'communityBenefits', 'inactiveFilter',
+    'investmentAreaId',
+    'projectTypeId',
+    'developmentStageId',
+    'status',
+    'programAdminId',
+    'investmentPeriodId',
+    'cpucProceedingId',
+    'businessClassId',
+    'utilityServiceId',
+    'assemblyDistrictId',
+    'senateDistrictId',
+    'contractMin',
+    'contractMax',
+    'disadvantaged',
+    'lowIncome',
+    'communityBenefits',
+    'inactiveFilter',
 ];
 
 function filtersFromUrl(sp: URLSearchParams): FilterValues {
     const f = { ...defaultFilters };
+
     for (const key of FILTER_PARAM_KEYS) {
         const val = sp.get(key);
         if (val !== null) {
@@ -43,25 +58,40 @@ function filtersFromUrl(sp: URLSearchParams): FilterValues {
             }
         }
     }
+
     return f;
 }
 
-function buildApiParams(page: number, search: string, filters: FilterValues, inactiveScopeAdminId?: string | null): URLSearchParams {
+function buildApiParams(
+    page: number,
+    search: string,
+    filters: FilterValues,
+    inactiveScopeAdminId?: string | null,
+    overrideLimit?: number,
+    overrideOffset?: number,
+): URLSearchParams {
+    const limit  = overrideLimit  ?? ITEMS_PER_PAGE;
+    const offset = overrideOffset ?? (page - 1) * ITEMS_PER_PAGE;
+
     const params = new URLSearchParams({
-        page: String(page),
-        limit: String(ITEMS_PER_PAGE),
+        page:     String(page),
+        limit:    String(limit),
+        offset:   String(offset),
+        pageSize: String(ITEMS_PER_PAGE),
     });
+
     if (search.trim()) params.set('search', search.trim());
+
     const fp = filtersToParams(filters);
     for (const [key, value] of Object.entries(fp)) params.set(key, value);
-    // Scope inactive results to a specific program admin org (ProgramAdmin role)
+
     if (filters.inactiveFilter && inactiveScopeAdminId) {
         params.set('inactiveScope', inactiveScopeAdminId);
     }
+
     return params;
 }
 
-// ─── Props ───────────────────────────────────────────────────────────
 interface ProjectsListContainerProps {
     categoryFilter?: string | null;
     onClearFilter?: () => void;
@@ -75,104 +105,184 @@ export function ProjectsListContainer({
                                           searchTerm = '',
                                           onSearchTermChange,
                                       }: ProjectsListContainerProps) {
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+    const router        = useRouter();
+    const pathname      = usePathname();
+    const searchParams  = useSearchParams();
     const { data: session } = useSession();
 
-    // Admin visibility
     const userGroups: string[] = (session?.user as { groups?: string[] })?.groups ?? [];
     const userOrg: string | null = (session?.user as { organization?: string | null })?.organization ?? null;
-    const isMasterAdmin = userGroups.includes('MasterAdmin');
-    const isProgramAdmin = userGroups.includes('ProgramAdmin');
+    const isMasterAdmin   = userGroups.includes('MasterAdmin');
+    const isProgramAdmin  = userGroups.includes('ProgramAdmin');
     const canViewInactive = isMasterAdmin || isProgramAdmin;
 
-    const inactiveScopeAdminId: string | null = isProgramAdmin && !isMasterAdmin ? (userOrg ?? null) : null;
+    const inactiveScopeAdminId: string | null =
+        isProgramAdmin && !isMasterAdmin ? userOrg ?? null : null;
 
-    // Hydrate from URL
-    const [filters, setFilters] = useState<FilterValues>(() => filtersFromUrl(searchParams));
-    const [inputValue, setInputValue] = useState(searchParams.get('search') ?? searchTerm);
-    const [searchKeyword, setSearchKeyword] = useState(searchParams.get('search') ?? searchTerm);
-
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [filters,        setFilters]       = useState<FilterValues>(() => filtersFromUrl(searchParams));
+    const [inputValue,     setInputValue]    = useState(searchParams.get('search') ?? searchTerm);
+    const [searchKeyword,  setSearchKeyword] = useState(searchParams.get('search') ?? searchTerm);
+    const [projects,    setProjects]    = useState<Project[]>([]);
+    const [loading,     setLoading]     = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
-
-    // Cached lookups for pill labels
+    const [totalPages,  setTotalPages]  = useState(1);
+    const [totalCount,  setTotalCount]  = useState(0);
     const [lookups, setLookups] = useState<LookupData | null>(null);
-
-    const isInitialMount = useRef(true);
-    const prevSearchTerm = useRef(searchTerm);
+    const isFirstFetch          = useRef(true);
+    const isInitialMount        = useRef(true);
+    const prevSearchTerm        = useRef(searchTerm);
     const onSearchTermChangeRef = useRef(onSearchTermChange);
-    onSearchTermChangeRef.current = onSearchTermChange;
 
-    // Fetch lookups once (for filter pill display names)
     useEffect(() => {
-        if (lookups) return;
+        onSearchTermChangeRef.current = onSearchTermChange;
+    }, [onSearchTermChange]);
+
+    useEffect(() => {
+        let cancelled = false;
+
         fetch('/api/projectsList/lookups')
             .then((r) => r.json())
-            .then((data) => { if (!data.error) setLookups(data); })
+            .then((data) => {
+                if (!cancelled && !data.error) setLookups(data);
+            })
             .catch(console.error);
-    }, [lookups]);
 
-    // Sync external searchTerm prop → local input (only on external change)
-    if (searchTerm !== prevSearchTerm.current) {
+        return () => { cancelled = true; };
+    }, []);
+
+    useEffect(() => {
+        if (searchTerm === prevSearchTerm.current) return;
         prevSearchTerm.current = searchTerm;
-        setInputValue(searchTerm);
-    }
 
-    // Debounced search — also notifies parent via ref callback (avoids setState-in-effect)
+        const frame = window.requestAnimationFrame(() => setInputValue(searchTerm));
+        return () => window.cancelAnimationFrame(frame);
+    }, [searchTerm]);
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setSearchKeyword(inputValue);
             onSearchTermChangeRef.current?.(inputValue);
         }, 300);
+
         return () => clearTimeout(timer);
     }, [inputValue]);
 
-    // Sync state → URL (skip first render)
     useEffect(() => {
-        if (isInitialMount.current) { isInitialMount.current = false; return; }
-        const params = new URLSearchParams(searchParams.toString());
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
         params.delete('search');
         for (const key of FILTER_PARAM_KEYS) params.delete(key);
+
         if (searchKeyword.trim()) params.set('search', searchKeyword.trim());
+
         const fp = filtersToParams(filters);
         for (const [key, value] of Object.entries(fp)) params.set(key, value);
-        const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-        router.replace(nextUrl, { scroll: false });
-    }, [searchKeyword, filters]);
 
-    // Fetch projects
-    const fetchProjects = useCallback((page: number, search: string, f: FilterValues) => {
-        setLoading(true);
-        fetch(`/api/projectsList?${buildApiParams(page, search, f, inactiveScopeAdminId)}`)
-            .then((r) => r.json())
-            .then((data) => {
-                if (data.projects && Array.isArray(data.projects)) {
-                    setProjects(data.projects);
-                    setTotalPages(data.totalPages ?? 1);
-                    setTotalCount(data.total ?? 0);
-                }
-            })
-            .catch(console.error)
-            .finally(() => setLoading(false));
-    }, []);
+        const queryString = params.toString();
+        const nextUrl    = queryString ? `${pathname}?${queryString}` : pathname;
+        const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+        if (nextUrl !== currentUrl) {
+            router.replace(nextUrl, { scroll: false });
+        }
+    }, [searchKeyword, filters, pathname, router]);
+
+    const fetchProjects = useCallback(
+        async (
+            page: number,
+            search: string,
+            f: FilterValues,
+            overrideLimit?: number,
+            overrideOffset?: number,
+        ) => {
+            const res = await fetch(
+                `/api/projectsList?${buildApiParams(page, search, f, inactiveScopeAdminId, overrideLimit, overrideOffset)}`,
+            );
+            return res.json();
+        },
+        [inactiveScopeAdminId],
+    );
 
     useEffect(() => {
-        fetchProjects(currentPage, searchKeyword, filters);
+        let cancelled = false;
+
+        const frame = window.requestAnimationFrame(() => {
+            setLoading(true);
+
+            const useProgressiveLoad = isFirstFetch.current && currentPage === 1;
+            isFirstFetch.current = false;
+
+            if (useProgressiveLoad) {
+                void fetchProjects(1, searchKeyword, filters, INITIAL_VISIBLE, 0)
+                    .then((data) => {
+                        if (cancelled) return;
+
+                        if (data.projects && Array.isArray(data.projects)) {
+                            setProjects(data.projects);
+                            setTotalPages(data.totalPages ?? 1);
+                            setTotalCount(data.total ?? 0);
+                        }
+
+                        setLoading(false);
+
+                        return new Promise<void>((resolve) => {
+                            setTimeout(resolve, DEFERRED_LOAD_DELAY_MS);
+                        }).then(() => {
+                            if (cancelled) return;
+                            return fetchProjects(1, searchKeyword, filters, INITIAL_DEFERRED, INITIAL_VISIBLE);
+                        });
+                    })
+                    .then((data) => {
+                        if (cancelled || !data) return;
+
+                        if (data.projects && Array.isArray(data.projects)) {
+                            // Functional update avoids racing on stale prev state
+                            setProjects((prev) => [...prev, ...data.projects]);
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                void fetchProjects(currentPage, searchKeyword, filters)
+                    .then((data) => {
+                        if (cancelled) return;
+
+                        if (data.projects && Array.isArray(data.projects)) {
+                            setProjects(data.projects);
+                            setTotalPages(data.totalPages ?? 1);
+                            setTotalCount(data.total ?? 0);
+                        }
+                    })
+                    .catch(console.error)
+                    .finally(() => {
+                        if (!cancelled) setLoading(false);
+                    });
+            }
+        });
+
+        return () => {
+            cancelled = true;
+            window.cancelAnimationFrame(frame);
+        };
     }, [currentPage, searchKeyword, filters, fetchProjects]);
 
-    useEffect(() => { setCurrentPage(1); }, [searchKeyword, categoryFilter, filters]);
+    useEffect(() => {
+        const frame = window.requestAnimationFrame(() => {
+            isFirstFetch.current = true;
+            setCurrentPage(1);
+        });
+
+        return () => window.cancelAnimationFrame(frame);
+    }, [searchKeyword, categoryFilter, filters]);
 
     const buildFilterParams = useCallback(
         () => buildApiParams(1, searchKeyword, filters, inactiveScopeAdminId),
-        [searchKeyword, filters, inactiveScopeAdminId]
+        [searchKeyword, filters, inactiveScopeAdminId],
     );
 
-    // Remove a single filter
     const handleRemoveFilter = (key: keyof FilterValues) => {
         setFilters((prev) => ({
             ...prev,
@@ -180,7 +290,6 @@ export function ProjectsListContainer({
         }));
     };
 
-    // ── Toolbar ──
     const toolbar = (
         <>
             <div className="relative flex-1">
@@ -194,12 +303,17 @@ export function ProjectsListContainer({
                 />
             </div>
 
-            <ProjectFilters filters={filters} onFiltersChange={setFilters} canViewInactive={canViewInactive} />
+            <ProjectFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+                canViewInactive={canViewInactive}
+            />
+
             <ProjectExport buildFilterParams={buildFilterParams} />
         </>
     );
 
-    // ── Filter pills ──
+    // ── Filter pills ─────────────────────────────────────────────────
     const filterPills = (
         <FilterPills
             filters={filters}
@@ -209,14 +323,22 @@ export function ProjectsListContainer({
         />
     );
 
+    // ── Inactive banner ──────────────────────────────────────────────
     const inactiveBanner = filters.inactiveFilter ? (
         <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             <EyeOff className="h-4 w-4 shrink-0 text-amber-600" />
             <span>
-                {filters.inactiveFilter === 'all'
-                    ? <><strong>All projects</strong> — including unpublished. {inactiveScopeAdminId ? 'Scoped to your organization.' : ''}</>
-                    : <><strong>Unpublished projects only</strong> — hidden from the public. {inactiveScopeAdminId ? 'Scoped to your organization.' : ''}</>
-                }
+                {filters.inactiveFilter === 'all' ? (
+                    <>
+                        <strong>All projects</strong> — including unpublished.{' '}
+                        {inactiveScopeAdminId ? 'Scoped to your organization.' : ''}
+                    </>
+                ) : (
+                    <>
+                        <strong>Unpublished projects only</strong> — hidden from the public.{' '}
+                        {inactiveScopeAdminId ? 'Scoped to your organization.' : ''}
+                    </>
+                )}
             </span>
         </div>
     ) : null;
@@ -224,6 +346,7 @@ export function ProjectsListContainer({
     return (
         <>
             {inactiveBanner}
+
             <ProjectsList
                 projects={projects}
                 loading={loading}

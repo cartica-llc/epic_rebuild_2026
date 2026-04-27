@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Loader2 } from 'lucide-react';
@@ -35,6 +35,19 @@ import { StageInfoModal } from './StageInfoModal';
 import { getEntryRequiredFormKeys, validateEntryStage } from './stageRequirements';
 import { useProjectNumberCheck } from './Useprojectnumbercheck';
 import type { LookupItem } from './types';
+
+// ─── Helpers ─────────────────────────────────────────────────────────
+
+type SavePayload = Omit<ProjectFormData, 'pendingReportFile' | 'reportMarkedForDeletion'>;
+
+function omitSaveOnlyFields(data: ProjectFormData): SavePayload {
+    const copy: Partial<ProjectFormData> = { ...data };
+
+    delete copy.pendingReportFile;
+    delete copy.reportMarkedForDeletion;
+
+    return copy as SavePayload;
+}
 
 // ─── Main Component ──────────────────────────────────────────────────
 
@@ -220,7 +233,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
         if (val === '' || val === null || val === undefined) return '(empty)';
         if (typeof val === 'boolean') return val ? 'Yes' : 'No';
         if (Array.isArray(val)) return resolveMultiNames(key, val);
-        if (typeof val === 'object' && val !== null && 'name' in val) return (val as { name: string }).name;
+        if (val && typeof val === 'object' && 'name' in val) return (val as { name: string }).name;
 
         if (
             [
@@ -281,7 +294,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
 
             if (Array.isArray(oldVal) && Array.isArray(newVal)) {
                 changed = JSON.stringify([...oldVal].sort()) !== JSON.stringify([...newVal].sort());
-            } else if (typeof oldVal === 'object' && typeof newVal === 'object') {
+            } else if (oldVal && newVal && typeof oldVal === 'object' && typeof newVal === 'object') {
                 changed = JSON.stringify(oldVal) !== JSON.stringify(newVal);
             } else {
                 changed = String(oldVal ?? '') !== String(newVal ?? '');
@@ -304,10 +317,9 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
     const executeSave = async () => {
         setPendingChanges(null);
 
-        const currentAdminId = effectiveProgramAdminId;
-        if (currentAdminId === null) return;
+        if (effectiveProgramAdminId === null) return;
 
-        const prefix = prefixForAdminId(currentAdminId);
+        const prefix = prefixForAdminId(effectiveProgramAdminId);
         const fullProjectNumber = data.projectNumber.trim() ? `${prefix}-${data.projectNumber.trim()}` : '';
 
         setSaveOverlay({ phase: 'saving' });
@@ -316,7 +328,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
             const url = mode === 'create' ? '/api/projectCreate' : `/api/projectEdit/${projectId}`;
             const method = mode === 'create' ? 'POST' : 'PUT';
 
-            const { pendingReportFile: _prf, reportMarkedForDeletion: _rmd, ...savePayload } = effectiveData;
+            const savePayload = omitSaveOnlyFields(effectiveData);
 
             const res = await fetch(url, {
                 method,
@@ -324,7 +336,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                 body: JSON.stringify({
                     ...savePayload,
                     projectNumber: fullProjectNumber,
-                    programAdminId: currentAdminId,
+                    programAdminId: effectiveProgramAdminId,
                 }),
             });
 
@@ -455,8 +467,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
             return;
         }
 
-        const currentAdminId = effectiveProgramAdminId;
-        if (currentAdminId === null) {
+        if (effectiveProgramAdminId === null) {
             setError('Program administrator is required.');
             return;
         }
@@ -507,20 +518,29 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
 
             if (data.pendingReportFile) {
                 const file = data.pendingReportFile as File;
-                changes.push({ label: 'Final Report', from: data.finalReportUrl || '(none)', to: `Upload: ${file.name}` });
+                changes.push({
+                    label: 'Final Report',
+                    from: data.finalReportUrl || '(none)',
+                    to: `Upload: ${file.name}`,
+                });
             } else if (data.reportMarkedForDeletion as boolean) {
-                changes.push({ label: 'Final Report', from: data.finalReportUrl || '(none)', to: '(removed)' });
+                changes.push({
+                    label: 'Final Report',
+                    from: data.finalReportUrl || '(none)',
+                    to: '(removed)',
+                });
             }
 
             if (changes.length === 0) {
                 setError('No changes detected.');
                 return;
             }
+
             setPendingChanges(changes);
             return;
         }
 
-        executeSave();
+        void executeSave();
     };
 
     // ── Loading state ──
@@ -536,15 +556,15 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
 
     // ── Tab content ──
 
-    const tabContent: Record<string, React.ReactNode> = {
+    const tabContent: Record<string, ReactNode> = {
         project: (
             <ProjectTab
                 data={effectiveData}
-                set={set}
+                setAction={set}
                 lookups={lookups}
                 isMaster={isMaster}
                 lockedPrefix={lockedPrefix}
-                onAddCompany={() => {
+                onAddCompanyAction={() => {
                     setAddCompanyContext('lead');
                     setShowAddCompany(true);
                 }}
@@ -586,9 +606,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
 
     return (
         <div className="min-h-screen bg-slate-50">
-            {/* MOBILE: px-4 on mobile → px-6 on sm+ */}
             <div className="mt-6 mx-auto max-w-5xl px-4 sm:px-6 py-8 overflow-hidden">
-
                 <div className="mb-6 flex items-center gap-3">
                     <button
                         type="button"
@@ -609,7 +627,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                             <polyline points="12 19 5 12 12 5" />
                         </svg>
                     </button>
-                    {/* MOBILE: slightly smaller heading on mobile */}
+
                     <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
                         {mode === 'create' ? 'Create Project' : 'Edit Project'}
                     </h1>
@@ -632,7 +650,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                     showDanger={mode === 'edit'}
                 />
 
-                {/* MOBILE: p-4 on mobile → p-6 on sm+ */}
                 <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
                     {tabContent[activeTab]}
                 </div>
@@ -644,10 +661,6 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                     showDanger={mode === 'edit'}
                 />
 
-                {/*
-                    MOBILE: stack buttons vertically (col-reverse puts Save on top),
-                    full-width each; on sm+ revert to right-aligned row.
-                */}
                 <div className="mt-6 pb-8 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
                     <button
                         type="button"
@@ -656,6 +669,7 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                     >
                         Cancel
                     </button>
+
                     <button
                         onClick={handleSave}
                         disabled={saveOverlay?.phase === 'saving'}
@@ -689,7 +703,9 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                 <PendingChangesDialog
                     changes={pendingChanges}
                     isSaving={saveOverlay?.phase === 'saving'}
-                    onConfirm={executeSave}
+                    onConfirm={() => {
+                        void executeSave();
+                    }}
                     onCancel={() => setPendingChanges(null)}
                 />
             )}

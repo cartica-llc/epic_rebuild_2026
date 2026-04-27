@@ -1,18 +1,19 @@
 'use client';
 
 import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
+import { motion, useScroll, useTransform, type MotionValue } from 'motion/react';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 type ChartDatum = {
     name: string;
     value: number;
+    fill: string;
 };
 
 const data: ChartDatum[] = [
-    { name: 'Q1', value: 2400 },
-    { name: 'Q2', value: 1900 },
-    { name: 'Q3', value: 900 },
+    { name: 'Q1', value: 2400, fill: 'url(#slateGradientMedium)' },
+    { name: 'Q2', value: 1900, fill: 'url(#slateGradientLight)' },
+    { name: 'Q3', value: 900, fill: 'url(#slateGradientDark)' },
 ];
 
 type AnimatedBarShapeProps = {
@@ -22,7 +23,34 @@ type AnimatedBarShapeProps = {
     width?: number;
     height?: number;
     payload?: ChartDatum;
+    barTransforms: MotionValue<number>[];
 };
+
+function AnimatedBarShape({
+                              fill,
+                              x = 0,
+                              y = 0,
+                              width = 0,
+                              height = 0,
+                              payload,
+                              barTransforms,
+                          }: AnimatedBarShapeProps) {
+    const index = data.findIndex((d) => d.name === payload?.name);
+    const transformY = barTransforms[index] ?? barTransforms[0];
+
+    return (
+        <motion.rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill={payload?.fill ?? fill}
+            rx={12}
+            ry={12}
+            style={{ y: transformY }}
+        />
+    );
+}
 
 export function HeroChart() {
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -40,24 +68,6 @@ export function HeroChart() {
     const chartOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0.6, 1, 1, 0.6]);
 
     const barTransforms = [bar0Y, bar1Y, bar2Y];
-
-    const AnimatedBarShape = ({ fill, x = 0, y = 0, width = 0, height = 0, payload }: AnimatedBarShapeProps) => {
-        const index = data.findIndex((d) => d.name === payload?.name);
-        const transformY = barTransforms[index] ?? bar0Y;
-
-        return (
-            <motion.rect
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-                fill={fill}
-                rx={12}
-                ry={12}
-                style={{ y: transformY }}
-            />
-        );
-    };
 
     return (
         <div
@@ -105,7 +115,11 @@ export function HeroChart() {
                     style={{ minHeight: '600px' }}
                 >
                     <ResponsiveContainer width="100%" height="100%" minHeight={600}>
-                        <BarChart data={data} margin={{ top: 40, right: 20, left: 20, bottom: 40 }} className="md:!mx-10">
+                        <BarChart
+                            data={data}
+                            margin={{ top: 40, right: 20, left: 20, bottom: 40 }}
+                            className="md:!mx-10"
+                        >
                             <defs>
                                 <linearGradient id="slateGradientLight" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="#94a3b8" stopOpacity={0.92} />
@@ -129,20 +143,16 @@ export function HeroChart() {
                             <XAxis dataKey="name" hide />
                             <YAxis hide />
 
-                            <Bar dataKey="value" maxBarSize={360} shape={<AnimatedBarShape />}>
-                                {data.map((entry, index) => (
-                                    <Cell
-                                        key={`bar-cell-${entry.name}-${index}`}
-                                        fill={
-                                            index === 0
-                                                ? 'url(#slateGradientMedium)'
-                                                : index === 1
-                                                    ? 'url(#slateGradientLight)'
-                                                    : 'url(#slateGradientDark)'
-                                        }
+                            <Bar
+                                dataKey="value"
+                                maxBarSize={360}
+                                shape={(props) => (
+                                    <AnimatedBarShape
+                                        {...props}
+                                        barTransforms={barTransforms}
                                     />
-                                ))}
-                            </Bar>
+                                )}
+                            />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
