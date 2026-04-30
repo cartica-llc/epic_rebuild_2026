@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { HeroChart } from './HeroChart';
 import { KPICards } from './KPICards';
-import { SearchAndFilter } from './SearchAndFilter';
+import { SearchAndFilter_Home } from './SearchAndFilter_Home';
 
 export function Hero() {
     const { scrollY } = useScroll();
@@ -39,7 +39,7 @@ export function Hero() {
                 <div className="px-4 pb-8 sm:px-6 lg:px-8">
                     <div className="mx-auto w-full max-w-7xl">
                         <KPICards />
-                        <SearchAndFilter />
+                        <SearchAndFilter_Home />
                     </div>
                 </div>
             </div>

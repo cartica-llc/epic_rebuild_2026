@@ -1,5 +1,3 @@
-// components/projects_page/projectsList/ProjectCard.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -60,6 +58,7 @@ const BLUR_MASK_STYLE = {
     maskComposite: 'intersect',
     WebkitMaskComposite: 'source-in',
 };
+
 function formatAmount(amount?: string) {
     if (!amount) return '—';
 
@@ -122,27 +121,27 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
     return (
         <div
             onClick={handleOpenProject}
-            className="group cursor-pointer  border border-slate-200 bg-white p-4 transition-all duration-200 hover:border-slate-300 hover:shadow-md"
+            className="group cursor-pointer border border-slate-200 bg-white p-4 transition-all duration-200 hover:border-slate-300 hover:shadow-md"
         >
             <div className="flex items-stretch gap-4">
                 {/* Left content */}
-                <div className="min-w-0 flex-1 py-1">
+                <div className="min-w-0 flex-1 overflow-hidden py-1">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500">
                             {project.status && (
                                 <span
-                                    className={`h-1.5 w-1.5 rounded-full ${statusStyles.dot}`}
+                                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusStyles.dot}`}
                                 />
                             )}
-                            <span>{projectCode}</span>
+                            <span className="truncate">{projectCode}</span>
                         </span>
 
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                             {organizationShort}
                         </span>
 
                         {investmentProgramPeriod && (
-                            <span className="rounded-full bg-sky-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+                            <span className="shrink-0 rounded-full bg-sky-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
                                 {investmentProgramPeriod}
                             </span>
                         )}
@@ -153,13 +152,13 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                     </h3>
 
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
-                        <span>{projectLead}</span>
+                        <span className="truncate">{projectLead}</span>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+                    <div className="mt-3 flex items-center">
+                        <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600">
                             <AreaChartIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                            <span className="max-w-[220px] truncate">
+                            <span className="min-w-0 truncate">
                                 {investmentArea}
                             </span>
                         </span>
@@ -167,7 +166,7 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                 </div>
 
                 {/* Right visual panel */}
-                <div className="relative w-[30%] min-w-[120px] max-w-[520px] shrink-0 self-stretch md:w-[35%] md:min-w-[280px]">
+                <div className="relative w-[30%] max-w-[520px] shrink-0 self-stretch md:w-[35%] md:min-w-[280px]">
                     {canEdit && (
                         <button
                             type="button"
@@ -180,7 +179,7 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                     )}
 
                     <div
-                        className="relative h-full min-h-[120px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+                        className="relative h-full min-h-[80px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 md:min-h-[120px]"
                         style={CARD_BG_STYLE}
                     >
                         <ProjectThumbnail
@@ -191,7 +190,7 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                         />
 
                         <div
-                            className="absolute right-0 bottom-0 left-0 z-10 flex items-end justify-end px-4 py-3 md:px-5 md:py-4"
+                            className="absolute right-0 bottom-0 left-0 z-10 flex items-end justify-end px-3 py-2 md:px-5 md:py-4"
                             onMouseEnter={() => setIsAmountHovered(true)}
                             onMouseLeave={() => setIsAmountHovered(false)}
                         >
@@ -204,7 +203,7 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                                 <div className="hidden text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-700/80">
                                     Committed
                                 </div>
-                                <div className="mt-1 text-[24px] leading-none font-semibold text-slate-950 drop-shadow-sm md:text-[36px]">
+                                <div className="mt-1 text-[18px] leading-none font-semibold text-slate-950 drop-shadow-sm md:text-[36px]">
                                     {committedDisplay}
                                 </div>
                             </div>

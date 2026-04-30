@@ -99,7 +99,7 @@ export function OverviewTab({ project }: Props) {
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_260px]">
                 <div>
                     <FieldLabel c="Summary" />
-                    <Txt text={details.projectSummary} n={10} />
+                    <Txt text={details.projectSummary} n={20} />
                 </div>
 
                 <div className="space-y-7 lg:border-l lg:border-slate-200 lg:pl-8">

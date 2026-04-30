@@ -3,7 +3,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { has } from './format';
 
 export function Chip({ l }: { l: string }) {
@@ -25,10 +25,6 @@ export function Chips({ items }: { items?: string[] }) {
     );
 }
 
-/**
- * Chips that become clickable links when `hrefFor(label)` returns a URL.
- * Returns null to render a given chip as a plain (non-clickable) chip.
- */
 export function LinkChips({
                               items,
                               hrefFor,
@@ -72,20 +68,38 @@ export function Txt({
     ph?: string;
 }) {
     const [open, setOpen] = useState(false);
+    const [clamped, setClamped] = useState(false);
+    const ref = useRef<HTMLParagraphElement>(null);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        setClamped(el.scrollHeight > el.clientHeight);
+    }, [text, n]);
+
     if (!has(text)) {
         return <p className="text-sm italic text-slate-400">{ph}</p>;
     }
+
+    const clampStyle = open
+        ? {}
+        : {
+            display: '-webkit-box',
+            WebkitLineClamp: n,
+            WebkitBoxOrient: 'vertical' as const,
+            overflow: 'hidden',
+        };
+
     return (
         <div>
             <p
-                className={[
-                    'whitespace-pre-line text-[15px] leading-[1.8] text-slate-600',
-                    open ? '' : `line-clamp-${n}`,
-                ].join(' ')}
+                ref={ref}
+                className="whitespace-pre-line text-[15px] leading-[1.8] text-slate-600"
+                style={clampStyle}
             >
                 {text}
             </p>
-            {text && text.length > 260 && (
+            {clamped && (
                 <button
                     type="button"
                     onClick={() => setOpen((p) => !p)}

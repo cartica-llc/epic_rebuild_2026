@@ -2,7 +2,7 @@
 
 'use client';
 
-import type { MasterDashboardBannerStats } from '@/app/(dashboard)/dashboard/master/page';
+import type { MasterDashboardBannerStats } from './types';
 
 export function MasterDashboardSummaryBanner({ stats }: { stats: MasterDashboardBannerStats }) {
     return (

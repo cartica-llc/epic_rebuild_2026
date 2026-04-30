@@ -16,11 +16,7 @@ function safeIntOrNull(v: unknown): string {
     const n = parseInt(String(v), 10);
     return isNaN(n) ? 'NULL' : String(n);
 }
-// function safeFloatOrNull(v: unknown): string {
-//     if (v === '' || v === null || v === undefined) return 'NULL';
-//     const n = parseFloat(String(v).replace(/[$,]/g, ''));
-//     return isNaN(n) ? 'NULL' : String(n);
-// }
+
 function safeDateOrNull(v: unknown): string {
     if (!v || v === '') return 'NULL';
     return `'${safeStr(v)}'`;

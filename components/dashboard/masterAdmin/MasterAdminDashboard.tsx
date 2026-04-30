@@ -6,7 +6,7 @@ import { MasterDashboardSummaryBanner } from './MasterDashboardSummaryBanner';
 import { MasterDashboardProjectTabs } from './MasterDashboardProjectTabs';
 import { QuickActions } from './QuickActions';
 import type { QuickAction } from './QuickActionLink';
-import type { MasterDashboardData } from '@/app/(dashboard)/dashboard/master/page';
+import type { MasterDashboardData } from './types';
 
 const quickActions: QuickAction[] = [
     { label: 'Manage Users', href: '/dashboard/master/users', icon: 'users' },
@@ -23,7 +23,7 @@ interface Props {
 export function MasterAdminDashboard({ userName, userEmail, data }: Props) {
     return (
         <main className="mx-auto mt-6 max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8">
-            {/* Header */}
+
             <div className="mb-8 flex items-center justify-between gap-4 pt-20 ">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">{userName}</h1>
@@ -38,7 +38,6 @@ export function MasterAdminDashboard({ userName, userEmail, data }: Props) {
                 {/* Banner spans full width */}
                 <MasterDashboardSummaryBanner stats={data.bannerStats} />
 
-                {/* Stacked on small/medium, 2-column on large+ (tabs take 2/3, quick actions 1/3) */}
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-2">
                         <MasterDashboardProjectTabs

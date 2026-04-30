@@ -2,7 +2,7 @@
 
 'use client';
 
-import type { DashboardKPIs } from '@/app/(dashboard)/dashboard/program/page';
+import type { DashboardKPIs } from './types';
 
 function formatCurrency(amount: number): string {
     if (amount >= 1_000_000_000) return `$${(amount / 1_000_000_000).toFixed(1)}B`;

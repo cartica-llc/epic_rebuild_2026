@@ -8,7 +8,7 @@ import { DashboardKPIGrid } from './DashboardKPIGrid';
 import { DashboardSummaryBanner } from './DashboardSummaryBanner';
 import { DashboardProjectTabs } from './DashboardProjectTabs';
 import { DashboardQuickActions } from './DashboardQuickActions';
-import type { DashboardData } from '@/app/(dashboard)/dashboard/program/page';
+import type { DashboardData } from './types';
 
 
 const ADMIN_LOGOS: Record<number, { src: string; alt: string; width: number; height: number }> = {
