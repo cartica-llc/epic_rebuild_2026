@@ -247,11 +247,11 @@ export function MapVisualization({
                     Map unavailable
                 </h4>
                 <p className="mt-1 text-xs text-amber-800">
-                    The Mapbox access token isn&apos;t configured. Set{' '}
-                    <code className="rounded bg-amber-100 px-1">
-                        NEXT_PUBLIC_MAPBOX_TOKEN
-                    </code>{' '}
-                    in your environment to enable the map.
+                    {/*The Mapbox access token isn&apos;t configured. Set{' '}*/}
+                    {/*<code className="rounded bg-amber-100 px-1">*/}
+                    {/*    NEXT_PUBLIC_MAPBOX_TOKEN*/}
+                    {/*</code>{' '}*/}
+                    {/*in your environment to enable the map.*/}
                 </p>
             </section>
         );
