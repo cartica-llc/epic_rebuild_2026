@@ -47,11 +47,8 @@ const Insight_Learnings = dynamic(
     { loading: insightSkeleton, ssr: false },
 );
 
-const Insight_LocationInsights = dynamic(
-    () =>
-        import('./insights/LocationInsights').then(
-            (m) => m.Insight_LocationInsights,
-        ),
+const Insight_Map = dynamic(
+    () => import('./insights/Insight_Map').then((m) => m.Insight_Map),
     { loading: insightSkeleton, ssr: false },
 );
 
@@ -123,7 +120,7 @@ export function QuickQueryVisualization({
                     {activeQuery === 'market' && <Insight_Market />}
 
                     {activeQuery === 'technology' && <Insight_Learnings />}
-                    {activeQuery === 'map' && <Insight_LocationInsights />}
+                    {activeQuery === 'map' && <Insight_Map />}
                     {!['spending', 'market', 'technology', 'map'].includes(
                         activeQuery,
                     ) && (
