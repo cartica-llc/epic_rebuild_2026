@@ -9,6 +9,7 @@ import {
     buildGroupingAreaFilter,
     safeQuery,
     toNum,
+    applyInsightCache
 } from '../../_shared';
 
 const MIN_REQUIRED_PCT = 25;
@@ -139,7 +140,7 @@ export async function GET(req: Request) {
             }),
         };
 
-        return NextResponse.json(body);
+        return applyInsightCache(NextResponse.json(body));
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('[spending/community] failed:', message);

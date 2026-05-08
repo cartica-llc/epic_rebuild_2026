@@ -8,6 +8,7 @@ import {
     buildFilterSql,
     safeQuery,
     toNum,
+    applyInsightCache,
 } from '../../_shared';
 
 interface BandRow {
@@ -24,6 +25,7 @@ interface SummaryRow {
     MIN_AMOUNT: number | null;
     MAX_AMOUNT: number | null;
 }
+
 
 
 const AMOUNT_COL = 'fd.COMMITED_FUNDING_AMT';
@@ -116,7 +118,8 @@ export async function GET(req: Request) {
             })),
         };
 
-        return NextResponse.json(body);
+        return applyInsightCache(NextResponse.json(body));
+
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('[spending/awards] failed:', message);

@@ -1,4 +1,5 @@
 // app/api/(snowflakePublic)/(projects_insights)/_shared.ts
+import type { NextResponse } from 'next/server';
 
 const DB = process.env.DEV_SNOWFLAKE_DATABASE;
 const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
@@ -67,3 +68,12 @@ export const toNum = (v: unknown): number => {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
 };
+
+// this is for the caching of the data visualizations 60s
+export function applyInsightCache(res: NextResponse, seconds = 60): NextResponse {
+    res.headers.set(
+        'Cache-Control',
+        `public, s-maxage=${seconds}, stale-while-revalidate=${seconds * 4}`,
+    );
+    return res;
+}

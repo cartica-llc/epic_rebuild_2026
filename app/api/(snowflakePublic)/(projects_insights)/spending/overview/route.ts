@@ -8,7 +8,7 @@ import {
     buildFilterSql,
     buildGroupingAreaFilter,
     safeQuery,
-    toNum,
+    toNum, applyInsightCache,
 } from '../../_shared';
 
 interface TotalsRow {
@@ -165,7 +165,7 @@ export async function GET(req: Request) {
             })),
         };
 
-        return NextResponse.json(body);
+        return applyInsightCache(NextResponse.json(body));
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('[spending/overview] failed:', message);
