@@ -2,13 +2,14 @@
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
-import { toNum } from '../../_shared';
+import { toNum, applyInsightCache } from '../../_shared';
 import {
     MATURITY_ORDER,
     SIGNAL_BANDS,
     MARKET_BASE_CTE,
     type MaturityStage,
     type SignalBand,
+
 } from '../_marketShared';
 
 interface SignalRow {
@@ -82,7 +83,8 @@ export async function GET() {
             avgScore: bandCounts.get(band)?.avgScore ?? 0,
         }));
 
-        return NextResponse.json({ byMaturity, overall });
+        // adds the shared cache but with the existing params
+        return applyInsightCache(NextResponse.json({ byMaturity, overall }));
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('[market/signals] failed:', message);

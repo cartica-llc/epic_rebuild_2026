@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
-import { T, toNum } from '../../_shared';
+import { T, toNum, applyInsightCache } from '../../_shared';
 
 const HARD_LIMIT = 200;
 const NARRATIVE_TRUNCATE = 1200; // chars — server-side cap to keep payload small
@@ -235,13 +235,17 @@ export async function GET(req: Request) {
         // Aggregate stats for the summary row.
         const totalCommitted = projects.reduce((s, p) => s + p.committedFunding, 0);
 
-        return NextResponse.json({
+//cache applied
+        return applyInsightCache(
+         NextResponse.json({
             projects,
             totalCommitted,
             count: projects.length,
             truncated: rows.length === HARD_LIMIT,
             limit: HARD_LIMIT,
-        });
+        }),
+    );
+
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('[learnings/search] failed:', message);

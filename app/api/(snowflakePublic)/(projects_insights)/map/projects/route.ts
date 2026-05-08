@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
-import { T, toNum } from '../../_shared';
+import { T, toNum, applyInsightCache } from '../../_shared';
 
 const HARD_LIMIT = 1000;
 
@@ -162,13 +162,15 @@ export async function GET(req: Request) {
             { committed: 0, contracted: 0, expended: 0 },
         );
 
-        return NextResponse.json({
-            projects,
-            count: projects.length,
-            totals,
-            truncated: rows.length === HARD_LIMIT,
-            limit: HARD_LIMIT,
-        });
+        return applyInsightCache(
+            NextResponse.json({
+                projects,
+                count: projects.length,
+                totals,
+                truncated: rows.length === HARD_LIMIT,
+                limit: HARD_LIMIT,
+            }),
+        );
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('[map/projects] failed:', message);

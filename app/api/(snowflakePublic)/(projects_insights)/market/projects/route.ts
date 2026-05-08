@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
-import { T, toNum } from '../../_shared';
+import { T, toNum, applyInsightCache } from '../../_shared';
 import {
     MATURITY_ORDER,
     SIGNAL_BANDS,
@@ -114,13 +114,15 @@ export async function GET(req: Request) {
             signalBand: r.SIGNAL_BAND as SignalBand,
             investmentAreas: splitMulti(r.INVESTMENT_AREAS),
         }));
-
-        return NextResponse.json({
-            projects,
-            count: projects.length,
-            truncated: rows.length === HARD_LIMIT,
-            limit: HARD_LIMIT,
-        });
+// new cache applied to each filter (stage, signal, score dropdowns) as well
+        return applyInsightCache(
+            NextResponse.json({
+                projects,
+                count: projects.length,
+                truncated: rows.length === HARD_LIMIT,
+                limit: HARD_LIMIT,
+            }),
+        );
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('[market/projects] failed:', message);
