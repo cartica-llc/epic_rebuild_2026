@@ -6,16 +6,9 @@ import { query } from '@/lib/snowflake';
 const DB     = process.env.DEV_SNOWFLAKE_DATABASE;
 const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
-// ─── Cache window ─────────────────────────────────────────────────────
-// CloudFront serves cached responses in <10ms, bypassing Lambda cold
-// starts and Snowflake entirely. Trade-off: a newly created project may
-// take up to S_MAX_AGE seconds to appear in the list.
-// Adjust S_MAX_AGE to taste:
-//   30  → fresher, cold start still possible for low-traffic periods
-//   60  → good balance for typical usage
-//   120 → maximum cache benefit, noticeable delay after project creation
-const S_MAX_AGE           = 60;  // seconds CloudFront holds the cache
-const STALE_WHILE_REVALIDATE = 30;  // seconds CloudFront serves stale while fetching fresh
+
+const S_MAX_AGE           = 60;
+const STALE_WHILE_REVALIDATE = 30;
 
 interface ProjectRow {
     PROJECT_ID: number;
