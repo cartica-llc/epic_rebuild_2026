@@ -36,6 +36,11 @@ export async function GET(req: Request) {
     const { whereClause, areaJoin } = buildFilterSql({ period, area });
 
     try {
+        // log test to compare snowflake vs cache result
+        console.log(
+            `[spending/awards] querying Snowflake | period=${period ?? 'all'} | area=${area ?? 'all'} | ${new Date().toISOString()}`
+        );
+
         const [bandRows, summaryRows] = await Promise.all([
             safeQuery<BandRow[]>('awards:bands', () =>
                 query(`
