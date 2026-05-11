@@ -13,7 +13,7 @@ interface CompletedProject {
     amount: string;
     completionDate: string;
     organizationShort: string;
-    imageKey: string;
+    imageUrl: string | null;
 }
 
 const DEFAULT_IMAGE = '/images/home/complete/defaultCompleted.webp';
@@ -24,28 +24,8 @@ function truncate(text: string, max: number): string {
     return text.slice(0, max).trimEnd() + '…';
 }
 
-function ProjectImage({ imageKey, alt }: { imageKey: string; alt: string }) {
-    const [src, setSrc] = useState<string>(DEFAULT_IMAGE);
-
-    useEffect(() => {
-        if (!imageKey) return;
-
-        let cancelled = false;
-
-        (async () => {
-            try {
-                const res = await fetch(
-                    `/api/projectImages/projectImagethumbnails?key=${encodeURIComponent(imageKey)}`,
-                );
-                const data = await res.json();
-                if (!cancelled) setSrc(data?.url ?? DEFAULT_IMAGE);
-            } catch {
-                if (!cancelled) setSrc(DEFAULT_IMAGE);
-            }
-        })();
-
-        return () => { cancelled = true; };
-    }, [imageKey]);
+function ProjectImage({ url, alt }: { url: string | null; alt: string }) {
+    const [src, setSrc] = useState<string>(url ?? DEFAULT_IMAGE);
 
     return (
         <Image
@@ -68,7 +48,7 @@ function ProjectCard({ project }: { project: CompletedProject }) {
         >
             <article className="flex flex-col h-full">
                 <div className="relative aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100">
-                    <ProjectImage imageKey={project.imageKey} alt={project.name} />
+                    <ProjectImage url={project.imageUrl} alt={project.name} />
 
                     <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200">
                         <span className="px-3 py-1.5 bg-white/95 backdrop-blur-sm text-slate-900 text-xs font-bold rounded-lg shadow-sm uppercase tracking-wide">

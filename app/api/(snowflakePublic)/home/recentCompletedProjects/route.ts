@@ -1,13 +1,18 @@
 // app/api/(snowflakePublic)/home/recentCompletedProjects/route.ts
 
 import { NextResponse } from 'next/server';
+import { ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { query } from '@/lib/snowflake';
+import { s3Client, S3_BUCKET } from '@/lib/s3';
 
 const DB     = process.env.DEV_SNOWFLAKE_DATABASE;
 const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 const S_MAX_AGE              = 3600;
 const STALE_WHILE_REVALIDATE = 600;
+
+const IMG_EXT = /\.(webp|png|jpe?g|gif)$/i;
 
 interface CompletedProjectRow {
     PROJECT_ID: number;
@@ -42,6 +47,54 @@ function formatDate(d: string | null): string {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
+async function signKey(key: string): Promise<string> {
+    return getSignedUrl(
+        s3Client,
+        new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
+        { expiresIn: 3600 },
+    );
+}
+
+
+async function resolveProjectImage(projectNumber: string | null): Promise<string | null> {
+    if (!projectNumber) return null;
+
+    const pnLower = projectNumber.toLowerCase();
+    const prefix  = `${pnLower}/`;
+
+    try {
+        const res = await s3Client.send(new ListObjectsV2Command({
+            Bucket: S3_BUCKET,
+            Prefix: prefix,
+        }));
+
+        const allKeys = (res.Contents ?? [])
+            .map(o => o.Key ?? '')
+            .filter((k): k is string => !!k);
+
+        if (allKeys.length === 0) return null;
+
+        // Prefer the main thumbnail (small, fast)
+        const thumbKey = `${prefix}${pnLower}_main_thumbnail.webp`;
+        if (allKeys.includes(thumbKey)) {
+            return await signKey(thumbKey);
+        }
+
+        // Fall back to the main original (any allowed extension)
+        const mainRegex = new RegExp(
+            `^${prefix}${pnLower}_main\\.(webp|png|jpe?g|gif)$`,
+            'i',
+        );
+        const mainKey = allKeys.find(k => mainRegex.test(k));
+        if (mainKey) return await signKey(mainKey);
+
+        return null;
+    } catch (err) {
+        console.error(`[recentCompletedProjects] image resolve failed for ${projectNumber}:`, err);
+        return null;
+    }
+}
+
 function mapRow(r: CompletedProjectRow) {
     return {
         id:                r.PROJECT_ID,
@@ -51,9 +104,6 @@ function mapRow(r: CompletedProjectRow) {
         amount:            formatCurrency(r.COMMITED_FUNDING_AMT),
         completionDate:    formatDate(r.PROJECT_END_DATE ?? r.MODIFIED_DATE),
         organizationShort: ADMIN_MAP[r.PROGRAM_ADMIN_ID ?? -1] ?? '',
-        imageKey:          r.PROJECT_NUMBER
-            ? `${r.PROJECT_NUMBER.toLowerCase()}/${r.PROJECT_NUMBER.toLowerCase()}_main`
-            : '',
     };
 }
 
@@ -81,16 +131,21 @@ export async function GET(request: Request) {
             LEFT JOIN ${t}.FINANCE_DETAIL fd
                 ON p.FINANCE_DETAIL_FINANCE_DETAIL_ID = fd.FINANCE_DETAIL_ID
             WHERE COALESCE(p.IS_ACTIVE, 1) = 1
-              AND (
-                  LOWER(TRIM(p.PROJECT_STATUS)) IN ('closed', 'complete', 'completed')
-              )
+              AND LOWER(TRIM(p.PROJECT_STATUS)) IN ('closed', 'complete', 'completed')
             ORDER BY COALESCE(p.MODIFIED_DATE, p.PROJECT_END_DATE) DESC NULLS LAST
             LIMIT ${limit}
         `)) as CompletedProjectRow[];
 
+        const projects = await Promise.all(
+            rows.map(async r => ({
+                ...mapRow(r),
+                imageUrl: await resolveProjectImage(r.PROJECT_NUMBER),
+            })),
+        );
+
         const res = NextResponse.json({
-            projects: rows.map(mapRow),
-            total:    rows.length,
+            projects,
+            total: projects.length,
         });
 
         res.headers.set(
