@@ -132,7 +132,7 @@ export async function GET(request: Request) {
                 ON p.FINANCE_DETAIL_FINANCE_DETAIL_ID = fd.FINANCE_DETAIL_ID
             WHERE COALESCE(p.IS_ACTIVE, 1) = 1
               AND LOWER(TRIM(p.PROJECT_STATUS)) IN ('closed', 'complete', 'completed')
-            ORDER BY COALESCE(p.MODIFIED_DATE, p.PROJECT_END_DATE) DESC NULLS LAST
+            ORDER BY COALESCE(p.PROJECT_END_DATE, p.MODIFIED_DATE) DESC NULLS LAST
             LIMIT ${limit}
         `)) as CompletedProjectRow[];
 

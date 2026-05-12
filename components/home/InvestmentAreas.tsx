@@ -153,7 +153,7 @@ export function InvestmentAreas() {
     if (loading) {
         return (
             <section className="py-2 bg-white relative">
-                <div className="max-w-6xl mx-auto">
+                <div className="">
                     <div className="header mb-12">
                         <div className="h-9 w-64 bg-slate-200 rounded animate-pulse mb-4" />
                         <div className="h-4 w-full max-w-2xl bg-slate-200 rounded animate-pulse" />
@@ -171,7 +171,7 @@ export function InvestmentAreas() {
 
     return (
         <section className="py-2 bg-white relative">
-            <div className="max-w-6xl mx-auto">
+            <div className="">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

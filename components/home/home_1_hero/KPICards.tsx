@@ -1,40 +1,133 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence, useMotionValue, animate } from 'motion/react';
 
-type KPI = {
-    title: string;
-    value: string;
-    fullValue: string;
-    change: string;
+type KPIData = {
+    activeProjects: number;
+    funding:        number;
+    matchFunding:   number;
 };
 
-const kpis: KPI[] = [
-    { title: 'Active Projects', value: '740', fullValue: '740', change: '+5' },
-    { title: 'Funding', value: '$1.9B', fullValue: '$1,925,562,849.79', change: '+12.3%' },
-    { title: 'Match Funding', value: '$8.3M', fullValue: '$836,055,614.76', change: '+8.2%' },
-];
+type KPI = {
+    title:     string;
+    value:     number;
+    fullValue: string;
+    format:    (n: number) => string;
+};
+
+const fmt = new Intl.NumberFormat('en-US', {
+    style:                 'currency',
+    currency:              'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+});
+
+function floorTo(n: number, decimals: number): number {
+    const factor = Math.pow(10, decimals);
+    return Math.floor(n * factor) / factor;
+}
+
+function fmt2(n: number): string {
+    return n % 1 === 0 ? String(n) : n.toFixed(1);
+}
+
+function abbreviate(n: number): string {
+    if (n >= 1_000_000_000) return `$${fmt2(floorTo(n / 1_000_000_000, 1))}B`;
+    if (n >= 1_000_000)     return `$${fmt2(floorTo(n / 1_000_000, 1))}M`;
+    if (n >= 1_000)         return `$${fmt2(floorTo(n / 1_000, 1))}K`;
+    return `$${Math.floor(n)}`;
+}
+
+function buildKPIs(data: KPIData): KPI[] {
+    return [
+        {
+            title:     'Active Projects',
+            value:     data.activeProjects,
+            fullValue: Math.floor(data.activeProjects).toLocaleString(),
+            format:    (n) => Math.floor(n).toLocaleString(),
+        },
+        {
+            title:     'Committed Funding',
+            value:     data.funding,
+            fullValue: fmt.format(Math.floor(data.funding)),
+            format:    abbreviate,
+        },
+        {
+            title:     'Match Funding',
+            value:     data.matchFunding,
+            fullValue: fmt.format(Math.floor(data.matchFunding)),
+            format:    abbreviate,
+        },
+    ];
+}
+
+const DURATION = 4.5;
+
+function AnimatedNumber({
+                            value,
+                            format,
+                            index = 0,
+                            className,
+                            style,
+                        }: {
+    value:      number;
+    format:     (n: number) => string;
+    index?:     number;
+    className?: string;
+    style?:     React.CSSProperties;
+}) {
+    const motionVal             = useMotionValue(0);
+    const [display, setDisplay] = useState(format(0));
+
+    useEffect(() => {
+        const unsub    = motionVal.on('change', (v) => setDisplay(format(v)));
+        const controls = animate(motionVal, value, {
+            duration: DURATION,
+            delay:    index * DURATION,
+            ease:     [0.0, 0.0, 0.2, 1],
+        });
+        return () => { controls.stop(); unsub(); };
+    }, [value]);
+
+    return <span className={className} style={style}>{display}</span>;
+}
 
 const container = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+    show:   { opacity: 1, transition: { staggerChildren: 0.12 } },
 };
 
 const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 },
+    show:   { opacity: 1, y: 0 },
 };
 
 export function KPICards() {
+    const [data, setData]                 = useState<KPIData>({ activeProjects: 0, funding: 0, matchFunding: 0 });
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            try {
+                const res = await fetch('/api/home/kpi');
+                if (!res.ok) throw new Error('Failed');
+                const json: KPIData = await res.json();
+                setData(json);
+            } catch {
+            }
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const kpis = buildKPIs(data);
 
     return (
         <motion.div
             variants={container}
             initial="hidden"
             animate="show"
-            className="mb-12 flex flex-col flex-wrap justify-between gap-8 md:flex-row md:gap-16"
+            className="mb-12 flex flex-col justify-between gap-8 xl:flex-row md:gap-16"
         >
             {kpis.map((kpi, index) => (
                 <motion.div
@@ -50,37 +143,32 @@ export function KPICards() {
                             onMouseEnter={() => setHoveredIndex(index)}
                             onMouseLeave={() => setHoveredIndex(null)}
                         >
-              <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 select-none font-bold leading-none tracking-tighter"
-                  style={{
-                      fontSize: 'clamp(6rem, 12vw, 10rem)',
-                      transform: 'translate(10px, 10px)',
-                      color: 'rgba(255,255,255,0.55)',
-                      filter: 'blur(10px)',
-                  }}
-              >
-                {kpi.value}
-              </span>
+                            {/* blur ghost */}
+                            <AnimatedNumber
+                                value={kpi.value}
+                                format={kpi.format}
+                                index={index}
+                                aria-hidden="true"
+                                className="pointer-events-none absolute inset-0 select-none font-bold leading-none tracking-tighter"
+                                style={{
+                                    fontSize:  'clamp(6rem, 12vw, 10rem)',
+                                    transform: 'translate(10px, 10px)',
+                                    color:     'rgba(255,255,255,0.55)',
+                                    filter:    'blur(10px)',
+                                }}
+                            />
 
-                            <h3
+                            {/* main value */}
+                            <AnimatedNumber
+                                value={kpi.value}
+                                format={kpi.format}
+                                index={index}
                                 className="relative inline-block cursor-default bg-gradient-to-b from-black to-black/60 bg-clip-text pr-2 font-bold leading-none tracking-tighter text-transparent"
                                 style={{ fontSize: 'clamp(6rem, 12vw, 10rem)' }}
-                            >
-                                {kpi.value}
-                            </h3>
-
-                            <motion.span
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.3 + index * 0.1, type: 'spring' }}
-                                className="absolute -right-2 -top-4 text-md font-bold text-emerald-500 md:-top-2 md:text-lg"
-                            >
-                                {kpi.change}
-                            </motion.span>
+                            />
 
                             <AnimatePresence>
-                                {hoveredIndex === index && kpi.value !== kpi.fullValue && (
+                                {hoveredIndex === index && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -5 }}
                                         animate={{ opacity: 1, y: 0 }}

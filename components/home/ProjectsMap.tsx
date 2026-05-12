@@ -6,393 +6,438 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { geoPath, geoMercator } from 'd3-geo';
 import * as topojson from 'topojson-client';
-import type { Feature, Geometry } from 'geojson';
-import { ChevronRight, MapPin } from 'lucide-react';
+import type { Feature, Geometry, GeoJsonProperties } from 'geojson';
+import { ChevronRight, X } from 'lucide-react';
 
-interface MapProject {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface DacProject {
     id: number;
     number: string;
     name: string;
-    description: string;
     funding: string;
+    expended: string;
     location: string;
-    organizationShort: string;
-    coordinates: [number, number] | null;
+    rank: number;
 }
 
-const FALLBACK_PATH =
-    'M 180 10 L 200 8 L 220 12 L 235 20 L 245 35 L 252 55 L 257 75 L 260 95 L 263 115 L 265 135 L 267 155 L 269 175 L 271 195 L 273 215 L 275 235 L 277 255 L 279 275 L 281 295 L 283 315 L 285 335 L 287 355 L 289 375 L 291 395 L 293 415 L 295 435 L 297 455 L 299 475 L 301 495 L 303 515 L 304 535 L 305 555 L 304 570 L 300 580 L 290 585 L 275 587 L 260 586 L 245 583 L 230 578 L 215 571 L 200 562 L 185 551 L 170 538 L 155 523 L 142 506 L 130 487 L 120 466 L 112 443 L 105 418 L 100 391 L 97 362 L 95 331 L 94 298 L 95 263 L 98 226 L 103 187 L 110 146 L 120 103 L 132 58 L 145 25 L 160 12 L 170 10 Z';
+interface Region {
+    adminId: number;
+    label: string;
+    short: string;
+    color: string;
+    dacPct: number;
+    dacExpended: string;
+    totalExpended: string;
+    projectCount: number;
+    projects: DacProject[];
+}
 
-export function ProjectsMap() {
-    const [projects, setProjects] = useState<MapProject[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [hoveredProject, setHoveredProject] = useState<number | null>(null);
-    const [californiaPath, setCaliforniaPath] = useState<string>('');
-    const [projectedCoords, setProjectedCoords] = useState<Array<[number, number]>>([]);
+// ─── County FIPS → admin region ──────────────────────────────────────────────
+// 0 = EPC/CEC (Central), 1 = SCE (SoCal), 2 = SDGE (San Diego), 3 = PGE (NorCal)
 
-    const svgRef = useRef<SVGSVGElement>(null);
+const COUNTY_FIPS_TO_ADMIN: Record<string, number> = {
+    '06001': 3, '06003': 3, '06005': 3, '06007': 3, '06009': 3,
+    '06011': 3, '06013': 3, '06015': 3, '06017': 3, '06019': 0,
+    '06021': 3, '06023': 3, '06025': 2, '06027': 0, '06029': 0,
+    '06031': 0, '06033': 3, '06035': 3, '06037': 1, '06039': 0,
+    '06041': 3, '06043': 3, '06045': 3, '06047': 0, '06049': 3,
+    '06051': 3, '06053': 3, '06055': 3, '06057': 3, '06059': 1,
+    '06061': 3, '06063': 3, '06065': 1, '06067': 3, '06069': 3,
+    '06071': 1, '06073': 2, '06075': 3, '06077': 3, '06079': 3,
+    '06081': 3, '06083': 3, '06085': 3, '06087': 3, '06089': 3,
+    '06091': 3, '06093': 3, '06095': 3, '06097': 3, '06099': 0,
+    '06101': 3, '06103': 3, '06105': 3, '06107': 0, '06109': 3,
+    '06111': 1, '06113': 3, '06115': 3,
+};
+
+// Slate shades per region — lighter = more contrast on dark base
+const REGION_META: Record<number, { label: string; short: string; fill: string; activeFill: string }> = {
+    3: {
+        label: 'Northern California',
+        short: 'NorCal',
+        fill: '#cbd5e1',
+        activeFill: '#94a3b8'
+    },
+
+    0: {
+        label: 'Central California',
+        short: 'Central',
+        fill: '#94a3b8',
+        activeFill: '#64748b'
+    },
+
+    1: {
+        label: 'Southern California',
+        short: 'SoCal',
+        fill: '#64748b',
+        activeFill: '#334155'
+    },
+
+    2: {
+        label: 'San Diego',
+        short: 'San Diego',
+        fill: '#1e293b',
+        activeFill: '#020617'
+    },
+};
+
+const REGION_ORDER = [3, 0, 1, 2];
+
+// ─── Popup ────────────────────────────────────────────────────────────────────
+
+function RegionPopup({
+                         region,
+                         onClose,
+                     }: {
+    region: Region;
+    onClose: () => void;
+}) {
+    const meta = REGION_META[region.adminId];
 
     useEffect(() => {
-        let cancelled = false;
+        function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
 
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-x-0 bottom-0 z-20 mx-2 mb-2 rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden"
+            // stop clicks inside the popup from bubbling to the overlay
+            onClick={e => e.stopPropagation()}
+        >
+            {/* Header */}
+            <div className="flex items-start justify-between px-5 pt-4 pb-3 border-b border-slate-100 select-none">
+                <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                        {region.label}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                        {region.projectCount} DAC/LI project{region.projectCount !== 1 ? 's' : ''} · {region.dacPct.toFixed(1)}% of regional spend
+                    </p>
+                </div>
+                <button
+                    onClick={onClose}
+                    className="mt-0.5 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors shrink-0"
+                    aria-label="Close"
+                >
+                    <X className="w-3 h-3 text-slate-500" />
+                </button>
+            </div>
+
+            {/* Project rows */}
+            <div className="px-5 py-3 space-y-0">
+                {region.projects.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-2">No projects available.</p>
+                ) : (
+                    region.projects.map((project, i) => (
+                        <motion.div
+                            key={project.id}
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.05, duration: 0.16 }}
+                        >
+                            <Link
+                                href={`/projects/${project.id}`}
+                                className="group flex items-start gap-3 py-3 border-b border-slate-100 last:border-0"
+                            >
+                                <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-slate-900 flex items-center justify-center text-[10px] font-black text-white">
+                                    {project.rank}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-semibold text-slate-800 line-clamp-1 group-hover:text-slate-500 transition-colors">
+                                        {project.name}
+                                    </p>
+                                    {project.location && (
+                                        <p className="text-[10px] text-slate-400 mt-0.5 truncate">
+                                            {project.location}
+                                        </p>
+                                    )}
+                                </div>
+                                <span className="shrink-0 text-sm font-black tabular-nums text-slate-900">
+                                    {project.funding}
+                                </span>
+                            </Link>
+                        </motion.div>
+                    ))
+                )}
+            </div>
+        </motion.div>
+    );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+export function ProjectsMap() {
+    const [regions, setRegions] = useState<Region[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [activeRegionId, setActiveRegionId] = useState<number | null>(null);
+    const [regionPaths, setRegionPaths] = useState<Record<number, string>>({});
+    const [regionCentroids, setRegionCentroids] = useState<Record<number, [number, number]>>({});
+
+    const mapContainerRef = useRef<HTMLDivElement>(null);
+
+    // Fetch DAC/LI data
+    useEffect(() => {
+        let cancelled = false;
         (async () => {
             try {
-                const res = await fetch('/api/home/recentUpdatedProjectsMap?limit=4');
+                const res  = await fetch('/api/home/dacLiProjectsMap');
                 const data = await res.json();
-
-                if (!cancelled) {
-                    setProjects(data?.projects ?? []);
-                }
+                if (cancelled) return;
+                const sorted: Region[] = REGION_ORDER
+                    .map(id => (data.regions as Region[]).find(r => r.adminId === id))
+                    .filter((r): r is Region => !!r);
+                setRegions(sorted);
             } catch {
-                if (!cancelled) {
-                    setProjects([]);
-                }
+                if (!cancelled) setRegions([]);
             } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
+                if (!cancelled) setLoading(false);
             }
         })();
+        return () => { cancelled = true; };
+    }, []);
 
-        return () => {
-            cancelled = true;
-        };
+    // Build county paths grouped into regions
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json');
+                const us  = await res.json();
+
+                interface CountyProps { name: string; }
+                const counties = topojson.feature(us, us.objects.counties) as unknown as {
+                    features: Feature<Geometry, CountyProps>[];
+                };
+
+                const caCounties = counties.features.filter(f =>
+                    String(f.id ?? '').padStart(5, '0').startsWith('06')
+                );
+
+                const caCollection = { type: 'FeatureCollection' as const, features: caCounties };
+                const projection   = geoMercator().fitSize([400, 600], caCollection as never);
+                const pathGen      = geoPath().projection(projection);
+
+                const grouped: Record<number, Feature<Geometry, GeoJsonProperties>[]> = {};
+                for (const feature of caCounties) {
+                    const fips    = String(feature.id ?? '').padStart(5, '0');
+                    const adminId = COUNTY_FIPS_TO_ADMIN[fips];
+                    if (adminId === undefined) continue;
+                    if (!grouped[adminId]) grouped[adminId] = [];
+                    grouped[adminId].push(feature);
+                }
+
+                const paths: Record<number, string>               = {};
+                const centroids: Record<number, [number, number]> = {};
+
+                for (const [adminIdStr, features] of Object.entries(grouped)) {
+                    const adminId = Number(adminIdStr);
+                    paths[adminId] = features
+                        .map(f => pathGen(f))
+                        .filter((p): p is string => !!p)
+                        .join(' ');
+
+                    const pts = features
+                        .map(f => pathGen.centroid(f))
+                        .filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+                    if (pts.length) {
+                        centroids[adminId] = [
+                            pts.reduce((s, c) => s + c[0], 0) / pts.length,
+                            pts.reduce((s, c) => s + c[1], 0) / pts.length,
+                        ];
+                    }
+                }
+
+                if (!cancelled) {
+                    setRegionPaths(paths);
+                    setRegionCentroids(centroids);
+                }
+            } catch (err) {
+                console.error('County map load failed:', err);
+            }
+        })();
+        return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
-        if (projects.length === 0) return;
-
-        let cancelled = false;
-
-        (async () => {
-            try {
-                const res = await fetch(
-                    'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json'
-                );
-
-                const us = await res.json();
-
-                interface StateProps {
-                    name: string;
-                }
-
-                const states = topojson.feature(
-                    us,
-                    us.objects.states
-                ) as unknown as {
-                    features: Feature<Geometry, StateProps>[];
-                };
-
-                const california = states.features.find(
-                    (d) => d.properties.name === 'California'
-                );
-
-                if (!california) {
-                    throw new Error('California not found in atlas');
-                }
-
-                const projection = geoMercator().fitSize(
-                    [400, 500],
-                    california
-                );
-
-                const pathGenerator = geoPath().projection(projection);
-
-                const path = pathGenerator(california);
-
-                if (cancelled) return;
-
-                if (path) {
-                    setCaliforniaPath(path);
-                }
-
-                const coords: Array<[number, number]> = projects
-                    .filter((p) => p.coordinates !== null)
-                    .map((p) => {
-                        const projected = projection(p.coordinates!);
-
-                        return projected ?? [0, 0];
-                    });
-
-                setProjectedCoords(coords);
-            } catch (err) {
-                if (cancelled) return;
-
-                console.error('Error loading California map data:', err);
-
-                setCaliforniaPath(FALLBACK_PATH);
-                setProjectedCoords([]);
+        if (activeRegionId === null) return;
+        function onPointerDown(e: MouseEvent) {
+            if (
+                mapContainerRef.current &&
+                !mapContainerRef.current.contains(e.target as Node)
+            ) {
+                setActiveRegionId(null);
             }
-        })();
+        }
+        document.addEventListener('pointerdown', onPointerDown);
+        return () => document.removeEventListener('pointerdown', onPointerDown);
+    }, [activeRegionId]);
 
-        return () => {
-            cancelled = true;
-        };
-    }, [projects]);
-
-    const projectsWithCoords = projects.filter(
-        (p) => p.coordinates !== null
-    );
-
-    const hovered =
-        hoveredProject !== null
-            ? projects.find((p) => p.id === hoveredProject)
-            : null;
+    const activeRegion = regions.find(r => r.adminId === activeRegionId) ?? null;
+    const mapReady     = Object.keys(regionPaths).length > 0;
 
     return (
-        <section className="py-6 sm:py-10 px-4 max-w-screen-xl mx-auto">
-            <div className="max-w-7xl mx-auto">
+        <section className="py-6 sm:py-10  max-w-screen-xl mx-auto">
+            <div className="max-w-7xl mx-auto select-none">
+                <div className="flex flex-col lg:flex-row gap-4">
 
-                {/* MOBILE = STACKED */}
-                {/* DESKTOP = 2 COLUMN */}
-                <div className="flex flex-col lg:flex-row gap-10 ">
-
-                    {/* CONTENT */}
+                    {/* ── CONTENT ───────────────────────────────────────────── */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="w-full order-1"
+                        className="w-full order-1 px-6"
                     >
                         <p className="text-slate-500 text-xs sm:text-sm mb-4 uppercase tracking-[0.2em] font-medium">
-                            Recently updated projects
+                            Community impact
                         </p>
 
                         <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight text-slate-900 mb-6">
-                            Where is EPIC turning plans into progress?
+                            Powering the places that need it most.
                         </h2>
 
                         <p className="text-slate-600 leading-relaxed text-lg sm:text-xl mb-8 max-w-lg">
-                            Hover to see what&rsquo;s changed and then open the
-                            full list to explore every project with recent
-                            updates.
+                            A meaningful share of EPIC&rsquo;s funding goes directly to lower-income
+                            and underserved communities across California. Click a region to explore
+                            what&rsquo;s being built there.
                         </p>
 
                         <Link
-                            href="/projects?sort=recent"
+                            href="/projects?dacli=1"
                             className="inline-flex items-center gap-2 text-slate-700 hover:text-slate-900 font-semibold text-lg transition-colors group"
                         >
-                            View all recently updated projects
-
+                            See all community projects
                             <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                         </Link>
                     </motion.div>
 
-                    {/* MAP */}
+                    {/* ── MAP ───────────────────────────────────────────────── */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.1 }}
                         className="w-full flex justify-center order-2 pt-4 md:pt-0"
                     >
-                        <div className="relative w-full max-w-[340px] sm:max-w-[420px] md:max-w-[520px]">
-
-                            {loading ? (
-                                <div className="aspect-[4/5] w-full bg-slate-200/40 rounded-lg animate-pulse" />
-                            ) : projectsWithCoords.length === 0 ? (
-                                <div className="aspect-[4/5] w-full flex items-center justify-center text-slate-500 text-sm">
-                                    No mapped project updates available.
-                                </div>
+                        <div
+                            ref={mapContainerRef}
+                            className="relative w-full max-w-[340px] sm:max-w-[420px] md:max-w-[520px]"
+                        >
+                            {loading || !mapReady ? (
+                                <div className="aspect-[2/3] w-full bg-slate-200/40 rounded-lg animate-pulse" />
                             ) : (
                                 <>
                                     <svg
-                                        ref={svgRef}
-                                        viewBox="0 0 400 500"
-                                        className="w-full h-auto drop-shadow-2xl"
+                                        viewBox="0 0 400 600"
+                                        className="w-full h-auto drop-shadow-2xl "
                                         xmlns="http://www.w3.org/2000/svg"
                                         role="img"
-                                        aria-label="Map of California with recent project locations"
+                                        aria-label="California map divided into EPIC program regions — click a region to see top DAC/LI projects"
                                     >
-                                        {californiaPath && (
-                                            <path
-                                                d={californiaPath}
-                                                fill="#475569"
-                                                stroke="#94a3b8"
-                                                strokeWidth="3"
-                                                className="transition-colors duration-300 hover:fill-[#5a6d8a]"
-                                            />
-                                        )}
+                                        {REGION_ORDER.map(adminId => {
+                                            const meta     = REGION_META[adminId];
+                                            const region   = regions.find(r => r.adminId === adminId);
+                                            const path     = regionPaths[adminId];
+                                            const centroid = regionCentroids[adminId];
+                                            if (!path || !meta) return null;
 
-                                        <g
-                                            opacity="0.1"
-                                            stroke="#cbd5e1"
-                                            strokeWidth="0.5"
-                                        >
-                                            <line x1="0" y1="125" x2="400" y2="125" />
-                                            <line x1="0" y1="250" x2="400" y2="250" />
-                                            <line x1="0" y1="375" x2="400" y2="375" />
-                                            <line x1="100" y1="0" x2="100" y2="500" />
-                                            <line x1="200" y1="0" x2="200" y2="500" />
-                                            <line x1="300" y1="0" x2="300" y2="500" />
-                                        </g>
-
-                                        {projectedCoords.map((coord, index) => {
-                                            const project =
-                                                projectsWithCoords[index];
-
-                                            if (!project) return null;
-
-                                            const [x, y] = coord;
-
-                                            const isHovered =
-                                                hoveredProject === project.id;
+                                            const isActive    = activeRegionId === adminId;
+                                            const isDimmed    = activeRegionId !== null && !isActive;
+                                            const fill        = isActive ? meta.activeFill : meta.fill;
+                                            const fillOpacity = isDimmed ? 0.3 : 1;
 
                                             return (
-                                                <g key={project.id}>
-                                                    {isHovered && (
-                                                        <circle
-                                                            cx={x}
-                                                            cy={y}
-                                                            r="20"
-                                                            fill="#3b82f6"
-                                                            opacity="0.2"
-                                                            className="animate-pulse"
-                                                        />
-                                                    )}
-
-                                                    {isHovered && (
-                                                        <motion.circle
-                                                            cx={x}
-                                                            cy={y}
-                                                            r="12"
-                                                            fill="none"
-                                                            stroke="#60a5fa"
-                                                            strokeWidth="2"
-                                                            initial={{
-                                                                scale: 0.5,
-                                                                opacity: 0.8,
-                                                            }}
-                                                            animate={{
-                                                                scale: 2,
-                                                                opacity: 0,
-                                                            }}
-                                                            transition={{
-                                                                duration: 1.5,
-                                                                repeat: Infinity,
-                                                            }}
-                                                        />
-                                                    )}
-
-                                                    <circle
-                                                        cx={x}
-                                                        cy={y}
-                                                        r={isHovered ? 12 : 10}
-                                                        fill="#3b82f6"
-                                                        stroke="#60a5fa"
-                                                        strokeWidth={
-                                                            isHovered ? 3 : 2
-                                                        }
-                                                        className="cursor-pointer transition-all duration-200"
-                                                        style={{
-                                                            opacity: isHovered
-                                                                ? 1
-                                                                : 0.9,
-                                                            filter: isHovered
-                                                                ? 'drop-shadow(0 0 8px #3b82f6)'
-                                                                : 'none',
+                                                <g key={adminId}>
+                                                    <path
+                                                        d={path}
+                                                        fill={fill}
+                                                        fillOpacity={fillOpacity}
+                                                        stroke="#f8fafc"
+                                                        strokeWidth="0.8"
+                                                        strokeLinejoin="round"
+                                                        className="cursor-pointer transition-all duration-300"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            setActiveRegionId(prev =>
+                                                                prev === adminId ? null : adminId
+                                                            );
                                                         }}
-                                                        onMouseEnter={() =>
-                                                            setHoveredProject(
-                                                                project.id
-                                                            )
-                                                        }
-                                                        onMouseLeave={() =>
-                                                            setHoveredProject(null)
-                                                        }
-                                                        onFocus={() =>
-                                                            setHoveredProject(
-                                                                project.id
-                                                            )
-                                                        }
-                                                        onBlur={() =>
-                                                            setHoveredProject(null)
-                                                        }
-                                                        tabIndex={0}
-                                                        role="button"
-                                                        aria-label={`${project.name} in ${project.location}`}
                                                     />
 
-                                                    <circle
-                                                        cx={x}
-                                                        cy={y}
-                                                        r={isHovered ? 5 : 4}
-                                                        fill="white"
-                                                        className="pointer-events-none transition-all duration-200"
-                                                    />
+                                                    {centroid && !isDimmed && region && (
+                                                        <g className="pointer-events-none" opacity={fillOpacity}>
+                                                            <rect
+                                                                x={centroid[0] - 36}
+                                                                y={centroid[1] - 28}
+                                                                width={72}
+                                                                height={58}
+                                                                rx={8}
+                                                                ry={8}
+                                                                fill={meta.activeFill}
+                                                                opacity={0.75}
+                                                            />
+                                                            <text
+                                                                x={centroid[0]}
+                                                                y={centroid[1] - 13}
+                                                                textAnchor="middle"
+                                                                fontSize="9"
+                                                                fontWeight="800"
+                                                                fill="white"
+                                                                opacity="0.7"
+                                                                letterSpacing="0.1em"
+                                                            >
+                                                                {meta.short.toUpperCase()}
+                                                            </text>
+                                                            <text
+                                                                x={centroid[0]}
+                                                                y={centroid[1] + 4}
+                                                                textAnchor="middle"
+                                                                fontSize="14"
+                                                                fontWeight="900"
+                                                                fill="white"
+                                                            >
+                                                                {region.dacPct.toFixed(1)}%
+                                                            </text>
+                                                            <text
+                                                                x={centroid[0]}
+                                                                y={centroid[1] + 17}
+                                                                textAnchor="middle"
+                                                                fontSize="6.5"
+                                                                fontWeight="600"
+                                                                fill="white"
+                                                                opacity="0.55"
+                                                                letterSpacing="0.08em"
+                                                            >
+                                                                DAC/LI
+                                                            </text>
+                                                        </g>
+                                                    )}
                                                 </g>
                                             );
                                         })}
                                     </svg>
 
+                                    {/* Popup — z-20 sits above the overlay */}
                                     <AnimatePresence>
-                                        {hovered && (
-                                            <motion.div
-                                                initial={{
-                                                    opacity: 0,
-                                                    scale: 0.9,
-                                                    y: 10,
-                                                }}
-                                                animate={{
-                                                    opacity: 1,
-                                                    scale: 1,
-                                                    y: 0,
-                                                }}
-                                                exit={{
-                                                    opacity: 0,
-                                                    scale: 0.9,
-                                                    y: 10,
-                                                }}
-                                                transition={{ duration: 0.2 }}
-                                                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-2xl p-5 border-2 border-blue-200 z-10 pointer-events-none w-[260px] sm:w-[300px]"
-                                            >
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    {hovered.organizationShort && (
-                                                        <span className="text-[10px] font-bold uppercase tracking-wide text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                                                            {
-                                                                hovered.organizationShort
-                                                            }
-                                                        </span>
-                                                    )}
-
-                                                    {hovered.number && (
-                                                        <span className="text-[10px] font-mono text-slate-500">
-                                                            {hovered.number}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <div className="font-semibold text-slate-900 mb-2 text-base sm:text-lg leading-tight line-clamp-2">
-                                                    {hovered.name}
-                                                </div>
-
-                                                {hovered.location && (
-                                                    <div className="text-sm text-slate-600 mb-3 flex items-center gap-1.5">
-                                                        <MapPin className="w-4 h-4 shrink-0" />
-
-                                                        <span className="truncate">
-                                                            {hovered.location}
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                {hovered.funding && (
-                                                    <div className="text-xl sm:text-2xl font-bold text-blue-600 mb-3">
-                                                        {hovered.funding}
-                                                    </div>
-                                                )}
-
-                                                {hovered.description && (
-                                                    <div className="text-xs text-slate-500 leading-relaxed pt-3 border-t border-slate-200 line-clamp-3">
-                                                        {hovered.description}
-                                                    </div>
-                                                )}
-                                            </motion.div>
+                                        {activeRegion && (
+                                            <div className="absolute inset-x-0 bottom-0 z-20">
+                                                <RegionPopup
+                                                    region={activeRegion}
+                                                    onClose={() => setActiveRegionId(null)}
+                                                />
+                                            </div>
                                         )}
                                     </AnimatePresence>
                                 </>
                             )}
                         </div>
                     </motion.div>
+
                 </div>
             </div>
         </section>

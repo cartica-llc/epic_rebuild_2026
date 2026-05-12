@@ -76,7 +76,7 @@ export function QuickActionButtons({
     };
 
     return (
-        <section className="bg-white px-4 py-8 md:px-0 md:py-0">
+        <section className="bg-white  py-8 md:px-0 md:py-0">
             <div className="mx-auto max-w-3xl">
                 <motion.div
                     className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2"

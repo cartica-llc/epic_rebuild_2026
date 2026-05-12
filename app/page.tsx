@@ -1,37 +1,54 @@
-import { Hero } from '@/components/home/home_1_hero/Hero';
-import { ProgramIntro } from '@/components/home/home_2_intro/ProgramIntro';
+// import {Hero} from '@/components/home/home_1_hero/Hero';
+import {ProgramIntro} from '@/components/home/home_2_intro/ProgramIntro';
 
-import { QuickActionButtons } from '@/components/home/QuickActionButtons';
-import { RecentlyCompletedProjects } from '@/components/home/RecentlyCompletedProjects';
-import { ProjectsMapWithParallax } from '@/components/home/ProjectsMapWithParallax';
-import { InvestmentAreas } from '@/components/home/InvestmentAreas';
+import {QuickActionButtons} from '@/components/home/QuickActionButtons';
+import {RecentlyCompletedProjects} from '@/components/home/RecentlyCompletedProjects';
+import {ProjectsMapWithParallax} from '@/components/home/ProjectsMapWithParallax';
+import {InvestmentAreas} from '@/components/home/InvestmentAreas';
+import {Hero_V2} from "@/components/home/hero2/Hero_V2";
 
 export default function Home() {
     return (
         <>
-            <Hero />
+            <main className="flex flex-col gap-4">
 
-            <section className="px-6">
-                <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 pb-8 lg:flex-row lg:items-center">
+                <section>
+                    {/*<Hero/>*/}
 
-                    <div className="w-full lg:w-1/2">
-                        <ProgramIntro />
-                    </div>
+                    <Hero_V2/>
+                </section>
+                <div className="flex flex-col gap-4 ">
 
-                    <div className="w-full lg:w-1/2">
-                        <QuickActionButtons />
-                    </div>
+                    {/*<section className="max-w-7xl mx-auto">*/}
+                    {/*    <div className="px-6 mx-auto flex w-full  flex-col gap-8  lg:flex-row lg:items-center">*/}
+
+                    {/*        <div className="w-full lg:w-1/2">*/}
+                    {/*            <ProgramIntro/>*/}
+                    {/*        </div>*/}
+
+                    {/*        <div className="w-full lg:w-1/2">*/}
+                    {/*            <QuickActionButtons/>*/}
+                    {/*        </div>*/}
+                    {/*    </div>*/}
+                    {/*</section>*/}
+                    <section className="w-full pl-6 max-w-7xl mx-auto">
+                        <RecentlyCompletedProjects/>
+                    </section>
+
+
+                    <section >
+                        <ProjectsMapWithParallax/>
+                    </section>
+
+                    <section className="px-6 w-full max-w-7xl mx-auto">
+                        <InvestmentAreas/>
+                    </section>
+
                 </div>
-            </section>
 
-            <RecentlyCompletedProjects />
-            <ProjectsMapWithParallax />
+            </main>
 
-            <section className="px-6">
-                <div className="flex flex-col gap-8 lg:flex">
-                    <InvestmentAreas />
-                </div>
-            </section>
+
         </>
     );
 }

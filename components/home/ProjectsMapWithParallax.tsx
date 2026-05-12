@@ -71,7 +71,7 @@ export function ProjectsMapWithParallax() {
                 <div className="pointer-events-none absolute inset-0 z-[6] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.40)_0%,rgba(255,255,255,0.10)_40%,rgba(255,255,255,0)_70%)]" />
             </motion.div>
 
-            <div className="relative z-10">
+            <div className="relative z-10 max-w-7xl mx-auto">
                 <ProjectsMap />
             </div>
         </div>

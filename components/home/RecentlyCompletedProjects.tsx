@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 interface CompletedProject {
     id: number;
@@ -18,162 +19,155 @@ interface CompletedProject {
 
 const DEFAULT_IMAGE = '/images/home/complete/defaultCompleted.webp';
 
-function truncate(text: string, max: number): string {
-    if (!text) return '';
-    if (text.length <= max) return text;
-    return text.slice(0, max).trimEnd() + '…';
-}
-
-function ProjectImage({ url, alt }: { url: string | null; alt: string }) {
-    const [src, setSrc] = useState<string>(url ?? DEFAULT_IMAGE);
+function ProjectCard({ project, index }: { project: CompletedProject; index: number }) {
+    const [imgSrc, setImgSrc] = useState<string>(project.imageUrl ?? DEFAULT_IMAGE);
 
     return (
-        <Image
-            src={src}
-            alt={alt}
-            fill
-            sizes="(max-width: 640px) 85vw, (max-width: 1024px) 45vw, 360px"
-            className="object-cover"
-            onError={() => setSrc(DEFAULT_IMAGE)}
-            unoptimized
-        />
-    );
-}
-
-function ProjectCard({ project }: { project: CompletedProject }) {
-    return (
-        <Link
-            href={`/projects/${project.id}`}
-            className="group block snap-start shrink-0 w-[85vw] sm:w-[340px] lg:w-[360px]"
+        <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.6, delay: index * 0.1, ease: [0.21, 0.47, 0.32, 0.98] }}
+            className=" select-none snap-start shrink-0 w-[15rem] "
         >
-            <article className="flex flex-col h-full">
-                <div className="relative aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden bg-slate-100">
-                    <ProjectImage url={project.imageUrl} alt={project.name} />
+            <Link href={`/projects/${project.id}`} className="group block">
+                <article className="flex flex-col">
+                    {/* Image Wrapper */}
+                    <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/60 shadow-sm">
+                        <Image
+                            src={imgSrc}
+                            alt={project.name}
+                            fill
+                            sizes="(max-width: 640px) 85vw, 400px"
+                            className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+                            onError={() => setImgSrc(DEFAULT_IMAGE)}
+                        />
 
-                    <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-200">
-                        <span className="px-3 py-1.5 bg-white/95 backdrop-blur-sm text-slate-900 text-xs font-bold rounded-lg shadow-sm uppercase tracking-wide">
-                            {project.number}
-                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                        {project.amount && (
+                            <div className="absolute bottom-3 left-3">
+                                <span className="px-2.5 py-1 bg-white/95 backdrop-blur-md text-[10px] font-bold tracking-tight text-slate-900 rounded-lg shadow-sm">
+                                    {project.amount}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
-                    {project.amount && (
-                        <div className="absolute bottom-3 right-3 z-10">
-                            <span className="px-3 py-1.5 bg-slate-900/85 backdrop-blur-sm text-white text-sm font-semibold rounded-lg">
-                                {project.amount}
+                    {/* Content Section */}
+                    <div className="mt-5 space-y-3">
+                        <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600 truncate mr-4">
+                                {project.organizationShort || 'Infrastructure'}
+                            </span>
+                            <span className="text-[10px] uppercase font-medium text-slate-400 tabular-nums shrink-0">
+                                {project.number}
                             </span>
                         </div>
-                    )}
-                </div>
 
-                <div className="mt-4 flex flex-col flex-1">
-                    <h3
-                        className="font-bold text-slate-900 text-base leading-snug line-clamp-2 min-h-[2.75rem]"
-                        title={project.name}
-                    >
-                        {project.name}
-                    </h3>
+                        <div className="space-y-2">
+                            {/* Project Title Truncation (1 Line) */}
+                            <h3 className="text-lg font-semibold text-slate-900 leading-snug group-hover:text-slate-600 transition-colors duration-300 line-clamp-1" title={project.name}>
+                                {project.name}
+                            </h3>
 
-                    {project.organizationShort && (
-                        <p className="mt-1 text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                            {project.organizationShort}
-                        </p>
-                    )}
-
-                    {project.description && (
-                        <p className="mt-2 text-sm text-slate-600 leading-relaxed line-clamp-2">
-                            {truncate(project.description, 120)}
-                        </p>
-                    )}
-
-                    {project.completionDate && (
-                        <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            <span>Completed {project.completionDate}</span>
+                            {/* Project Description Truncation (2 Lines) */}
+                            <p className="text-sm text-slate-500 line-clamp-2 font-light leading-relaxed min-h-[40px]">
+                                {project.description}
+                            </p>
                         </div>
-                    )}
-                </div>
-            </article>
-        </Link>
+
+                        {/* Date & Status */}
+                        {project.completionDate && (
+                            <div className="pt-1 flex items-center gap-2">
+                                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+                                    Ended {project.completionDate}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                </article>
+            </Link>
+        </motion.div>
     );
 }
 
 export function RecentlyCompletedProjects() {
     const [projects, setProjects] = useState<CompletedProject[]>([]);
-    const [loading, setLoading]   = useState(true);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let cancelled = false;
-
         (async () => {
             try {
-                const res = await fetch('/api/home/recentCompletedProjects?limit=3');
+                const res = await fetch('/api/home/recentCompletedProjects?limit=4');
                 const data = await res.json();
-                if (!cancelled) setProjects(data?.projects ?? []);
+                setProjects(data?.projects ?? []);
             } catch {
-                if (!cancelled) setProjects([]);
+                setProjects([]);
             } finally {
-                if (!cancelled) setLoading(false);
+                setLoading(false);
             }
         })();
-
-        return () => { cancelled = true; };
     }, []);
 
     return (
-        <section className="bg-white py-12 sm:py-16">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 mb-8 sm:mb-10">
-                    <div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1.5">
-                            Recently Completed Projects
-                        </h2>
-                        <p className="text-sm sm:text-base text-slate-600">
-                            Successful infrastructure initiatives across California
-                        </p>
+        <section className="select-none bg-white  overflow-hidden">
+            <div className="max-w-7xl mx-auto ">
+                <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+                    <div className="max-w-xl">
+                        <motion.span
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            className="text-slate-600 text-xs font-bold uppercase tracking-[0.3em] block mb-3"
+                        >
+                            Milestones
+                        </motion.span>
+                        <motion.h2
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900"
+                        >
+                            Impact in Motion.
+                        </motion.h2>
+                        <motion.p
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="mt-5 text-lg text-slate-500 font-light leading-relaxed"
+                        >
+                            Showcasing our latest successfully delivered infrastructure initiatives.
+                        </motion.p>
                     </div>
+
                     <Link
                         href="/projects?status=Closed"
-                        className="inline-flex items-center gap-1.5 text-sm sm:text-base text-slate-700 hover:text-slate-900 font-semibold transition-colors group self-start sm:self-end"
+                        className="whitespace-nowrap inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-slate-400 hover:text-slate-600 transition-all group"
                     >
-                        View all
-                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                        View Archive
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform pr-6 " />
                     </Link>
-                </div>
+                </header>
 
                 {loading ? (
-                    <div className="flex gap-4 sm:gap-6 overflow-hidden">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                            <div
-                                key={i}
-                                className="shrink-0 w-[85vw] sm:w-[340px] lg:w-[360px] animate-pulse"
-                            >
-                                <div className="aspect-[4/3] sm:aspect-[16/10] bg-slate-200 rounded-2xl" />
-                                <div className="mt-4 h-5 w-3/4 bg-slate-200 rounded" />
-                                <div className="mt-2 h-3 w-1/4 bg-slate-200 rounded" />
-                                <div className="mt-2 h-4 w-1/2 bg-slate-200 rounded" />
+                    <div className="flex gap-8">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="shrink-0 w-[340px] animate-pulse">
+                                <div className="aspect-[16/9] bg-slate-100 rounded-2xl mb-6" />
+                                <div className="h-3 w-1/4 bg-slate-100 rounded mb-4" />
+                                <div className="h-6 w-3/4 bg-slate-100 rounded" />
                             </div>
                         ))}
                     </div>
-                ) : projects.length === 0 ? (
-                    <p className="text-slate-500 text-sm">No recently completed projects to display.</p>
                 ) : (
-                    <div
-                        className="
-                            flex gap-4 sm:gap-6
-                            overflow-x-auto
-                            snap-x snap-mandatory
-                            scroll-smooth
-                            -mx-4 sm:-mx-6 px-4 sm:px-6
-                            pb-4
-                            [scrollbar-width:none]
-                            [&::-webkit-scrollbar]:hidden
-                        "
+                    <motion.div
+                        className="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-12 cursor-grab active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                        whileTap={{ cursor: "grabbing" }}
                     >
-                        {projects.map((project) => (
-                            <ProjectCard key={project.id} project={project} />
+                        {projects.map((project, index) => (
+                            <ProjectCard key={project.id} project={project} index={index} />
                         ))}
-                        <div className="shrink-0 w-1 sm:w-2" aria-hidden />
-                    </div>
+                        <div className="shrink-0 w-8" aria-hidden="true" />
+                    </motion.div>
                 )}
             </div>
         </section>
