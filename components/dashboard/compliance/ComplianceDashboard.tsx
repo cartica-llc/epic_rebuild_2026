@@ -207,7 +207,7 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
     };
 
     return (
-        <div className="space-y-5 mt-38 px-6 max-w-7xl m-auto">
+        <div className="space-y-5  py-12 px-6 max-w-7xl m-auto">
             {/* ─── Header ─── */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
