@@ -106,6 +106,12 @@ export function RotatingHeadline() {
     const safeIndex = lenses.length > 0 ? index % lenses.length : 0;
     const current = lenses[safeIndex] ?? FALLBACK_LENSES[0];
 
+    const longestLabel = lenses.reduce(
+        (longest, lens) =>
+            lens.label.length > longest.label.length ? lens : longest,
+        lenses[0] ?? FALLBACK_LENSES[0],
+    );
+
     return (
         <div
             onMouseEnter={() => setPaused(true)}
@@ -117,46 +123,84 @@ export function RotatingHeadline() {
             >
                 <span className="block">California has committed</span>
 
-                <span
-                    className="relative mt-1 block overflow-hidden"
-                    style={{ minHeight: '2.4em', lineHeight: 1.1 }}
-                >
-                    <AnimatePresence mode="wait">
-                        <motion.span
-                            key={`line-${safeIndex}`}
-                            initial={{ opacity: 0, y: '0.4em', filter: 'blur(6px)' }}
-                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                            exit={{ opacity: 0, y: '-0.4em', filter: 'blur(6px)' }}
-                            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                            className="absolute inset-0"
-                            title={current.fullAmount}
-                        >
-                            <span className="text-slate-900">{current.amount}</span>
-                            <span className="ml-3 mr-3 font-normal text-slate-400">in</span>
-                            <span className="text-slate-600">{current.label}</span>
-                        </motion.span>
-                    </AnimatePresence>
+                <span className="relative mt-1 block" style={{ lineHeight: 1.1 }}>
+                    <span aria-hidden="true" className="invisible block">
+                        <span>{longestLabel.amount}</span>
+                        <span className="ml-3 mr-3 font-normal">in</span>
+                        <span>
+                            {longestLabel.label}
+                            <span className="ml-2 inline-block" style={{ width: '0.7em' }} />
+                        </span>
+                    </span>
+
+                    <span className="absolute inset-0">
+                        <AnimatePresence mode="wait">
+                            <motion.span
+                                key={`line-${safeIndex}`}
+                                initial={{ opacity: 0, y: '0.3em', filter: 'blur(6px)' }}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                exit={{ opacity: 0, y: '-0.3em', filter: 'blur(6px)' }}
+                                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                className="absolute inset-0"
+                                title={current.fullAmount}
+                            >
+                                <span className="text-slate-900">{current.amount}</span>
+                                <span className="ml-3 mr-3 font-normal text-slate-400">in</span>
+                                <span
+                                    className="text-slate-600"
+                                    style={{
+                                        backgroundImage:
+                                            'linear-gradient(to right, rgba(2, 132, 199, 0.7), rgba(5, 150, 105, 0.7), rgba(225, 29, 72, 0.7))',
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundSize: '40% 3px',
+                                        backgroundPosition: '100% 100%',
+                                        paddingBottom: '0.12em',
+                                        boxDecorationBreak: 'clone',
+                                        WebkitBoxDecorationBreak: 'clone',
+                                    }}
+                                >
+                                    {current.label}
+                                </span>
+
+                                <TrailingStar />
+                            </motion.span>
+                        </AnimatePresence>
+                    </span>
                 </span>
             </h1>
-
-            {/* Progress dots */}
-            {/*{lenses.length > 1 && (*/}
-            {/*    <div className="mt-6 flex items-center gap-1.5">*/}
-            {/*        {lenses.map((lens, i) => (*/}
-            {/*            <button*/}
-            {/*                key={`${lens.label}-${i}`}*/}
-            {/*                type="button"*/}
-            {/*                onClick={() => setIndex(i)}*/}
-            {/*                className={`h-1 rounded-full transition-all duration-300 ${*/}
-            {/*                    i === safeIndex*/}
-            {/*                        ? 'w-6 bg-slate-900'*/}
-            {/*                        : 'w-1.5 bg-slate-300 hover:bg-slate-400'*/}
-            {/*                }`}*/}
-            {/*                aria-label={`View ${lens.label}`}*/}
-            {/*            />*/}
-            {/*        ))}*/}
-            {/*    </div>*/}
-            {/*)}*/}
         </div>
+    );
+}
+
+
+function TrailingStar() {
+    return (
+        <motion.span
+            aria-hidden="true"
+            initial={{ opacity: 0, scale: 0.3, rotate: -60 }}
+            animate={{
+                opacity: 1,
+                scale: 1,
+                rotate: 0,
+            }}
+            transition={{
+                duration: 0.5,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 0.25,
+            }}
+            className="ml-2 inline-block align-middle"
+            style={{ width: '0.55em', height: '0.55em' }}
+        >
+            <svg
+                viewBox="0 0 224 212"
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-full w-full"
+            >
+                <path
+                    d="M140,80L112,0l-28,80H0l68,52-24,80,68-52,68,52-24-80,68-52h-84Z"
+                    fill="#e11d48"
+                />
+            </svg>
+        </motion.span>
     );
 }

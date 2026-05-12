@@ -15,7 +15,7 @@ const TABS: { key: SpendingTab; label: string }[] = [
     { key: 'overview', label: 'Spending Overview' },
     { key: 'leverage', label: 'Leverage & Match' },
     { key: 'awards', label: 'Award Size' },
-    { key: 'community', label: 'Community Requirements' },
+    { key: 'community', label: 'Community Investments' },
 ];
 
 export function SpendingTabBar({ active, onChange }: SpendingTabBarProps) {

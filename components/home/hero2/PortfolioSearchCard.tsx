@@ -72,18 +72,15 @@ export function PortfolioSearchCard() {
     const router = useRouter();
     const inputRef = useRef<HTMLInputElement | null>(null);
 
-    // KPI data
     const [data, setData] = useState<KPIData>({
         activeProjects: 0,
         funding: 0,
         matchFunding: 0,
     });
 
-    // Search state
     const [value, setValue] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    // Load KPI data
     useEffect(() => {
         const timer = setTimeout(async () => {
             try {
@@ -112,11 +109,17 @@ export function PortfolioSearchCard() {
     };
 
     return (
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {/* Top brand gradient hairline */}
+            <div
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600 opacity-60"
+            />
+
             {/* Header band */}
             <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-50/60 px-6 py-4 sm:px-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    EPIC portfolio at a glance
+                <p className="text-xs font-semibold uppercase tracking-[0.18em]    text-slate-500">
+                    EPIC database at a glance
                 </p>
             </div>
 
@@ -132,6 +135,7 @@ export function PortfolioSearchCard() {
                         />
                     }
                     sublabel="In progress today"
+                    accent="sky"
                 />
 
                 <StatCell
@@ -147,6 +151,7 @@ export function PortfolioSearchCard() {
                     sublabel={
                         data.funding > 0 ? fmt.format(data.funding) : 'Ratepayer dollars'
                     }
+                    accent="emerald"
                 />
 
                 <StatCell
@@ -164,10 +169,11 @@ export function PortfolioSearchCard() {
                             ? fmt.format(data.matchFunding)
                             : 'Outside investment'
                     }
+                    accent="rose"
                 />
             </div>
 
-            {/* Divider with label - signals the section transition */}
+            {/* Divider with label */}
             <div className="relative border-t border-slate-200 bg-slate-50/40 px-6 pt-5 sm:px-8">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Search this portfolio
@@ -215,21 +221,29 @@ export function PortfolioSearchCard() {
     );
 }
 
+const ACCENT_MAP = {
+    sky: 'before:bg-sky-600',
+    emerald: 'before:bg-emerald-600',
+    rose: 'before:bg-rose-600',
+} as const;
+
 function StatCell({
                       label,
                       value,
                       sublabel,
+                      accent,
                   }: {
     label: string;
     value: React.ReactNode;
     sublabel: string;
+    accent: keyof typeof ACCENT_MAP;
 }) {
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="px-6 py-6 sm:px-8 sm:py-7"
+            className={`relative px-6 py-6 sm:px-8 sm:py-7 before:absolute before:left-6 before:top-0 before:h-[2px] before:w-8 before:rounded-full before:opacity-70 sm:before:left-8 ${ACCENT_MAP[accent]}`}
         >
             <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 {label}
