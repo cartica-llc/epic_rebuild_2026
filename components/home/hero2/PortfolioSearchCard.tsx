@@ -109,11 +109,12 @@ export function PortfolioSearchCard() {
     };
 
     return (
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className=" select-none relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Top brand gradient hairline */}
             <div
                 aria-hidden="true"
-                className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600 opacity-60"
+                className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600 opacity-60"
+
             />
 
             {/* Header band */}
@@ -196,7 +197,7 @@ export function PortfolioSearchCard() {
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') handleSubmit();
                         }}
-                        placeholder="Search projects, technologies, recipients, or locations..."
+                        placeholder="Search projects, technologies, recipients..."
                         className="flex-1 bg-transparent px-3 py-3.5 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
                     />
 
@@ -204,7 +205,7 @@ export function PortfolioSearchCard() {
                         type="button"
                         onClick={handleSubmit}
                         disabled={submitting}
-                        className="inline-flex items-center gap-2 bg-slate-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-60 sm:px-6"
+                        className="inline-flex items-center gap-2 bg-gray-100 px-5 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-200 disabled:opacity-60 sm:px-6"
                     >
                         {submitting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -222,9 +223,9 @@ export function PortfolioSearchCard() {
 }
 
 const ACCENT_MAP = {
-    sky: 'before:bg-sky-600',
-    emerald: 'before:bg-emerald-600',
-    rose: 'before:bg-rose-600',
+    sky: 'before:bg-sky',
+    emerald: 'before:bg-emerald',
+    rose: 'before:bg-rose',
 } as const;
 
 function StatCell({

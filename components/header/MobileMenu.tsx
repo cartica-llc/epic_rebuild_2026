@@ -112,7 +112,7 @@ export function MobileMenu({ isOpen, onClose, activePath, isSignedIn, onSignIn }
                                         height={48}
                                         className="h-12 w-auto object-contain"
                                     />
-                                    <div>
+                                    <div className="">
                                         <h2 className="text-xs font-semibold leading-tight text-slate-900">
                                             California Energy Commission
                                         </h2>

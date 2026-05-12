@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 export function BrandLogo() {
     return (
-        <Link href="/" className="flex items-center gap-3 shrink-0">
+        <Link href="/" className=" select-none flex items-center gap-3 shrink-0">
             <Image
                 src="/logo/CAgov-logo.svg"
                 alt="California Government Logo"
@@ -12,7 +12,7 @@ export function BrandLogo() {
                 className="h-10 w-auto object-contain"
                 priority
             />
-            <div className="hidden md:block">
+            <div className="hidden ">
                 <h1 className="text-lg font-semibold text-slate-900 whitespace-nowrap">
                     California Public Utilities Commission
                 </h1>

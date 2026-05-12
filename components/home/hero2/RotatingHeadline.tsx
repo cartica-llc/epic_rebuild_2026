@@ -52,16 +52,8 @@ function normalizeLabel(name: string): string {
 const ROTATE_MS = 3600;
 const TOP_N = 6;
 
-const FALLBACK_LENSES: Lens[] = [
-    {
-        amount: '—',
-        fullAmount: '—',
-        label: 'clean energy research',
-    },
-];
-
 export function RotatingHeadline() {
-    const [lenses, setLenses] = useState<Lens[]>(FALLBACK_LENSES);
+    const [lenses, setLenses] = useState<Lens[]>([]);
     const [index, setIndex] = useState(0);
     const [paused, setPaused] = useState(false);
 
@@ -103,67 +95,101 @@ export function RotatingHeadline() {
         return () => clearInterval(id);
     }, [paused, lenses.length]);
 
-    const safeIndex = lenses.length > 0 ? index % lenses.length : 0;
-    const current = lenses[safeIndex] ?? FALLBACK_LENSES[0];
+    const hasData = lenses.length > 0;
+    const safeIndex = hasData ? index % lenses.length : 0;
+    const current = hasData ? lenses[safeIndex] : null;
 
-    const longestLabel = lenses.reduce(
-        (longest, lens) =>
-            lens.label.length > longest.label.length ? lens : longest,
-        lenses[0] ?? FALLBACK_LENSES[0],
-    );
+    const longestLabel = hasData
+        ? lenses.reduce(
+            (longest, lens) =>
+                lens.label.length > longest.label.length ? lens : longest,
+            lenses[0],
+        )
+        : null;
 
     return (
         <div
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
+            className="w-full min-w-0 select-none"
         >
             <h1
-                className="font-bold leading-[1.05] tracking-tight text-slate-900"
-                style={{ fontSize: 'clamp(2.25rem, 5.5vw, 4.25rem)' }}
+                className="w-full min-w-0 font-bold leading-[1.05] tracking-tight text-slate-900"
+                style={{
+                    fontSize: 'clamp(1.25rem, 7vw, 4.25rem)',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word',
+                    hyphens: 'auto',
+                }}
             >
                 <span className="block">California has committed</span>
 
-                <span className="relative mt-1 block" style={{ lineHeight: 1.1 }}>
-                    <span aria-hidden="true" className="invisible block">
-                        <span>{longestLabel.amount}</span>
-                        <span className="ml-3 mr-3 font-normal">in</span>
-                        <span>
-                            {longestLabel.label}
-                            <span className="ml-2 inline-block" style={{ width: '0.7em' }} />
-                        </span>
-                    </span>
-
-                    <span className="absolute inset-0">
-                        <AnimatePresence mode="wait">
-                            <motion.span
-                                key={`line-${safeIndex}`}
-                                initial={{ opacity: 0, y: '0.3em', filter: 'blur(6px)' }}
-                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                exit={{ opacity: 0, y: '-0.3em', filter: 'blur(6px)' }}
-                                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                                className="absolute inset-0"
-                                title={current.fullAmount}
-                            >
-                                <span className="text-slate-900">{current.amount}</span>
-                                <span className="ml-3 mr-3 font-normal text-slate-400">in</span>
+                <span
+                    className="relative mt-1 block w-full min-w-0"
+                    style={{ lineHeight: 1.1 }}
+                >
+                    {/* Spacer reserves height for the longest label */}
+                    {longestLabel ? (
+                        <span
+                            aria-hidden="true"
+                            className="invisible block w-full"
+                            style={{
+                                overflowWrap: 'break-word',
+                                wordBreak: 'break-word',
+                            }}
+                        >
+                            <span>{longestLabel.amount}</span>
+                            <span className="ml-3 mr-3 font-normal">in</span>
+                            <span>
+                                {longestLabel.label}
                                 <span
-                                    className="text-slate-600"
-                                    style={{
-                                        backgroundImage:
-                                            'linear-gradient(to right, rgba(2, 132, 199, 0.7), rgba(5, 150, 105, 0.7), rgba(225, 29, 72, 0.7))',
-                                        backgroundRepeat: 'no-repeat',
-                                        backgroundSize: '40% 3px',
-                                        backgroundPosition: '100% 100%',
-                                        paddingBottom: '0.12em',
-                                        boxDecorationBreak: 'clone',
-                                        WebkitBoxDecorationBreak: 'clone',
-                                    }}
-                                >
-                                    {current.label}
-                                </span>
+                                    className="ml-2 inline-block"
+                                    style={{ width: '0.7em' }}
+                                />
+                            </span>
+                        </span>
+                    ) : (
+                        <span aria-hidden="true" className="invisible block">
+                            placeholder
+                        </span>
+                    )}
 
-                                <TrailingStar />
-                            </motion.span>
+                    {/* Animated content - only renders once data has loaded */}
+                    <span className="absolute inset-0 w-full">
+                        <AnimatePresence mode="wait">
+                            {current && (
+                                <motion.span
+                                    key={`line-${safeIndex}`}
+                                    initial={{
+                                        opacity: 0,
+                                        y: '0.3em',
+                                        filter: 'blur(6px)',
+                                    }}
+                                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                    exit={{
+                                        opacity: 0,
+                                        y: '-0.3em',
+                                        filter: 'blur(6px)',
+                                    }}
+                                    transition={{
+                                        duration: 0.5,
+                                        ease: [0.22, 1, 0.36, 1],
+                                    }}
+                                    className="absolute inset-0 block w-full"
+                                    style={{
+                                        overflowWrap: 'break-word',
+                                        wordBreak: 'break-word',
+                                    }}
+                                    title={current.fullAmount}
+                                >
+                                    <span className="text-slate-900">{current.amount}</span>
+                                    <span className="ml-3 mr-3 font-normal text-slate-400">
+                                        in
+                                    </span>
+                                    <LabelWithLastLineUnderline label={current.label} />
+                                    <TrailingStar />
+                                </motion.span>
+                            )}
                         </AnimatePresence>
                     </span>
                 </span>
@@ -172,6 +198,34 @@ export function RotatingHeadline() {
     );
 }
 
+// ─── Label that only underlines its final line ───────────────────────────────
+
+function LabelWithLastLineUnderline({ label }: { label: string }) {
+    const parts = label.split(' ');
+    const lastWord = parts[parts.length - 1] ?? '';
+    const head = parts.slice(0, -1).join(' ');
+
+    return (
+        <span className="text-slate-600">
+            {head && <>{head} </>}
+            <span
+                className="whitespace-nowrap"
+                style={{
+                    backgroundImage:
+                        'linear-gradient(to right, rgba(2, 132, 199, 0.7), rgba(5, 150, 105, 0.7), rgba(225, 29, 72, 0.7))',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '100% 3px',
+                    backgroundPosition: '0 100%',
+                    paddingBottom: '0.12em',
+                }}
+            >
+                {lastWord}
+            </span>
+        </span>
+    );
+}
+
+// ─── Trailing star ───────────────────────────────────────────────────────────
 
 function TrailingStar() {
     return (
