@@ -12,7 +12,7 @@ export function Hero_V2() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="relative w-full overflow-hidden bg-white pt-10"
+            className="relative w-full overflow-hidden bg-white pt-10 "
         >
             {/* Background chart - decorative */}
             <div className="pointer-events-none absolute inset-0 z-0 opacity-85">

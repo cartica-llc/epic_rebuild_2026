@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { geoPath, geoMercator } from 'd3-geo';
 import * as topojson from 'topojson-client';
 import type { Feature, Geometry, GeoJsonProperties } from 'geojson';
-import { ChevronRight, X } from 'lucide-react';
+import { ArrowRight, ChevronRight, X } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,50 +51,18 @@ const COUNTY_FIPS_TO_ADMIN: Record<string, number> = {
     '06111': 1, '06113': 3, '06115': 3,
 };
 
-// Slate shades per region — lighter = more contrast on dark base
 const REGION_META: Record<number, { label: string; short: string; fill: string; activeFill: string }> = {
-    3: {
-        label: 'Northern California',
-        short: 'NorCal',
-        fill: '#cbd5e1',
-        activeFill: '#94a3b8'
-    },
-
-    0: {
-        label: 'Central California',
-        short: 'Central',
-        fill: '#94a3b8',
-        activeFill: '#64748b'
-    },
-
-    1: {
-        label: 'Southern California',
-        short: 'SoCal',
-        fill: '#64748b',
-        activeFill: '#334155'
-    },
-
-    2: {
-        label: 'San Diego',
-        short: 'San Diego',
-        fill: '#1e293b',
-        activeFill: '#020617'
-    },
+    3: { label: 'Northern California', short: 'NorCal',   fill: '#cbd5e1', activeFill: '#94a3b8' },
+    0: { label: 'Central California',  short: 'Central',  fill: '#94a3b8', activeFill: '#64748b' },
+    1: { label: 'Southern California', short: 'SoCal',    fill: '#64748b', activeFill: '#334155' },
+    2: { label: 'San Diego',           short: 'San Diego',fill: '#1e293b', activeFill: '#020617' },
 };
 
 const REGION_ORDER = [3, 0, 1, 2];
 
 // ─── Popup ────────────────────────────────────────────────────────────────────
 
-function RegionPopup({
-                         region,
-                         onClose,
-                     }: {
-    region: Region;
-    onClose: () => void;
-}) {
-    const meta = REGION_META[region.adminId];
-
+function RegionPopup({ region, onClose }: { region: Region; onClose: () => void }) {
     useEffect(() => {
         function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
         window.addEventListener('keydown', onKey);
@@ -103,27 +71,26 @@ function RegionPopup({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.97 }}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-x-0 bottom-0 z-20 mx-2 mb-2 rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden"
-            // stop clicks inside the popup from bubbling to the overlay
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-x-0 bottom-0 z-20 mx-2 mb-2 rounded-lg bg-white shadow-xl border border-slate-200 overflow-hidden"
             onClick={e => e.stopPropagation()}
         >
-            {/* Header */}
-            <div className="flex items-start justify-between px-5 pt-4 pb-3 border-b border-slate-100 select-none">
+            {/* Gray header band — matches InvestmentAreas popup */}
+            <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-start justify-between">
                 <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                    <h3 className="text-sm font-semibold text-slate-900">
                         {region.label}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                        {region.projectCount} DAC/LI project{region.projectCount !== 1 ? 's' : ''} · {region.dacPct.toFixed(1)}% of regional spend
+                    </h3>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                        Top {region.projects.length} of {region.projectCount.toLocaleString()} DAC/LI projects
                     </p>
                 </div>
                 <button
                     onClick={onClose}
-                    className="mt-0.5 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors shrink-0"
+                    className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center hover:bg-slate-300 transition-colors shrink-0 mt-0.5"
                     aria-label="Close"
                 >
                     <X className="w-3 h-3 text-slate-500" />
@@ -131,41 +98,38 @@ function RegionPopup({
             </div>
 
             {/* Project rows */}
-            <div className="px-5 py-3 space-y-0">
+            <div className="p-3">
                 {region.projects.length === 0 ? (
-                    <p className="text-xs text-slate-400 py-2">No projects available.</p>
+                    <p className="text-xs text-slate-500 py-2">No projects available.</p>
                 ) : (
-                    region.projects.map((project, i) => (
-                        <motion.div
-                            key={project.id}
-                            initial={{ opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.05, duration: 0.16 }}
-                        >
+                    <div className="space-y-2">
+                        {region.projects.map(project => (
                             <Link
+                                key={project.id}
                                 href={`/projects/${project.id}`}
-                                className="group flex items-start gap-3 py-3 border-b border-slate-100 last:border-0"
+                                className="flex items-center justify-between gap-3 text-xs py-1.5 hover:bg-slate-50 rounded px-2 -mx-2"
                             >
-                                <span className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-slate-900 flex items-center justify-center text-[10px] font-black text-white">
-                                    {project.rank}
+                                <span className="text-slate-700 truncate flex-1">
+                                    {project.name}
                                 </span>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-semibold text-slate-800 line-clamp-1 group-hover:text-slate-500 transition-colors">
-                                        {project.name}
-                                    </p>
-                                    {project.location && (
-                                        <p className="text-[10px] text-slate-400 mt-0.5 truncate">
-                                            {project.location}
-                                        </p>
-                                    )}
-                                </div>
-                                <span className="shrink-0 text-sm font-black tabular-nums text-slate-900">
+                                <span className="font-semibold text-slate-900 whitespace-nowrap tabular-nums">
                                     {project.funding}
                                 </span>
                             </Link>
-                        </motion.div>
-                    ))
+                        ))}
+                    </div>
                 )}
+
+                {/* Footer link */}
+                <div className="mt-3 pt-3 border-t border-slate-200">
+                    <Link
+                        href={`/projects?dacli=1&programAdminId=${region.adminId}&disadvantaged=1&lowIncome=1`}
+                        className="text-xs font-medium text-slate-900 hover:text-slate-700 inline-flex items-center gap-1 group"
+                    >
+                        View all {region.short} DAC/LI projects
+                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                </div>
             </div>
         </motion.div>
     );
@@ -268,10 +232,7 @@ export function ProjectsMap() {
     useEffect(() => {
         if (activeRegionId === null) return;
         function onPointerDown(e: MouseEvent) {
-            if (
-                mapContainerRef.current &&
-                !mapContainerRef.current.contains(e.target as Node)
-            ) {
+            if (mapContainerRef.current && !mapContainerRef.current.contains(e.target as Node)) {
                 setActiveRegionId(null);
             }
         }
@@ -283,7 +244,7 @@ export function ProjectsMap() {
     const mapReady     = Object.keys(regionPaths).length > 0;
 
     return (
-        <section className="py-6 sm:py-10  max-w-screen-xl mx-auto">
+        <section className="py-6 sm:py-10 max-w-screen-xl mx-auto">
             <div className="max-w-7xl mx-auto select-none">
                 <div className="flex flex-col lg:flex-row gap-4">
 
@@ -334,7 +295,7 @@ export function ProjectsMap() {
                                 <>
                                     <svg
                                         viewBox="0 0 400 600"
-                                        className="w-full h-auto drop-shadow-2xl "
+                                        className="w-full h-auto drop-shadow-2xl"
                                         xmlns="http://www.w3.org/2000/svg"
                                         role="img"
                                         aria-label="California map divided into EPIC program regions — click a region to see top DAC/LI projects"
@@ -422,7 +383,6 @@ export function ProjectsMap() {
                                         })}
                                     </svg>
 
-                                    {/* Popup — z-20 sits above the overlay */}
                                     <AnimatePresence>
                                         {activeRegion && (
                                             <div className="absolute inset-x-0 bottom-0 z-20">

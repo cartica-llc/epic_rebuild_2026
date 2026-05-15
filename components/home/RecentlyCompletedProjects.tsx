@@ -80,9 +80,11 @@ function ProjectCard({ project, index }: { project: CompletedProject; index: num
                         {/* Date & Status */}
                         {project.completionDate && (
                             <div className="pt-1 flex items-center gap-2">
-                                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-                                    Ended {project.completionDate}
-                                </span>
+                              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+
+    Completed {project.completionDate}
+
+</span>
                             </div>
                         )}
                     </div>
@@ -99,7 +101,7 @@ export function RecentlyCompletedProjects() {
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch('/api/home/recentCompletedProjects?limit=4');
+                const res = await fetch('/api/home/recentCompletedProjects?limit=5');
                 const data = await res.json();
                 setProjects(data?.projects ?? []);
             } catch {
@@ -120,32 +122,37 @@ export function RecentlyCompletedProjects() {
                             whileInView={{ opacity: 1 }}
                             className="text-slate-600 text-xs font-bold uppercase tracking-[0.3em] block mb-3"
                         >
-                            Milestones
+                            Recently Completed
                         </motion.span>
+
                         <motion.h2
                             initial={{ opacity: 0, y: 10 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900"
                         >
-                            Impact in Motion.
+                            Project Milestones
                         </motion.h2>
+
                         <motion.p
                             initial={{ opacity: 0, y: 10 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
                             className="mt-5 text-lg text-slate-500 font-light leading-relaxed"
                         >
-                            Showcasing our latest successfully delivered infrastructure initiatives.
+                            A look at the latest initiatives that have moved from planning to completion.
                         </motion.p>
                     </div>
 
                     <Link
+
                         href="/projects?status=Closed"
-                        className="whitespace-nowrap inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-slate-400 hover:text-slate-600 transition-all group"
+
+                        className="whitespace-nowrap px-8 inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase text-slate-400 hover:text-slate-600 transition-all group"
+
                     >
-                        View Archive
-                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform pr-6 " />
-                    </Link>
+
+                        View All
+                        <ChevronRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" />                    </Link>
                 </header>
 
                 {loading ? (

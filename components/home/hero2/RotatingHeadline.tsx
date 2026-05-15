@@ -51,6 +51,7 @@ function normalizeLabel(name: string): string {
 
 const ROTATE_MS = 3600;
 const TOP_N = 6;
+const MAX_LABEL_WORDS = 4;
 
 export function RotatingHeadline() {
     const [lenses, setLenses] = useState<Lens[]>([]);
@@ -74,13 +75,15 @@ export function RotatingHeadline() {
                     .map((r) => ({
                         amount: abbreviate(r.funding),
                         fullAmount: fmt.format(Math.floor(r.funding)),
-                        label: normalizeLabel(r.name),
+                        label: normalizeLabel(r.name)
+                            .split(' ')
+                            .slice(0, MAX_LABEL_WORDS)
+                            .join(' '),
                     }));
 
                 if (next.length) setLenses(next);
             })
-            .catch(() => {
-            });
+            .catch(() => {});
 
         return () => {
             cancelled = true;
@@ -116,10 +119,7 @@ export function RotatingHeadline() {
             <h1
                 className="w-full min-w-0 font-bold leading-[1.05] tracking-tight text-slate-900"
                 style={{
-                    fontSize: 'clamp(1.25rem, 7vw, 4.25rem)',
-                    overflowWrap: 'break-word',
-                    wordBreak: 'break-word',
-                    hyphens: 'auto',
+                    fontSize: 'clamp(0.95rem, 4vw, 3.25rem)',
                 }}
             >
                 <span className="block">California has committed</span>
@@ -128,15 +128,10 @@ export function RotatingHeadline() {
                     className="relative mt-1 block w-full min-w-0"
                     style={{ lineHeight: 1.1 }}
                 >
-                    {/* Spacer reserves height for the longest label */}
                     {longestLabel ? (
                         <span
                             aria-hidden="true"
                             className="invisible block w-full"
-                            style={{
-                                overflowWrap: 'break-word',
-                                wordBreak: 'break-word',
-                            }}
                         >
                             <span>{longestLabel.amount}</span>
                             <span className="ml-3 mr-3 font-normal">in</span>
@@ -154,7 +149,6 @@ export function RotatingHeadline() {
                         </span>
                     )}
 
-                    {/* Animated content - only renders once data has loaded */}
                     <span className="absolute inset-0 w-full">
                         <AnimatePresence mode="wait">
                             {current && (
@@ -176,10 +170,6 @@ export function RotatingHeadline() {
                                         ease: [0.22, 1, 0.36, 1],
                                     }}
                                     className="absolute inset-0 block w-full"
-                                    style={{
-                                        overflowWrap: 'break-word',
-                                        wordBreak: 'break-word',
-                                    }}
                                     title={current.fullAmount}
                                 >
                                     <span className="text-slate-900">{current.amount}</span>
@@ -197,8 +187,6 @@ export function RotatingHeadline() {
         </div>
     );
 }
-
-// ─── Label that only underlines its final line ───────────────────────────────
 
 function LabelWithLastLineUnderline({ label }: { label: string }) {
     const parts = label.split(' ');
@@ -225,18 +213,12 @@ function LabelWithLastLineUnderline({ label }: { label: string }) {
     );
 }
 
-// ─── Trailing star ───────────────────────────────────────────────────────────
-
 function TrailingStar() {
     return (
         <motion.span
             aria-hidden="true"
             initial={{ opacity: 0, scale: 0.3, rotate: -60 }}
-            animate={{
-                opacity: 1,
-                scale: 1,
-                rotate: 0,
-            }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
             transition={{
                 duration: 0.5,
                 ease: [0.22, 1, 0.36, 1],
