@@ -1,4 +1,4 @@
-//app/api/auth/confirm-password/route.ts
+//app/api/auth/confirm-password/awardbands.ts
 
 import { NextResponse } from "next/server"
 import {

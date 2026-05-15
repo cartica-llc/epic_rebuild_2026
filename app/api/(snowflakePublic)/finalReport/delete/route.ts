@@ -1,4 +1,4 @@
-// app/api/finalReport/delete/route.ts
+// app/api/finalReport/delete/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';

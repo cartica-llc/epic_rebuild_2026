@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/home/dacLiProjectsMap/route.ts
+// app/api/(snowflakePublic)/home/dacLiProjectsMap/awardbands.ts
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
 

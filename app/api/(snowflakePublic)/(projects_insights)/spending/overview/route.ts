@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/(projects_insights)/spending/overview/route.ts
+// app/api/(snowflakePublic)/(projects_insights)/spending/overview/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
@@ -19,6 +19,7 @@ interface TotalsRow {
 }
 
 interface ByAreaRow {
+    INVESTMENT_AREA_ID: number | null;
     INVESTMENT_AREA_NAME: string | null;
     COMMITTED: number | null;
     CONTRACTED: number | null;
@@ -26,6 +27,7 @@ interface ByAreaRow {
 }
 
 interface ByPeriodRow {
+    PERIOD_ID: number | null;
     PERIOD_NAME: string | null;
     COMMITTED: number | null;
     CONTRACTED: number | null;
@@ -68,6 +70,7 @@ export async function GET(req: Request) {
             safeQuery<ByAreaRow[]>('overview:byArea', () =>
                 query(`
                     SELECT
+                        ia.INVESTMENT_AREA_ID,
                         ia.INVESTMENT_AREA_NAME,
                         SUM(COALESCE(fd.COMMITED_FUNDING_AMT, 0))      AS COMMITTED,
                         SUM(COALESCE(fd.CONTRACT_AMOUNT, 0))           AS CONTRACTED,
@@ -84,7 +87,7 @@ export async function GET(req: Request) {
                         ${groupingAreaFilter}
                     ${areaJoin}
                     WHERE ${whereClause}
-                    GROUP BY ia.INVESTMENT_AREA_NAME
+                    GROUP BY ia.INVESTMENT_AREA_ID, ia.INVESTMENT_AREA_NAME
                     ORDER BY COMMITTED DESC NULLS LAST
                     LIMIT 15
                 `) as Promise<ByAreaRow[]>,
@@ -93,6 +96,7 @@ export async function GET(req: Request) {
             safeQuery<ByPeriodRow[]>('overview:byPeriod', () =>
                 query(`
                     SELECT
+                        ipp.PERIOD_ID,
                         ipp.PERIOD_NAME,
                         SUM(COALESCE(fd.COMMITED_FUNDING_AMT, 0))      AS COMMITTED,
                         SUM(COALESCE(fd.CONTRACT_AMOUNT, 0))           AS CONTRACTED,
@@ -104,7 +108,7 @@ export async function GET(req: Request) {
                         ON p.INVESTMENT_PROGRAM_PERIOD_PERIOD_ID = ipp.PERIOD_ID
                     ${areaJoin}
                     WHERE ${whereClause}
-                    GROUP BY ipp.PERIOD_NAME
+                    GROUP BY ipp.PERIOD_ID, ipp.PERIOD_NAME
                     ORDER BY ipp.PERIOD_NAME
                 `) as Promise<ByPeriodRow[]>,
             ),
@@ -142,15 +146,19 @@ export async function GET(req: Request) {
                 expended: toNum(totalsRow?.EXPENDED),
                 projectCount: toNum(totalsRow?.PROJECT_COUNT),
             },
-            byArea: (byAreaRows ?? []).map((r) => ({
-                name: r.INVESTMENT_AREA_NAME ?? 'Unknown',
-                committed: toNum(r.COMMITTED),
-                contracted: toNum(r.CONTRACTED),
-                expended: toNum(r.EXPENDED),
-            })),
-            byPeriod: (byPeriodRows ?? [])
-                .filter((r) => r.PERIOD_NAME !== null)
+            byArea: (byAreaRows ?? [])
+                .filter((r) => r.INVESTMENT_AREA_ID !== null)
                 .map((r) => ({
+                    id: r.INVESTMENT_AREA_ID!,
+                    name: r.INVESTMENT_AREA_NAME ?? 'Unknown',
+                    committed: toNum(r.COMMITTED),
+                    contracted: toNum(r.CONTRACTED),
+                    expended: toNum(r.EXPENDED),
+                })),
+            byPeriod: (byPeriodRows ?? [])
+                .filter((r) => r.PERIOD_ID !== null && r.PERIOD_NAME !== null)
+                .map((r) => ({
+                    id: r.PERIOD_ID!,
                     period: r.PERIOD_NAME!,
                     committed: toNum(r.COMMITTED),
                     contracted: toNum(r.CONTRACTED),

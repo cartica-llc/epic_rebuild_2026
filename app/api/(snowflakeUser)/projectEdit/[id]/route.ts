@@ -1,4 +1,4 @@
-//app/api/(snowflakeUser)/projectEdit/[id]/route.ts
+//app/api/(snowflakeUser)/projectEdit/[id]/awardbands.ts
 // GET  — fetch ALL project data for the edit form (all tabs)
 // PUT  — update a project (with org-based permission enforcement)
 

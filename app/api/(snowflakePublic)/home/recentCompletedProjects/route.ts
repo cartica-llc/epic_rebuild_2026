@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/home/recentCompletedProjects/route.ts
+// app/api/(snowflakePublic)/home/recentCompletedProjects/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';

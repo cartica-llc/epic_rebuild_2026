@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/(projects_insights)/spending/filters/route.ts
+// app/api/(snowflakePublic)/(projects_insights)/spending/filters/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';

@@ -1,4 +1,4 @@
-// app/api/master-dashboard/route.ts
+// app/api/master-dashboard/awardbands.ts
 
 import { NextResponse } from 'next/server';
 

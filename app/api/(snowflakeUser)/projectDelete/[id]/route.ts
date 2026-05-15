@@ -1,4 +1,4 @@
-// app/api/(snowflakeUser)/projectDelete/[id]/route.ts
+// app/api/(snowflakeUser)/projectDelete/[id]/awardbands.ts
 //
 // Two-phase project deletion.
 //

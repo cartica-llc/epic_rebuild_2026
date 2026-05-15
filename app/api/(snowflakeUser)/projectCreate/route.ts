@@ -1,4 +1,4 @@
-//app/api/(snowflakeUser)/projectCreate/route.ts
+//app/api/(snowflakeUser)/projectCreate/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';

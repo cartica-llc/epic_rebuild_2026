@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/(projects_insights)/market/filters/route.ts
+// app/api/(snowflakePublic)/(projects_insights)/market/filters/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { MATURITY_ORDER, SIGNAL_BANDS } from '../_marketShared';

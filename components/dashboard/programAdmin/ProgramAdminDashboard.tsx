@@ -9,7 +9,7 @@ import { DashboardSummaryBanner } from './DashboardSummaryBanner';
 import { DashboardProjectTabs } from './DashboardProjectTabs';
 import { DashboardQuickActions } from './DashboardQuickActions';
 import type { DashboardData } from './types';
-
+import { ProgramAdminFAQ } from './ProgramAdminFAQ';
 
 const ADMIN_LOGOS: Record<number, { src: string; alt: string; width: number; height: number }> = {
     0: { src: '/dashboardLogos/cec.png',  alt: 'California Energy Commission', width: 120, height: 48 },
@@ -69,6 +69,9 @@ export function ProgramAdminDashboard({
                     inactiveProjects={data.recentInactiveProjects}
                 />
                 <DashboardQuickActions programAdminId={programAdminId} />
+                <div className="mt-12 border-t pt-8">
+                    <ProgramAdminFAQ />
+                </div>
             </div>
         </main>
     );

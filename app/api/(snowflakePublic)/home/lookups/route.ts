@@ -1,4 +1,4 @@
-// app/api/home/lookups/route.ts
+// app/api/home/lookups/awardbands.ts
 
 
 import { NextResponse } from 'next/server';

@@ -1,4 +1,4 @@
-// ─── api/projectsList/export/route.ts ─────────────────
+// ─── api/projectsList/export/awardbands.ts ─────────────────
 // Filtered Results export — single-sheet .xlsx respecting current search + filters
 
 import { NextResponse } from 'next/server';

@@ -1,4 +1,4 @@
-//app/api/(snowflakeUser)/companyCreate/route.ts
+//app/api/(snowflakeUser)/companyCreate/awardbands.ts
 //Users can create/add new companies in the Create/edit project forms
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';

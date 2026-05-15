@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/home/investmentAreasTreeMap/route.ts
+// app/api/(snowflakePublic)/home/investmentAreasTreeMap/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';

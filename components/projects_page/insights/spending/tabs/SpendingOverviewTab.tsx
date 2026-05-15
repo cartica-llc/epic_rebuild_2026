@@ -26,8 +26,15 @@ interface OverviewResponse {
         expended: number;
         projectCount: number;
     };
-    byArea: { name: string; committed: number; contracted: number; expended: number }[];
+    byArea: {
+        id: number;
+        name: string;
+        committed: number;
+        contracted: number;
+        expended: number;
+    }[];
     byPeriod: {
+        id: number;
         period: string;
         committed: number;
         contracted: number;
@@ -52,6 +59,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
     );
 
     const [isolated, setIsolated] = useState<FundingLayer | null>(null);
+
     const sortedByArea = useMemo(
         () =>
             data?.byArea
@@ -99,6 +107,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                     <NestedBarList
                         rows={sortedByArea.map((a) => ({
                             label: a.name,
+                            href: `/projects?investmentAreaId=${a.id}`,
                             committed: a.committed,
                             contracted: a.contracted,
                             expended: a.expended,
@@ -126,6 +135,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                     <NestedBarList
                         rows={data.byPeriod.map((p) => ({
                             label: p.period,
+                            href: `/projects?investmentPeriodId=${p.id}`,
                             committed: p.committed,
                             contracted: p.contracted,
                             expended: p.expended,
@@ -173,6 +183,7 @@ interface NestedRow {
     contracted: number;
     expended: number;
     sublabel?: string;
+    href?: string;
 }
 
 interface NestedBarListProps {
@@ -181,7 +192,6 @@ interface NestedBarListProps {
 }
 
 function NestedBarList({ rows, isolated }: NestedBarListProps) {
-
     const max = rows.reduce((m, r) => Math.max(m, r.committed), 0);
 
     return (
@@ -201,7 +211,18 @@ function NestedBarList({ rows, isolated }: NestedBarListProps) {
                 return (
                     <li key={r.label}>
                         <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
-                            <span className="truncate text-slate-700">{r.label}</span>
+                            {r.href ? (
+                                <a
+                                    href={r.href}
+                                    className="truncate rounded-sm text-slate-700 underline-offset-2 transition hover:text-slate-900 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                    title={`View projects for ${r.label}`}
+                                >
+                                    {r.label}
+                                </a>
+                            ) : (
+                                <span className="truncate text-slate-700">{r.label}</span>
+                            )}
+
                             <span className="flex-shrink-0 font-medium text-slate-900">
                                 {formatMoneyShort(labelValue)}
                                 {isolated && (

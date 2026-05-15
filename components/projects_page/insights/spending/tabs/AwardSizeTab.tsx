@@ -10,6 +10,7 @@ import {
     SectionCard,
 } from '../shared/SectionCard';
 import { formatCount, formatMoneyShort } from '../shared/format';
+import { AWARD_BANDS, bandToProjectsHref } from '../shared/awardbands';
 
 interface AwardsResponse {
     summary: {
@@ -58,7 +59,7 @@ export default function AwardSizeTab({ queryString }: Props) {
 
             <SectionCard
                 title="Distribution by award size"
-                description="Number of projects in each committed-funding band."
+                description="Number of projects in each committed-funding band. Click a count to view the projects."
             >
                 {loading ? (
                     <ChartSkeleton />
@@ -74,13 +75,26 @@ export default function AwardSizeTab({ queryString }: Props) {
                                 0,
                             );
                             const pct = max > 0 ? (b.projectCount / max) * 100 : 0;
+                            const bandDef = AWARD_BANDS.find((d) => d.order === b.order);
+                            const href = bandDef ? bandToProjectsHref(bandDef) : null;
+
                             return (
                                 <li key={b.band}>
                                     <div className="mb-1 flex items-baseline justify-between text-xs">
                                         <span className="text-slate-700">{b.band}</span>
                                         <span className="font-medium text-slate-900">
-                                            {formatCount(b.projectCount)}{' '}
-                                            <span className="text-slate-400">
+                                            {href ? (
+                                                <a
+                                                    href={href}
+                                                    className="rounded-sm underline-offset-2 transition hover:text-indigo-600 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                                    title={`View projects in ${b.band}`}
+                                                >
+                                                    {formatCount(b.projectCount)} project{b.projectCount === 1 ? '' : 's'}
+                                                </a>
+                                            ) : (
+                                                `${formatCount(b.projectCount)} project${b.projectCount === 1 ? '' : 's'}`
+                                            )}
+                                            <span className="ml-1 text-slate-400">
                                                 · {formatMoneyShort(b.amount)} total
                                             </span>
                                         </span>

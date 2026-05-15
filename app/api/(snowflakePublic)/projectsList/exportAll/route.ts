@@ -1,4 +1,4 @@
-// ─── api/projectsList/exportAll/route.ts ──────────────
+// ─── api/projectsList/exportAll/awardbands.ts ──────────────
 // Entire Database export — 4-sheet .xlsx (Projects, Details, Finances, Metrics)
 
 import { NextResponse } from 'next/server';

@@ -1,4 +1,4 @@
-// app/api/projectImages/projectImagethumbnails/route.ts
+// app/api/projectImages/projectImagethumbnails/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';

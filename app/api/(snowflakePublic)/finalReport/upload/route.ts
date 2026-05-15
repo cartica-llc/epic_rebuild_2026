@@ -1,4 +1,4 @@
-// app/api/finalReport/upload/route.ts
+// app/api/finalReport/upload/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';

@@ -1,4 +1,4 @@
-// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/compliance/route.ts
+// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/compliance/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
@@ -302,7 +302,7 @@ export async function GET() {
             // MATCH_FUNDING and TOTAL_MATCH_FUNDING both read MATCH_FUNDING_SPLIT.
             // Per components/project_forms/stageRequirements.ts (lines 150 + 155),
             // the form maps both stage keys to the `matchFundingSplit` form field,
-            // and projectCreate/route.ts writes that single value into the
+            // and projectCreate/awardbands.ts writes that single value into the
             // FINANCE_DETAIL.MATCH_FUNDING_SPLIT column. The dedicated MATCH_FUNDING
             // column on the FINANCE_DETAIL table is never populated by the form,
             // so reading it here would always show "missing" even on complete projects.

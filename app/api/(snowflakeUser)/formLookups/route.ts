@@ -1,4 +1,4 @@
-//app/api/(snowflakeUser)/formLookups/route.ts
+//app/api/(snowflakeUser)/formLookups/awardbands.ts
 // looks up data needed by the project create/edit form.
 
 

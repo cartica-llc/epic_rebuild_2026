@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/(projects_insights)/spending/awards/route.ts
+// app/api/(snowflakePublic)/(projects_insights)/spending/awards/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
@@ -10,6 +10,7 @@ import {
     toNum,
     applyInsightCache,
 } from '../../_shared';
+import { AWARD_BANDS } from '@/components/projects_page/insights/spending/shared/awardbands';
 
 interface BandRow {
     BAND: string | null;
@@ -26,9 +27,33 @@ interface SummaryRow {
     MAX_AMOUNT: number | null;
 }
 
-
-
 const AMOUNT_COL = 'fd.COMMITED_FUNDING_AMT';
+
+// Build CASE expressions from the shared band definitions so the SQL
+// stays in lockstep with the URL-building helper on the client.
+function buildBandLabelCase(): string {
+    const whens = AWARD_BANDS
+        .filter((b) => b.max !== null)
+        .map((b) => `WHEN amount < ${b.max} THEN '${b.label.replace(/'/g, "''")}'`)
+        .join('\n                            ');
+    const elseBand = AWARD_BANDS.find((b) => b.max === null);
+    return `CASE
+                            ${whens}
+                            ELSE '${elseBand?.label.replace(/'/g, "''") ?? 'Unknown'}'
+                        END`;
+}
+
+function buildBandOrderCase(): string {
+    const whens = AWARD_BANDS
+        .filter((b) => b.max !== null)
+        .map((b) => `WHEN amount < ${b.max} THEN ${b.order}`)
+        .join('\n                            ');
+    const elseBand = AWARD_BANDS.find((b) => b.max === null);
+    return `CASE
+                            ${whens}
+                            ELSE ${elseBand?.order ?? 0}
+                        END`;
+}
 
 export async function GET(req: Request) {
     const url = new URL(req.url);
@@ -36,7 +61,6 @@ export async function GET(req: Request) {
     const { whereClause, areaJoin } = buildFilterSql({ period, area });
 
     try {
-        // log test to compare snowflake vs cache result
         console.log(
             `[spending/awards] querying Snowflake | period=${period ?? 'all'} | area=${area ?? 'all'} | ${new Date().toISOString()}`
         );
@@ -57,22 +81,8 @@ export async function GET(req: Request) {
                         WHERE ${whereClause}
                     )
                     SELECT
-                        CASE
-                            WHEN amount < 100000          THEN 'Under $100K'
-                            WHEN amount < 500000          THEN '$100K – $500K'
-                            WHEN amount < 1000000         THEN '$500K – $1M'
-                            WHEN amount < 5000000         THEN '$1M – $5M'
-                            WHEN amount < 10000000        THEN '$5M – $10M'
-                            ELSE                                'Over $10M'
-                        END AS BAND,
-                        CASE
-                            WHEN amount < 100000          THEN 1
-                            WHEN amount < 500000          THEN 2
-                            WHEN amount < 1000000         THEN 3
-                            WHEN amount < 5000000         THEN 4
-                            WHEN amount < 10000000        THEN 5
-                            ELSE                                6
-                        END AS BAND_ORDER,
+                        ${buildBandLabelCase()} AS BAND,
+                        ${buildBandOrderCase()} AS BAND_ORDER,
                         COUNT(*) AS PROJECT_COUNT,
                         SUM(amount) AS AMOUNT
                     FROM banded

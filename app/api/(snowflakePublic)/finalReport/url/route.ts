@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/finalReport/url/route.ts
+// app/api/(snowflakePublic)/finalReport/url/awardbands.ts
 
 
 import { NextResponse } from 'next/server';

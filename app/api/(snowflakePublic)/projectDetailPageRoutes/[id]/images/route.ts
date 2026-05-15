@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/projectDetailPageRoutes/[id]/images/route.ts
+// app/api/(snowflakePublic)/projectDetailPageRoutes/[id]/images/awardbands.ts
 //
 // Public variant of /api/(snowflakeUser)/projectImages — reads the same S3
 // layout but requires no auth. Accepts any image extension for main/gallery
