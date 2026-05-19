@@ -194,7 +194,7 @@ function MetricButton({
             disabled={loading}
             aria-pressed={isActive}
             aria-label={`${isActive ? 'Hide' : 'Show only'} ${label} on the funding bar`}
-            className={`group -mx-2 -my-1.5 rounded-md px-2 py-1.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+            className={`flex flex-col group -mx-2 -my-1.5 rounded-md px-2 py-1.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                 isDimmed ? 'opacity-50' : 'opacity-100'
             } ${
                 isActive

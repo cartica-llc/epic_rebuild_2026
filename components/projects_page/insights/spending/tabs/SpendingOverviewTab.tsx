@@ -53,6 +53,8 @@ interface Props {
     queryString: string;
 }
 
+const LAYERS: FundingLayer[] = ['committed', 'contracted', 'expended'];
+
 export default function SpendingOverviewTab({ queryString }: Props) {
     const { data, loading, error } = useInsightFetch<OverviewResponse>(
         `/api/spending/overview?${queryString}`,
@@ -97,6 +99,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                         : 'Top 15 investment areas, ordered by committed funding.'
                 }
             >
+                <ChartLegend isolated={isolated} onIsolate={setIsolated} />
                 {loading ? (
                     <ChartSkeleton />
                 ) : error ? (
@@ -125,6 +128,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                         : 'Committed vs. contracted vs. expended per period.'
                 }
             >
+                <ChartLegend isolated={isolated} onIsolate={setIsolated} />
                 {loading ? (
                     <ChartSkeleton height={180} />
                 ) : error ? (
@@ -153,6 +157,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                         : 'Top 10 lead companies, ordered by committed funding.'
                 }
             >
+                <ChartLegend isolated={isolated} onIsolate={setIsolated} />
                 {loading ? (
                     <ChartSkeleton />
                 ) : error ? (
@@ -176,6 +181,45 @@ export default function SpendingOverviewTab({ queryString }: Props) {
     );
 }
 
+
+// ─── Legend ─────────────────────────────────────────────────────────────
+
+interface ChartLegendProps {
+    isolated: FundingLayer | null;
+    onIsolate: (layer: FundingLayer | null) => void;
+}
+
+function ChartLegend({ isolated, onIsolate }: ChartLegendProps) {
+    return (
+        <div className="-mt-2 mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-500">
+            {LAYERS.map((layer) => {
+                const muted = isolated !== null && isolated !== layer;
+                const isActive = isolated === layer;
+                return (
+                    <button
+                        key={layer}
+                        type="button"
+                        onClick={() => onIsolate(isActive ? null : layer)}
+                        aria-pressed={isActive}
+                        title={isActive ? 'Show all layers' : `Show only ${LAYER_LABEL[layer]}`}
+                        className={`flex items-center gap-1.5 rounded-sm transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 hover:text-slate-900 ${
+                            muted ? 'opacity-40' : 'opacity-100'
+                        }`}
+                    >
+                        <span
+                            className={`inline-block h-2.5 w-2.5 rounded-full ${FUNDING_COLORS[layer].dot}`}
+                            aria-hidden="true"
+                        />
+                        <span className="capitalize">{LAYER_LABEL[layer]}</span>
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+
+// ─── Nested bar list ────────────────────────────────────────────────────
 
 interface NestedRow {
     label: string;

@@ -63,7 +63,7 @@ export function ProjectsMobileToggle({
                     transition={{ duration: 0.2 }}
                     className="mt-6 -mx-4 sm:-mx-6 overflow-x-auto px-4 sm:px-6"
                 >
-                    <div className="flex gap-2 pb-1">
+                    <div className="flex gap-2 pb-1 m-auto justify-center">
                         {INSIGHT_OPTIONS.map((opt) => {
                             const Icon = opt.icon;
                             const isActive = activePrefilter === opt.id;

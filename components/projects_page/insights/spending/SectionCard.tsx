@@ -7,16 +7,22 @@ import { ReactNode } from 'react';
 interface SectionCardProps {
     title: string;
     description?: string;
+    action?: ReactNode;
     children: ReactNode;
 }
 
-export function SectionCard({ title, description, children }: SectionCardProps) {
+export function SectionCard({ title, description, action, children }: SectionCardProps) {
     return (
         <section className="rounded-md border border-slate-200 bg-white p-4 md:p-5">
-            <header className="mb-4">
-                <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
-                {description && (
-                    <p className="mt-1 text-sm text-slate-500">{description}</p>
+            <header className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                <div className="min-w-0">
+                    <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+                    {description && (
+                        <p className="mt-1 text-sm text-slate-500">{description}</p>
+                    )}
+                </div>
+                {action && (
+                    <div className="flex-shrink-0 sm:pt-0.5">{action}</div>
                 )}
             </header>
             {children}
