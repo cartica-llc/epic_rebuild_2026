@@ -15,7 +15,7 @@ export function HeroNav({ projectId, programAdminId }: Props) {
     const canEdit = useCanEdit(programAdminId);
 
     return (
-        <div className="relative mx-auto flex max-w-5xl items-center justify-between px-6  pb-0 sm:px-8">
+        <div className="pt-6 relative mx-auto flex max-w-5xl items-center justify-between px-6  pb-0 sm:px-8">
             <Button
                 variant="ghost"
                 onClick={() => router.back()}

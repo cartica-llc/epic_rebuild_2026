@@ -2,11 +2,21 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { MarketHeader } from './market/MarketHeader';
 import { MarketFiltersBar } from './market/MarketFiltersBar';
 import { MarketMethodologyPanel } from './market/MarketMethodologyPanel';
 import { useMarketFilters } from './market/useMarketFilters';
+import { useInsightFetch } from './spending/shared/useInsightFetch';
+import type { MarketProject } from './market/shared/types';
+
+interface ProjectsResponse {
+    projects: MarketProject[];
+    count: number;
+    truncated: boolean;
+    limit: number;
+}
 
 const MarketSignalMix = dynamic(
     () => import('./market/MarketSignalMix').then((m) => m.MarketSignalMix),
@@ -40,12 +50,30 @@ export function Insight_Market() {
         filters,
         setMaturity,
         setBand,
-        setMinScore,
-        setNearMarketOnly,
+        setScoreFilter,
         reset,
         hasActiveFilters,
         projectsQueryString,
     } = useMarketFilters();
+
+    // Fetch the full unfiltered list to derive score distribution for the
+    // filter dropdown. Same URL as the table's unfiltered state — deduplicated
+    // by useInsightFetch's cache, no extra network request.
+    const { data } = useInsightFetch<ProjectsResponse>('/api/market/projects');
+
+    const scoreCounts = useMemo(() => {
+        const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        for (const p of data?.projects ?? []) {
+            if (p.signalScore >= 1 && p.signalScore <= 5) {
+                counts[p.signalScore] = (counts[p.signalScore] ?? 0) + 1;
+            }
+        }
+        return counts;
+    }, [data]);
+
+    // Changing filters remounts the table via `key`, which resets its internal
+    // page state to 1 — no useEffect or setState-in-effect needed in the table.
+    const tableKey = `${projectsQueryString}::${filters.scoreFilter}`;
 
     return (
         <div className="bg-white">
@@ -63,10 +91,10 @@ export function Insight_Market() {
                         filters={filters}
                         onMaturityChange={setMaturity}
                         onBandChange={setBand}
-                        onMinScoreChange={setMinScore}
-                        onNearMarketChange={setNearMarketOnly}
+                        onScoreFilterChange={setScoreFilter}
                         hasActiveFilters={hasActiveFilters}
                         onReset={reset}
+                        scoreCounts={data ? scoreCounts : undefined}
                     />
                 </div>
 
@@ -89,8 +117,10 @@ export function Insight_Market() {
                 />
 
                 <MarketProjectsTable
+                    key={tableKey}
                     queryString={projectsQueryString}
                     hasActiveFilters={hasActiveFilters}
+                    scoreFilter={filters.scoreFilter}
                 />
             </div>
         </div>

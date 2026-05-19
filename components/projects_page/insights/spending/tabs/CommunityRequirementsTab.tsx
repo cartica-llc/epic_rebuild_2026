@@ -103,10 +103,10 @@ export default function CommunityRequirementsTab({ queryString }: Props) {
                                     </div>
                                     <div className="relative h-2.5 overflow-hidden rounded-sm bg-slate-100">
                                         <div
-                                            className={`h-full ${meetsBar ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                            className={`h-full ${meetsBar ? 'bg-emerald-400' : 'bg-slate-400'}`}
+
                                             style={{ width: `${Math.min(100, p.dacLiPct)}%` }}
                                         />
-                                        {/* 25% marker */}
                                         <div
                                             className="absolute top-0 h-full border-l border-dashed border-slate-400"
                                             style={{ left: `${overall?.minRequiredPct ?? 25}%` }}

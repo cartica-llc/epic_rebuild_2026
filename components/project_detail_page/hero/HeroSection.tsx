@@ -44,7 +44,7 @@ export function HeroSection({ project }: Props) {
 
     return (
         <header
-            className="relative overflow-hidden pb-12 mt-10"
+            className="relative overflow-hidden pb-12 "
             style={
                 heroBg
                     ? {

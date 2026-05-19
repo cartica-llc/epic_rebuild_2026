@@ -131,7 +131,7 @@ export function RotatingHeadline() {
                     {longestLabel ? (
                         <span
                             aria-hidden="true"
-                            className="invisible block w-full"
+                            className="invisible block w-full whitespace-nowrap"
                         >
                             <span>{longestLabel.amount}</span>
                             <span className="ml-3 mr-3 font-normal">in</span>
@@ -149,7 +149,7 @@ export function RotatingHeadline() {
                         </span>
                     )}
 
-                    <span className="absolute inset-0 w-full">
+                    <span className="absolute inset-0 w-full whitespace-nowrap">
                         <AnimatePresence mode="wait">
                             {current && (
                                 <motion.span

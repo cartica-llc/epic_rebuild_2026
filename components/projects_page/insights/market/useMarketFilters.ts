@@ -8,15 +8,13 @@ import type { MaturityStage, SignalBand } from './shared/types';
 export interface MarketFilters {
     maturity: MaturityStage | null;
     band: SignalBand | null;
-    minScore: 0 | 3 | 4;
-    nearMarketOnly: boolean;
+    scoreFilter: number;
 }
 
 const DEFAULTS: MarketFilters = {
     maturity: null,
     band: null,
-    minScore: 0,
-    nearMarketOnly: false,
+    scoreFilter: 0,
 };
 
 export function useMarketFilters() {
@@ -33,13 +31,8 @@ export function useMarketFilters() {
         [],
     );
 
-    const setMinScore = useCallback(
-        (minScore: 0 | 3 | 4) => setFilters((f) => ({ ...f, minScore })),
-        [],
-    );
-
-    const setNearMarketOnly = useCallback(
-        (nearMarketOnly: boolean) => setFilters((f) => ({ ...f, nearMarketOnly })),
+    const setScoreFilter = useCallback(
+        (scoreFilter: number) => setFilters((f) => ({ ...f, scoreFilter })),
         [],
     );
 
@@ -48,25 +41,21 @@ export function useMarketFilters() {
     const hasActiveFilters =
         filters.maturity !== null ||
         filters.band !== null ||
-        filters.minScore > 0 ||
-        filters.nearMarketOnly;
+        filters.scoreFilter > 0;
 
-    /** Query string for /api/market/projects (table only — pipeline/signals are unfiltered). */
     const projectsQueryString = useMemo(() => {
         const params = new URLSearchParams();
         if (filters.maturity) params.set('maturity', filters.maturity);
         if (filters.band) params.set('band', filters.band);
-        if (filters.minScore > 0) params.set('minScore', String(filters.minScore));
-        if (filters.nearMarketOnly) params.set('nearMarket', 'true');
+        // Always fetch the full superset; exact filtering happens client-side
         return params.toString();
-    }, [filters]);
+    }, [filters.maturity, filters.band]);
 
     return {
         filters,
         setMaturity,
         setBand,
-        setMinScore,
-        setNearMarketOnly,
+        setScoreFilter,
         reset,
         hasActiveFilters,
         projectsQueryString,

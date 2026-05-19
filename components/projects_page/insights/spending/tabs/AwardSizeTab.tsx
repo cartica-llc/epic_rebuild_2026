@@ -101,7 +101,7 @@ export default function AwardSizeTab({ queryString }: Props) {
                                     </div>
                                     <div className="h-2 overflow-hidden rounded-sm bg-slate-100">
                                         <div
-                                            className="h-full bg-indigo-500"
+                                            className="h-full bg-emerald-400"
                                             style={{ width: `${pct}%` }}
                                         />
                                     </div>

@@ -15,54 +15,56 @@ interface MarketFiltersBarProps {
     filters: MarketFilters;
     onMaturityChange: (m: MaturityStage | null) => void;
     onBandChange: (b: SignalBand | null) => void;
-    onMinScoreChange: (s: 0 | 3 | 4) => void;
-    onNearMarketChange: (v: boolean) => void;
+    onScoreFilterChange: (s: number) => void;
     hasActiveFilters: boolean;
     onReset: () => void;
+    scoreCounts?: Record<number, number>;
 }
 
 export function MarketFiltersBar({
-    filters,
-    onMaturityChange,
-    onBandChange,
-    onMinScoreChange,
-    onNearMarketChange,
-    hasActiveFilters,
-    onReset,
-}: MarketFiltersBarProps) {
+                                     filters,
+                                     onMaturityChange,
+                                     onBandChange,
+                                     onScoreFilterChange,
+                                     hasActiveFilters,
+                                     onReset,
+                                     scoreCounts,
+                                 }: MarketFiltersBarProps) {
+    const visibleScores = [1, 2, 3, 4, 5].filter(
+        (n) => scoreCounts === undefined || (scoreCounts[n] ?? 0) > 0,
+    );
+
     return (
-        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-            <div className="mb-3 flex items-center gap-2">
-                <Filter className="h-3.5 w-3.5 text-slate-500" />
-                <span className="text-xs font-semibold text-slate-700">Filters</span>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <div className="mb-2.5 flex items-center gap-1.5">
+                <Filter className="h-3 w-3 text-slate-400" />
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    Filters
+                </span>
                 {hasActiveFilters && (
                     <button
                         type="button"
                         onClick={onReset}
-                        className="ml-auto text-[11px] font-medium text-slate-500 underline-offset-2 transition hover:text-slate-900 hover:underline"
+                        className="ml-auto text-[10px] text-slate-400 underline-offset-2 transition hover:text-slate-700 hover:underline"
                     >
                         Reset
                     </button>
                 )}
             </div>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-                {/* Maturity */}
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <SelectField
-                    label="Maturity Stage"
+                    label="Maturity"
                     value={filters.maturity ?? ''}
-                    onChange={(v) =>
-                        onMaturityChange((v as MaturityStage) || null)
-                    }
+                    onChange={(v) => onMaturityChange((v as MaturityStage) || null)}
                     options={[
                         { value: '', label: 'All Stages' },
                         ...MATURITY_ORDER.map((m) => ({ value: m, label: m })),
                     ]}
                 />
 
-                {/* Signal Band */}
                 <SelectField
-                    label="Signal Band"
+                    label="Signal band"
                     value={filters.band ?? ''}
                     onChange={(v) => onBandChange((v as SignalBand) || null)}
                     options={[
@@ -71,85 +73,46 @@ export function MarketFiltersBar({
                     ]}
                 />
 
-                {/* Score Threshold */}
-                <div>
-                    <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-                        Min Score
-                    </label>
-                    <div className="flex gap-2">
-                        {[
-                            { value: 0 as const, label: 'Any' },
-                            { value: 3 as const, label: '3+' },
-                            { value: 4 as const, label: '4+' },
-                        ].map((opt) => {
-                            const isActive = filters.minScore === opt.value;
-                            return (
-                                <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => onMinScoreChange(opt.value)}
-                                    aria-pressed={isActive}
-                                    className={`flex-1 rounded-md px-3 py-2 text-xs font-medium transition ${
-                                        isActive
-                                            ? 'bg-slate-900 text-white shadow-sm'
-                                            : 'border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
-                                    }`}
-                                >
-                                    {opt.label}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Near-market toggle */}
-                <div>
-                    <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">
-                        Quick filter
-                    </label>
-                    <button
-                        type="button"
-                        onClick={() => onNearMarketChange(!filters.nearMarketOnly)}
-                        aria-pressed={filters.nearMarketOnly}
-                        disabled={filters.maturity !== null}
-                        className={`w-full rounded-md px-3 py-2 text-xs font-medium transition ${
-                            filters.nearMarketOnly
-                                ? 'bg-slate-900 text-white shadow-sm'
-                                : 'border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
-                        } disabled:cursor-not-allowed disabled:opacity-50`}
-                        title={
-                            filters.maturity !== null
-                                ? 'Disabled while a maturity stage is selected'
-                                : undefined
-                        }
-                    >
-                        Near-market only
-                    </button>
-                </div>
+                <SelectField
+                    label="Score"
+                    value={filters.scoreFilter === 0 ? '' : String(filters.scoreFilter)}
+                    onChange={(v) => onScoreFilterChange(v === '' ? 0 : Number(v))}
+                    options={[
+                        { value: '', label: 'Any Score' },
+                        ...visibleScores.map((n) => ({
+                            value: String(n),
+                            label: `${n} / 5`,
+                        })),
+                    ]}
+                />
             </div>
         </div>
     );
 }
 
-// ─── SelectField ────────────────────────────────────────────────────────
-interface SelectFieldProps {
+// ─── SelectField ──────────────────────────────────────────────────────────────
+
+function SelectField({
+                         label,
+                         value,
+                         onChange,
+                         options,
+                     }: {
     label: string;
     value: string;
     onChange: (v: string) => void;
     options: { value: string; label: string }[];
-}
-
-function SelectField({ label, value, onChange, options }: SelectFieldProps) {
+}) {
     return (
         <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+            <label className="mb-1 block text-[8.5px] font-semibold uppercase tracking-wider text-slate-400">
                 {label}
             </label>
             <div className="relative">
                 <select
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    className="w-full appearance-none rounded-md border border-slate-200 bg-white px-3 py-2 pr-8 text-xs text-slate-700 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                    className="w-full appearance-none rounded-md border border-slate-200 bg-white py-1.5 pl-2.5 pr-6 text-[11px] text-slate-700 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                 >
                     {options.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -157,7 +120,7 @@ function SelectField({ label, value, onChange, options }: SelectFieldProps) {
                         </option>
                     ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
             </div>
         </div>
     );

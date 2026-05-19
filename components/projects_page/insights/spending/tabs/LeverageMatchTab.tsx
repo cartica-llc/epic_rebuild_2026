@@ -96,17 +96,17 @@ export default function LeverageMatchTab({ queryString }: Props) {
                                     </div>
                                     <div className="flex h-3 overflow-hidden rounded-sm bg-slate-100">
                                         <div
-                                            className="bg-emerald-500"
+                                            className="bg-emerald-400"
                                             style={{ width: `${matchPct}%` }}
                                             title={`Match: ${formatMoneyShort(p.match)}`}
                                         />
                                         <div
-                                            className="bg-sky-500"
+                                            className="bg-emerald-700"
                                             style={{ width: `${leveragedPct}%` }}
                                             title={`Leveraged: ${formatMoneyShort(p.leveraged)}`}
                                         />
                                         <div
-                                            className="bg-slate-400"
+                                            className="bg-slate-300"
                                             style={{ width: `${contractPct}%` }}
                                             title={`Contract: ${formatMoneyShort(p.contract)}`}
                                         />
@@ -115,9 +115,9 @@ export default function LeverageMatchTab({ queryString }: Props) {
                             );
                         })}
                         <li className="flex flex-wrap gap-3 pt-2 text-[11px] text-slate-500">
-                            <Legend color="bg-emerald-500" label="Match" />
-                            <Legend color="bg-sky-500" label="Leveraged" />
-                            <Legend color="bg-slate-400" label="Contract" />
+                            <Legend color="bg-emerald-400" label="Match" />
+                            <Legend color="bg-emerald-700" label="Leveraged" />
+                            <Legend color="bg-slate-300" label="Contract" />
                         </li>
                     </ul>
                 )}
