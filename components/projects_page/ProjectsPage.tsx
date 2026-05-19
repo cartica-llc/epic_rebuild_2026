@@ -6,6 +6,7 @@ import { AnimatePresence } from 'motion/react';
 import { ProjectFilters } from './ProjectFilters';
 import { ProjectsListContainer } from './projectsList/ProjectsListContainer';
 import { QuickQueryVisualization } from './QuickQueryVisualization';
+import { ProjectsMobileToggle } from './ProjectsMobileToggle';
 // import { ProjectsPageHeader } from './ProjectsPageHeader';
 
 export function ProjectsPage() {
@@ -62,6 +63,12 @@ export function ProjectsPage() {
                     </aside>
 
                     <div className="flex min-w-0 flex-1 flex-col">
+                        {/* Mobile-only segmented toggle (hidden on lg+) */}
+                        <ProjectsMobileToggle
+                            activePrefilter={activePrefilter}
+                            onPrefilterChange={setActivePrefilter}
+                        />
+
                         <AnimatePresence mode="wait">
                             {activePrefilter &&
                                 activePrefilter !== 'all-projects' && (
