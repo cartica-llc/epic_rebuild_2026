@@ -223,7 +223,7 @@ export function ProjectsMobileToggle({
                                     key={option.id}
                                     type="button"
                                     onClick={() => handleSelectInsight(option.id)}
-                                    className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition ${
+                                    className={`cursor-pointer flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition ${
                                         isActive
                                             ? 'bg-slate-50 text-slate-950'
                                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'

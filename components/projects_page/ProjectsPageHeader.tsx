@@ -74,9 +74,11 @@ export function ProjectsPageHeader({
     const Icon = activeContent.icon;
 
     return (
-        <section className="select-none relative z-30 mb-10">
-            <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white shadow-sm">
-                <div className="relative px-5 py-6 md:px-6">
+        <section className="relative z-30 mb-10 select-none">
+            <div className="relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
+                <div className="hidden lg:block absolute left-0 top-0 h-full w-[5px] bg-gradient-to-b from-sky-600 via-emerald-600 to-rose-600" />
+
+                <div className="relative px-5 py-6 md:px-6 lg:pl-8">
                     <div className="pointer-events-none absolute right-6 top-5 hidden h-24 w-24 rounded-full bg-slate-100/80 blur-2xl md:block" />
 
                     <div className="relative min-w-0">
@@ -88,11 +90,11 @@ export function ProjectsPageHeader({
                             </p>
                         </span>
 
-                        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 ">
+                        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">
                             {activeContent.title}
                         </h1>
 
-                        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-600 ">
+                        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-600">
                             {activeContent.description}
                         </p>
                     </div>

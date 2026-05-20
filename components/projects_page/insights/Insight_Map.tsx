@@ -46,13 +46,13 @@ const MapProjectList = dynamic(
     },
 );
 
-const MapSelectedProjectCard = dynamic(
-    () =>
-        import('./map/MapSelectedProjectCard').then(
-            (m) => m.MapSelectedProjectCard,
-        ),
-    { ssr: false },
-);
+// const MapSelectedProjectCard = dynamic(
+//     () =>
+//         import('./map/MapSelectedProjectCard').then(
+//             (m) => m.MapSelectedProjectCard,
+//         ),
+//     { ssr: false },
+// );
 
 const EMPTY_RESPONSE: ProjectsResponse = {
     projects: [],
@@ -146,12 +146,12 @@ export function Insight_Map() {
                     dacliFilterActive={filters.dacliOnly}
                 />
 
-                {selectedProject && (
-                    <MapSelectedProjectCard
-                        project={selectedProject}
-                        onClose={() => setSelectedId(null)}
-                    />
-                )}
+                {/*{selectedProject && (*/}
+                {/*    <MapSelectedProjectCard*/}
+                {/*        project={selectedProject}*/}
+                {/*        onClose={() => setSelectedId(null)}*/}
+                {/*    />*/}
+                {/*)}*/}
 
                 <MapProjectList
                     projects={response.projects}

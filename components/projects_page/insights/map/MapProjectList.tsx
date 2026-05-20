@@ -17,30 +17,55 @@ interface MapProjectListProps {
 }
 
 export function MapProjectList({
-    projects,
-    selectedId,
-    onSelect,
-    loading,
-    error,
-    truncated,
-    limit,
-}: MapProjectListProps) {
+                                   projects,
+                                   selectedId,
+                                   onSelect,
+                                   loading,
+                                   error,
+                                   truncated,
+                                   limit,
+                               }: MapProjectListProps) {
+    const sectionRef = useRef<HTMLElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
 
     /**
-     * When the user clicks a dot on the map, scroll the matching card into
-     * view in the list. Keeps map and list in sync as a coordinated pair.
+     * When a project is selected (typically by clicking a dot on the map),
+     * coordinate two scroll behaviors:
+     *  1. Scroll the page so the list section is visible (lg layouts can
+     *     place the list below the fold on smaller viewports).
+     *  2. Scroll inside the list so the matching card is centered.
+     *
+     * Both use smooth scrolling, and the inner scroll runs slightly after
+     * the page scroll so the card's "expanded" height is already laid out
+     * when we center it.
      */
     useEffect(() => {
-        if (selectedId === null || !listRef.current) return;
-        const card = listRef.current.querySelector<HTMLElement>(
+        if (selectedId === null) return;
+
+        sectionRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+        });
+
+        const card = listRef.current?.querySelector<HTMLElement>(
             `[data-project-id="${selectedId}"]`,
         );
-        card?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (!card) return;
+
+        // Defer to next frame so the just-expanded card is measured at its
+        // new height before we center it.
+        const raf = requestAnimationFrame(() => {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        return () => cancelAnimationFrame(raf);
     }, [selectedId]);
 
     return (
-        <section className="rounded-md border border-slate-200 bg-white p-4 md:p-5">
+        <section
+            ref={sectionRef}
+            className="rounded-md border border-slate-200 bg-white p-4 md:p-5"
+        >
             <header className="mb-4">
                 <h4 className="text-sm font-semibold text-slate-900">
                     Projects in view
@@ -78,7 +103,7 @@ export function MapProjectList({
             ) : (
                 <div
                     ref={listRef}
-                    className="max-h-[520px] space-y-2 overflow-y-auto pr-1"
+                    className="max-h-[640px] space-y-2 overflow-y-auto pr-1"
                 >
                     {projects.map((project) => (
                         <div key={project.id} data-project-id={project.id}>

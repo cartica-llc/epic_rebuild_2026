@@ -102,7 +102,7 @@ export function ProjectFilters({
     }, [initialPrefilter, activePrefilter, handlePrefilter]);
 
     const filterContent = (
-        <div className="space-y-3 pr-2">
+        <div className=" select-none space-y-3 pr-2">
             <div>
                 <div className="mb-3 hidden lg:block">
                     <div className="flex items-start gap-2">

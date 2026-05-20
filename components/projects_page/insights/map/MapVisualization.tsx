@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Map, {
     Layer,
     Popup,
@@ -172,6 +172,36 @@ export function MapVisualization({
             })),
         };
     }, [projects, selectedId]);
+
+    /**
+     * Fly the camera to the selected project whenever `selectedId` changes
+     * — including selections that originate from clicks in the project list,
+     * not just from the map itself. Skip when the selection is cleared, and
+     * be defensive in case the project doesn't have valid coordinates.
+     */
+    useEffect(() => {
+        if (selectedId == null) return;
+        const project = projects.find((p) => p.id === selectedId);
+        if (!project) return;
+        if (
+            typeof project.longitude !== 'number' ||
+            typeof project.latitude !== 'number'
+        ) {
+            return;
+        }
+
+        const map = mapRef.current;
+        if (!map) return;
+
+        // Zoom in close enough to break out of clustering (clusterMaxZoom = 12)
+        // so the user sees the actual selected dot, not a cluster.
+        const targetZoom = Math.max(map.getZoom(), 12.5);
+        map.easeTo({
+            center: [project.longitude, project.latitude],
+            zoom: targetZoom,
+            duration: 700,
+        });
+    }, [selectedId, projects]);
 
     const handleClick = useCallback(
         (event: MapMouseEvent) => {
