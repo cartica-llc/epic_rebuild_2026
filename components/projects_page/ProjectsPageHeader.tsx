@@ -88,11 +88,11 @@ export function ProjectsPageHeader({
                             </p>
                         </span>
 
-                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-950 md:text-3xl">
+                        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 ">
                             {activeContent.title}
                         </h1>
 
-                        <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600 md:text-sm">
+                        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-600 ">
                             {activeContent.description}
                         </p>
                     </div>
