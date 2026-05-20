@@ -29,9 +29,6 @@ export function MapProjectCard({
                     : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
             }`}
         >
-            {/* Summary — the only region that toggles selection. Putting the
-                handler on the button (not the outer card) means clicks inside
-                the expanded panel never accidentally collapse the card. */}
             <button
                 type="button"
                 onClick={onSelect}
@@ -101,16 +98,10 @@ function ExpandedDetails({ project }: { project: MapProject }) {
     const match = project.matchFunding;
     const leveraged = project.leveragedFunds;
 
-    // Funding lifecycle: each stage's bar width is its share of committed
-    // (the envelope). Percent labels show how far each stage has advanced
-    // relative to committed — making the "progress through the funnel"
-    // visible at a glance without needing to do mental math.
     const safeCommitted = Math.max(committed, 1);
     const contractedPct = (contracted / safeCommitted) * 100;
     const expendedPct = (expended / safeCommitted) * 100;
 
-    // Total capital stack: EPIC committed + match + leveraged. This is the
-    // total dollar volume the project mobilized, broken down by source.
     const totalCapital = committed + match + leveraged;
     const safeTotal = Math.max(totalCapital, 1);
     const epicShare = (committed / safeTotal) * 100;
@@ -152,8 +143,7 @@ function ExpandedDetails({ project }: { project: MapProject }) {
                 />
             </div>
 
-            {/* Total capital mobilized — only show when there's outside capital,
-                otherwise the EPIC committed number alone is already the headline */}
+
             {hasAdditionalCapital && (
                 <div className="border-t border-slate-200 px-3 py-3">
                     <div className="mb-2 flex items-baseline justify-between gap-3">
@@ -165,9 +155,7 @@ function ExpandedDetails({ project }: { project: MapProject }) {
                         </p>
                     </div>
 
-                    {/* Single split bar — flex weights mean widths come out
-                        proportional to dollar amounts automatically. Tiny segments
-                        still render thanks to a min-width on each child. */}
+
                     <div className="flex h-3 overflow-hidden rounded-sm bg-slate-50 ring-1 ring-inset ring-slate-200">
                         <StackSegment
                             className="bg-slate-400"
@@ -239,7 +227,6 @@ function FunnelStage({
     fill: string;
     widthPct: number;
     amount: number;
-    /** When provided, shown as a subtle annotation next to the amount. */
     pctOfCommitted?: number;
 }) {
     return (

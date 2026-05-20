@@ -1,6 +1,7 @@
-// app/api/(snowflakePublic)/home/recentCompletedProjects/awardbands.ts
+// app/api/(snowflakePublic)/home/recentCompletedProjects/route.ts
 
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { query } from '@/lib/snowflake';
@@ -9,10 +10,11 @@ import { s3Client, S3_BUCKET } from '@/lib/s3';
 const DB     = process.env.DEV_SNOWFLAKE_DATABASE;
 const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
-const S_MAX_AGE              = 3600;
-const STALE_WHILE_REVALIDATE = 600;
+const SIGNED_URL_TTL_SECONDS = 3600;
+const CACHE_TTL_SECONDS      = 1800;
 
-const IMG_EXT = /\.(webp|png|jpe?g|gif)$/i;
+const S_MAX_AGE              = CACHE_TTL_SECONDS;
+const STALE_WHILE_REVALIDATE = 300;
 
 interface CompletedProjectRow {
     PROJECT_ID: number;
@@ -51,10 +53,9 @@ async function signKey(key: string): Promise<string> {
     return getSignedUrl(
         s3Client,
         new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
-        { expiresIn: 3600 },
+        { expiresIn: SIGNED_URL_TTL_SECONDS },
     );
 }
-
 
 async function resolveProjectImage(projectNumber: string | null): Promise<string | null> {
     if (!projectNumber) return null;
@@ -74,13 +75,11 @@ async function resolveProjectImage(projectNumber: string | null): Promise<string
 
         if (allKeys.length === 0) return null;
 
-        // Prefer the main thumbnail (small, fast)
         const thumbKey = `${prefix}${pnLower}_main_thumbnail.webp`;
         if (allKeys.includes(thumbKey)) {
             return await signKey(thumbKey);
         }
 
-        // Fall back to the main original (any allowed extension)
         const mainRegex = new RegExp(
             `^${prefix}${pnLower}_main\\.(webp|png|jpe?g|gif)$`,
             'i',
@@ -107,11 +106,8 @@ function mapRow(r: CompletedProjectRow) {
     };
 }
 
-export async function GET(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') ?? '3', 10)));
-
+const getRecentCompletedData = unstable_cache(
+    async (limit: number) => {
         const t = `${DB}.${SCHEMA}`;
 
         const rows = (await query(`
@@ -134,7 +130,7 @@ export async function GET(request: Request) {
               AND LOWER(TRIM(p.PROJECT_STATUS)) IN ('closed', 'complete', 'completed')
             ORDER BY COALESCE(p.PROJECT_END_DATE, p.MODIFIED_DATE) DESC NULLS LAST
             LIMIT ${limit}
-        `)) as CompletedProjectRow[];
+        `)) as unknown as CompletedProjectRow[];
 
         const projects = await Promise.all(
             rows.map(async r => ({
@@ -143,16 +139,36 @@ export async function GET(request: Request) {
             })),
         );
 
-        const res = NextResponse.json({
+        return {
             projects,
             total: projects.length,
-        });
+        };
+    },
+    ['home:recentCompletedProjects'],
+    {
+        revalidate: CACHE_TTL_SECONDS,
+        tags: ['home-data', 'home:recentCompletedProjects'],
+    },
+);
 
+function clampInt(raw: string | null, min: number, max: number, fallback: number): number {
+    const n = parseInt(raw ?? '', 10);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+}
+
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const limit = clampInt(searchParams.get('limit'), 1, 20, 3);
+
+        const payload = await getRecentCompletedData(limit);
+
+        const res = NextResponse.json(payload);
         res.headers.set(
             'Cache-Control',
             `public, s-maxage=${S_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
         );
-
         return res;
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';

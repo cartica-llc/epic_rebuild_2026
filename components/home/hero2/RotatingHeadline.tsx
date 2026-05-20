@@ -2,19 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-
-type InvestmentAreaRow = {
-    id: number | string;
-    name: string;
-    funding: number;
-    projectCount?: number;
-};
-
-type InvestmentAreasResponse = {
-    areas?: InvestmentAreaRow[];
-    totalFunding?: number;
-    total?: number;
-};
+import { useInvestmentAreas } from '@/hooks/useInvestmentAreas';
 
 type Lens = {
     amount: string;
@@ -54,41 +42,31 @@ const TOP_N = 6;
 const MAX_LABEL_WORDS = 4;
 
 export function RotatingHeadline() {
+    const { data } = useInvestmentAreas();
+
     const [lenses, setLenses] = useState<Lens[]>([]);
     const [index, setIndex] = useState(0);
     const [paused, setPaused] = useState(false);
 
     useEffect(() => {
-        let cancelled = false;
+        const rows = data?.areas ?? [];
+        if (!rows.length) return;
 
-        fetch('/api/home/investmentAreasTreeMap')
-            .then((r) => r.json())
-            .then((json: InvestmentAreasResponse | InvestmentAreaRow[]) => {
-                if (cancelled) return;
-                const rows = Array.isArray(json) ? json : json.areas ?? [];
-                if (!rows.length) return;
+        const next: Lens[] = rows
+            .filter((r) => r && Number.isFinite(r.funding) && r.funding > 0)
+            .sort((a, b) => b.funding - a.funding)
+            .slice(0, TOP_N)
+            .map((r) => ({
+                amount: abbreviate(r.funding),
+                fullAmount: fmt.format(Math.floor(r.funding)),
+                label: normalizeLabel(r.name)
+                    .split(' ')
+                    .slice(0, MAX_LABEL_WORDS)
+                    .join(' '),
+            }));
 
-                const next: Lens[] = rows
-                    .filter((r) => r && Number.isFinite(r.funding) && r.funding > 0)
-                    .sort((a, b) => b.funding - a.funding)
-                    .slice(0, TOP_N)
-                    .map((r) => ({
-                        amount: abbreviate(r.funding),
-                        fullAmount: fmt.format(Math.floor(r.funding)),
-                        label: normalizeLabel(r.name)
-                            .split(' ')
-                            .slice(0, MAX_LABEL_WORDS)
-                            .join(' '),
-                    }));
-
-                if (next.length) setLenses(next);
-            })
-            .catch(() => {});
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+        if (next.length) setLenses(next);
+    }, [data]);
 
     useEffect(() => {
         if (paused || lenses.length <= 1) return;

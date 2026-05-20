@@ -1,5 +1,6 @@
-// app/api/(snowflakePublic)/home/dacLiProjectsMap/awardbands.ts
+// app/api/(snowflakePublic)/home/dacLiProjectsMap/route.ts
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { query } from '@/lib/snowflake';
 
 const DB     = process.env.DEV_SNOWFLAKE_DATABASE;
@@ -7,6 +8,7 @@ const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 const S_MAX_AGE              = 3600;
 const STALE_WHILE_REVALIDATE = 600;
+const CACHE_TTL_SECONDS      = 600;
 
 export const REGION_META: Record<number, { label: string; short: string; color: string }> = {
     3: { label: 'Northern California',  short: 'NorCal',   color: '#0d9488' },
@@ -53,8 +55,8 @@ function formatLocation(city: string | null, state: string | null): string {
     return [city, state].filter(Boolean).join(', ');
 }
 
-export async function GET() {
-    try {
+const getDacLiProjectsMapData = unstable_cache(
+    async () => {
         const t = `${DB}.${SCHEMA}`;
 
         const [rawProjectRows, rawGlobalRows] = await Promise.all([
@@ -219,7 +221,7 @@ export async function GET() {
 
         const regions = Object.values(regionMap).sort((a, b) => a.adminId - b.adminId);
 
-        const res = NextResponse.json({
+        return {
             globalStats: {
                 totalSpent:   formatFunding(globalStats.TOTAL_SPENT),
                 dacLiSpent:   formatFunding(globalStats.DAC_LI_SPENT),
@@ -228,13 +230,24 @@ export async function GET() {
                 meetingReq:   globalStats.DAC_LI_SPENT_PCT >= 25,
             },
             regions,
-        });
+        };
+    },
+    ['home:dacLiProjectsMap'],
+    {
+        revalidate: CACHE_TTL_SECONDS,
+        tags: ['home-data', 'home:dacLiProjectsMap'],
+    },
+);
 
+export async function GET() {
+    try {
+        const payload = await getDacLiProjectsMapData();
+
+        const res = NextResponse.json(payload);
         res.headers.set(
             'Cache-Control',
             `public, s-maxage=${S_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
         );
-
         return res;
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';

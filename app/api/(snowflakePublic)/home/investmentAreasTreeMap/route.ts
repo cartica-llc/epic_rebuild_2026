@@ -1,6 +1,7 @@
-// app/api/(snowflakePublic)/home/investmentAreasTreeMap/awardbands.ts
+// app/api/(snowflakePublic)/home/investmentAreasTreeMap/route.ts
 
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { query } from '@/lib/snowflake';
 
 const DB     = process.env.DEV_SNOWFLAKE_DATABASE;
@@ -8,6 +9,7 @@ const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 const S_MAX_AGE              = 3600;
 const STALE_WHILE_REVALIDATE = 600;
+const CACHE_TTL_SECONDS      = 600;
 
 interface AreaRow {
     INVESTMENT_AREA_ID:   number;
@@ -42,15 +44,11 @@ interface InvestmentArea {
     projects:     Project[];
 }
 
-export async function GET(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') ?? '8', 10)));
-        const projectsPerArea = Math.min(10, Math.max(1, parseInt(searchParams.get('projectsPerArea') ?? '3', 10)));
-
+const getInvestmentAreasData = unstable_cache(
+    async (limit: number, projectsPerArea: number) => {
         const t = `${DB}.${SCHEMA}`;
 
-        const [areaRows, projectRows] = (await Promise.all([
+        const [areaRowsRaw, projectRowsRaw] = await Promise.all([
             query(`
                 SELECT
                     ia.INVESTMENT_AREA_ID,
@@ -95,7 +93,10 @@ export async function GET(request: Request) {
                 FROM ranked
                 WHERE AREA_RANK <= ${projectsPerArea}
             `),
-        ])) as [AreaRow[], TopProjectRow[]];
+        ]);
+
+        const areaRows    = areaRowsRaw    as unknown as AreaRow[];
+        const projectRows = projectRowsRaw as unknown as TopProjectRow[];
 
         const projectsByArea = new Map<number, Project[]>();
         for (const r of projectRows) {
@@ -120,17 +121,37 @@ export async function GET(request: Request) {
 
         const totalFunding = areas.reduce((s, a) => s + a.funding, 0);
 
-        const res = NextResponse.json({
+        return {
             areas,
             totalFunding,
             total: areas.length,
-        });
+        };
+    },
+    ['home:investmentAreasTreeMap'],
+    {
+        revalidate: CACHE_TTL_SECONDS,
+        tags: ['home-data', 'home:investmentAreasTreeMap'],
+    },
+);
+function clampInt(raw: string | null, min: number, max: number, fallback: number): number {
+    const n = parseInt(raw ?? '', 10);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+}
 
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const limit           = clampInt(searchParams.get('limit'), 1, 20, 8);
+        const projectsPerArea = clampInt(searchParams.get('projectsPerArea'), 1, 10, 3);
+
+        const payload = await getInvestmentAreasData(limit, projectsPerArea);
+
+        const res = NextResponse.json(payload);
         res.headers.set(
             'Cache-Control',
             `public, s-maxage=${S_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
         );
-
         return res;
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';

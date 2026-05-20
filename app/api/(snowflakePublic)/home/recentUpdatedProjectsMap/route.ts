@@ -1,5 +1,7 @@
-// app/api/(snowflakePublic)/home/recentUpdatedProjectsMap/awardbands.ts
+// app/api/(snowflakePublic)/home/recentUpdatedProjectsMap/route.ts
+
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { query } from '@/lib/snowflake';
 
 const DB     = process.env.DEV_SNOWFLAKE_DATABASE;
@@ -7,6 +9,7 @@ const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 const S_MAX_AGE              = 3600;
 const STALE_WHILE_REVALIDATE = 600;
+const CACHE_TTL_SECONDS      = 600;
 
 interface UpdatedProjectRow {
     PROJECT_ID: number;
@@ -39,8 +42,7 @@ function formatFunding(amt: number | null): string {
 }
 
 function formatLocation(city: string | null, state: string | null): string {
-    const parts = [city, state].filter(Boolean);
-    return parts.join(', ');
+    return [city, state].filter(Boolean).join(', ');
 }
 
 function mapRow(r: UpdatedProjectRow) {
@@ -58,11 +60,8 @@ function mapRow(r: UpdatedProjectRow) {
     };
 }
 
-export async function GET(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') ?? '4', 10)));
-
+const getRecentUpdatedData = unstable_cache(
+    async (limit: number) => {
         const t = `${DB}.${SCHEMA}`;
 
         const rows = (await query(`
@@ -110,18 +109,38 @@ export async function GET(request: Request) {
               AND pa.LONGITUDE_X IS NOT NULL
             ORDER BY p.MODIFIED_DATE DESC NULLS LAST
             LIMIT ${limit}
-        `)) as UpdatedProjectRow[];
+        `)) as unknown as UpdatedProjectRow[];
 
-        const res = NextResponse.json({
+        return {
             projects: rows.map(mapRow),
             total:    rows.length,
-        });
+        };
+    },
+    ['home:recentUpdatedProjectsMap'],
+    {
+        revalidate: CACHE_TTL_SECONDS,
+        tags: ['home-data', 'home:recentUpdatedProjectsMap'],
+    },
+);
 
+function clampInt(raw: string | null, min: number, max: number, fallback: number): number {
+    const n = parseInt(raw ?? '', 10);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(max, Math.max(min, n));
+}
+
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const limit = clampInt(searchParams.get('limit'), 1, 20, 4);
+
+        const payload = await getRecentUpdatedData(limit);
+
+        const res = NextResponse.json(payload);
         res.headers.set(
             'Cache-Control',
             `public, s-maxage=${S_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
         );
-
         return res;
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';

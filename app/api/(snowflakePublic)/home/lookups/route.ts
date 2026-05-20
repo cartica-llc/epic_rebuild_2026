@@ -1,22 +1,21 @@
-// app/api/home/lookups/awardbands.ts
-
+// app/api/home/lookups/route.ts
 
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { query } from '@/lib/snowflake';
 
-const DB = process.env.DEV_SNOWFLAKE_DATABASE;
+const DB     = process.env.DEV_SNOWFLAKE_DATABASE;
 const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
+
+const CACHE_TTL_SECONDS      = 3600;
+const S_MAX_AGE              = CACHE_TTL_SECONDS;
+const STALE_WHILE_REVALIDATE = 600;
 
 interface LookupRow {
     ID: number;
     NAME: string;
 }
 
-/**
- * Drop rows with null ids and any duplicate ids. React crashes with
- * "two children with the same key" when a <select>'s options contain
- * a repeated id, so we defend at the source.
- */
 function dedupeById(rows: LookupRow[]): LookupRow[] {
     const seen = new Set<number>();
     const out: LookupRow[] = [];
@@ -28,8 +27,8 @@ function dedupeById(rows: LookupRow[]): LookupRow[] {
     return out;
 }
 
-export async function GET() {
-    try {
+const getLookupsData = unstable_cache(
+    async () => {
         const t = `${DB}.${SCHEMA}`;
 
         const [
@@ -44,7 +43,7 @@ export async function GET() {
             utilityServiceAreas,
             assemblyDistricts,
             senateDistricts,
-        ] = await Promise.all([
+        ] = (await Promise.all([
             query(
                 `SELECT INVESTMENT_AREA_ID AS ID, INVESTMENT_AREA_NAME AS NAME
                  FROM ${t}.INVESTMENT_AREA
@@ -100,7 +99,6 @@ export async function GET() {
                  WHERE UTILITY_SERVICE_AREA_ID IS NOT NULL
                  ORDER BY NAME`,
             ),
-            // DISTINCT guards against duplicate district rows in the source
             query(
                 `SELECT DISTINCT ASSEMBLY_DISTRICT_ID AS ID, ASSEMBLY_DISTRICT_ID AS NAME
                  FROM ${t}.ASSEMBLY_DISTRICT
@@ -113,7 +111,7 @@ export async function GET() {
                  WHERE SENATE_DISTRICT_ID IS NOT NULL
                  ORDER BY ID`,
             ),
-        ]) as [
+        ])) as [
             LookupRow[],
             LookupRow[],
             LookupRow[],
@@ -130,37 +128,47 @@ export async function GET() {
         const mapIdName = (rows: LookupRow[]) =>
             dedupeById(rows).map((r) => ({ id: r.ID, name: r.NAME }));
 
-        // Status is a string list — dedupe by string value, drop empties
         const statusNames = Array.from(
             new Set(
-                (projectStatuses as { NAME: string }[])
+                projectStatuses
                     .map((r) => r.NAME)
                     .filter((s): s is string => typeof s === 'string' && s.length > 0),
             ),
         );
 
-        const body = {
-            investmentAreas: mapIdName(investmentAreas),
-            projectTypes: mapIdName(projectTypes),
-            developmentStages: mapIdName(developmentStages),
-            projectStatuses: statusNames,
-            programAdmins: mapIdName(programAdmins),
-            businessClassifications: mapIdName(businessClassifications),
+        return {
+            investmentAreas:          mapIdName(investmentAreas),
+            projectTypes:             mapIdName(projectTypes),
+            developmentStages:        mapIdName(developmentStages),
+            projectStatuses:          statusNames,
+            programAdmins:            mapIdName(programAdmins),
+            businessClassifications:  mapIdName(businessClassifications),
             investmentProgramPeriods: mapIdName(investmentProgramPeriods),
-            cpucProceedings: mapIdName(cpucProceedings),
-            utilityServiceAreas: mapIdName(utilityServiceAreas),
-            assemblyDistricts: mapIdName(assemblyDistricts),
-            senateDistricts: mapIdName(senateDistricts),
+            cpucProceedings:          mapIdName(cpucProceedings),
+            utilityServiceAreas:      mapIdName(utilityServiceAreas),
+            assemblyDistricts:        mapIdName(assemblyDistricts),
+            senateDistricts:          mapIdName(senateDistricts),
         };
+    },
+    ['home:lookups'],
+    {
+        revalidate: CACHE_TTL_SECONDS,
+        // Note: 'lookups' (not 'home-data') because these are shared with
+        // filter UIs across the app and shouldn't be invalidated by every
+        // project mutation.
+        tags: ['lookups'],
+    },
+);
+
+export async function GET() {
+    try {
+        const body = await getLookupsData();
 
         const res = NextResponse.json(body);
-
-        // Cache for 5 minutes on CDN, serve stale while revalidating
         res.headers.set(
             'Cache-Control',
-            'public, s-maxage=300, stale-while-revalidate=600',
+            `public, s-maxage=${S_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
         );
-
         return res;
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';

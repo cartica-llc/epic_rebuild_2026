@@ -2,25 +2,10 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-
-interface Project {
-    id:      number;
-    number:  string;
-    name:    string;
-    status:  string;
-    funding: number;
-}
-
-interface InvestmentArea {
-    id:           number;
-    name:         string;
-    funding:      number;
-    projectCount: number;
-    projects:     Project[];
-}
+import { useInvestmentAreas, type InvestmentArea } from '@/hooks/useInvestmentAreas';
 
 interface AreaWithPercent extends InvestmentArea {
     percent: number;
@@ -59,36 +44,16 @@ function sumFunding(arr: { funding: number }[]): number {
 }
 
 export function InvestmentAreas() {
-    const [areas, setAreas]         = useState<InvestmentArea[]>([]);
-    const [totalCount, setTotalCount] = useState(0);
-    const [loading, setLoading]     = useState(true);
+    const { data, loading } = useInvestmentAreas();
+
+    const areas      = data?.areas ?? [];
+    const totalCount = data?.total ?? 0;
 
     const [selectedArea, setSelectedArea]   = useState<InvestmentArea | null>(null);
     const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
     const [showBelow, setShowBelow]         = useState(false);
 
     const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        (async () => {
-            try {
-                const res = await fetch('/api/home/investmentAreasTreeMap?limit=8&projectsPerArea=3');
-                const data = await res.json();
-                if (!cancelled) {
-                    setAreas(data?.areas ?? []);
-                    setTotalCount(data?.total ?? 0);
-                }
-            } catch {
-                if (!cancelled) setAreas([]);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        })();
-
-        return () => { cancelled = true; };
-    }, []);
 
     const handleAreaClick = (area: InvestmentArea, event: React.MouseEvent<HTMLDivElement>) => {
         const target         = event.currentTarget;
