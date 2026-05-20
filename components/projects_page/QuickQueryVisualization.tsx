@@ -93,7 +93,7 @@ export function QuickQueryVisualization({
             className="mb-6"
         >
             <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white/50 backdrop-blur-sm">
-                <div className="flex items-center justify-between border-b-2 border-slate-200 px-6 py-4">
+                <div className="hidden flex items-center justify-between border-b-2 border-slate-200 px-6 py-4">
                     <div>
                         <h3 className="text-lg font-bold text-slate-900">
                             {headerInfo.title}

@@ -45,15 +45,24 @@ export function Insight_SpendingAnalysis() {
             {/* Header strip */}
             <div className="relative bg-white px-4 py-6 md:px-6 md:py-8">
                 <div className="space-y-5">
-                    <SpendingHeader onReset={reset} />
+                    <SpendingHeader  />
 
                     <SpendingFilters
+
                         filters={filters}
+
                         periods={periods}
+
                         areas={areas}
+
                         onPeriodChange={setPeriod}
+
                         onAreaChange={setArea}
+
+                        onReset={reset}
+
                         optionsLoading={optionsLoading}
+
                     />
 
                     <div className="h-px w-full bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200" />

@@ -10,8 +10,8 @@ interface MarketHeaderProps {
 export function MarketHeader({ showReset, onReset }: MarketHeaderProps) {
     return (
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
+            <div className="hidden">
+                <h2 className=" text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
                     Market Maturity Analysis
                 </h2>
                 <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-slate-500">

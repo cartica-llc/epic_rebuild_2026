@@ -11,6 +11,7 @@ interface SpendingFiltersProps {
     areas: string[];
     onPeriodChange: (p: string) => void;
     onAreaChange: (a: string) => void;
+    onReset: () => void;
     optionsLoading?: boolean;
 }
 
@@ -55,6 +56,7 @@ export function SpendingFilters({
                                     areas,
                                     onPeriodChange,
                                     onAreaChange,
+                                    onReset,
                                     optionsLoading,
                                 }: SpendingFiltersProps) {
     return (
@@ -80,6 +82,16 @@ export function SpendingFilters({
                     ...areas.map((a) => ({ value: a, label: a })),
                 ]}
             />
+
+            <div className="sm:col-span-2">
+                <button
+                    type="button"
+                    onClick={onReset}
+                    className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
+                >
+                    Reset filters
+                </button>
+            </div>
         </div>
     );
 }

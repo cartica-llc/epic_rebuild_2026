@@ -1,15 +1,43 @@
-// ─── components/projects_page/ProjectsMobileToggle.tsx ─────────────────
-
 'use client';
 
-import { LayoutList, Sparkles, DollarSign, TrendingUp, Search, Map } from 'lucide-react';
-import { motion } from 'motion/react';
+import {
+    LayoutList,
+    Sparkles,
+    DollarSign,
+    TrendingUp,
+    Search,
+    Map,
+    ChevronDown,
+    Check,
+} from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
 
 const INSIGHT_OPTIONS = [
-    { id: 'spending',   label: 'Spending',   icon: DollarSign },
-    { id: 'market',     label: 'Market',     icon: TrendingUp },
-    { id: 'technology', label: 'Technology', icon: Search },
-    { id: 'map',        label: 'Map',        icon: Map },
+    {
+        id: 'spending',
+        label: 'Spending Analysis',
+        shortLabel: 'Spending',
+        icon: DollarSign,
+    },
+    {
+        id: 'market',
+        label: 'Market Maturity',
+        shortLabel: 'Market',
+        icon: TrendingUp,
+    },
+    {
+        id: 'technology',
+        label: 'Key Learnings',
+        shortLabel: 'Learnings',
+        icon: Search,
+    },
+    {
+        id: 'map',
+        label: 'Project Map',
+        shortLabel: 'Map',
+        icon: Map,
+    },
 ] as const;
 
 const INSIGHT_IDS = INSIGHT_OPTIONS.map((o) => o.id) as readonly string[];
@@ -19,108 +47,203 @@ interface ProjectsMobileToggleProps {
     onPrefilterChange: (next: string) => void;
 }
 
+const selectedLineClass =
+    'absolute bottom-0 left-4 right-4 h-[3px] rounded-full bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600';
+
 export function ProjectsMobileToggle({
                                          activePrefilter,
                                          onPrefilterChange,
                                      }: ProjectsMobileToggleProps) {
-    const isList     = activePrefilter === 'all-projects';
-    const isInsights = INSIGHT_IDS.includes(activePrefilter);
+    const [open, setOpen] = useState(false);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+    const containerRef = useRef<HTMLDivElement>(null);
+    const insightButtonRef = useRef<HTMLButtonElement>(null);
 
-    const handleSelectList = () => {
-        if (!isList) onPrefilterChange('all-projects');
+    const isProjects = activePrefilter === 'all-projects';
+    const isInsight = INSIGHT_IDS.includes(activePrefilter);
+
+    const activeInsight =
+        INSIGHT_OPTIONS.find((o) => o.id === activePrefilter) ?? INSIGHT_OPTIONS[0];
+
+    const ActiveInsightIcon = activeInsight.icon;
+
+    const updateMenuPosition = () => {
+        const button = insightButtonRef.current;
+
+        if (!button) return;
+
+        const rect = button.getBoundingClientRect();
+
+        setMenuStyle({
+            top: rect.bottom + 8,
+            left: 16,
+            right: 16,
+        });
     };
 
-    const handleSelectInsights = () => {
-        if (!isInsights) onPrefilterChange('spending');
+    useEffect(() => {
+        if (!open) return;
+
+        updateMenuPosition();
+
+        window.addEventListener('resize', updateMenuPosition);
+        window.addEventListener('scroll', updateMenuPosition, true);
+
+        return () => {
+            window.removeEventListener('resize', updateMenuPosition);
+            window.removeEventListener('scroll', updateMenuPosition, true);
+        };
+    }, [open]);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                containerRef.current &&
+                !containerRef.current.contains(event.target as Node)
+            ) {
+                setOpen(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const handleSelectProjects = () => {
+        setOpen(false);
+        onPrefilterChange('all-projects');
+    };
+
+    const handleSelectInsight = (id: string) => {
+        setOpen(false);
+        onPrefilterChange(id);
+    };
+
+    const handleInsightButton = () => {
+        if (!isInsight) {
+            onPrefilterChange('spending');
+            setOpen(true);
+            return;
+        }
+
+        setOpen((current) => !current);
     };
 
     return (
-        <div className="mb-4 lg:hidden">
-            {/* Segmented control */}
+        <div
+            ref={containerRef}
+            className="relative block border-t border-slate-200 lg:hidden"
+        >
             <div
                 role="tablist"
-                aria-label="View mode"
-                className="flex gap-1 rounded-xl bg-slate-100 p-1"
+                aria-label="Project view mode"
+                className="grid grid-cols-2"
             >
-                <SegmentButton
-                    active={isList}
-                    onClick={handleSelectList}
-                    icon={<LayoutList className="h-4 w-4" />}
-                    label="List"
-                />
-                <SegmentButton
-                    active={isInsights}
-                    onClick={handleSelectInsights}
-                    icon={<Sparkles className="h-4 w-4" />}
-                    label="Insights"
-                />
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={isProjects}
+                    onClick={handleSelectProjects}
+                    className={`relative flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition ${
+                        isProjects
+                            ? 'text-slate-950'
+                            : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                >
+                    <LayoutList className="h-4 w-4" />
+                    Projects
+
+                    {isProjects && (
+                        <motion.span
+                            layoutId="mobile-header-toggle-line"
+                            className={selectedLineClass}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        />
+                    )}
+                </button>
+
+                <button
+                    ref={insightButtonRef}
+                    type="button"
+                    role="tab"
+                    aria-selected={isInsight}
+                    aria-expanded={open}
+                    onClick={handleInsightButton}
+                    className={`relative flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition ${
+                        isInsight
+                            ? 'text-slate-950'
+                            : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                >
+                    {isInsight ? (
+                        <ActiveInsightIcon className="h-4 w-4" />
+                    ) : (
+                        <Sparkles className="h-4 w-4" />
+                    )}
+
+                    <span className="truncate">
+                        {isInsight ? activeInsight.shortLabel : 'Insights'}
+                    </span>
+
+                    <ChevronDown
+                        className={`h-4 w-4 transition-transform ${
+                            open ? 'rotate-180' : ''
+                        }`}
+                    />
+
+                    {isInsight && (
+                        <motion.span
+                            layoutId="mobile-header-toggle-line"
+                            className={selectedLineClass}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        />
+                    )}
+                </button>
             </div>
 
-            {isInsights && (
-                <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="mt-6 -mx-4 sm:-mx-6 overflow-x-auto px-4 sm:px-6"
-                >
-                    <div className="flex gap-2 pb-1 m-auto justify-center">
-                        {INSIGHT_OPTIONS.map((opt) => {
-                            const Icon = opt.icon;
-                            const isActive = activePrefilter === opt.id;
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.16 }}
+                        style={menuStyle}
+                        className="fixed z-[999] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+                    >
+                        {INSIGHT_OPTIONS.map((option) => {
+                            const Icon = option.icon;
+                            const isActive = activePrefilter === option.id;
+
                             return (
                                 <button
-                                    key={opt.id}
+                                    key={option.id}
                                     type="button"
-                                    onClick={() => onPrefilterChange(opt.id)}
-                                    className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                                    onClick={() => handleSelectInsight(option.id)}
+                                    className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition ${
                                         isActive
-                                            ? 'border-slate-900 bg-slate-900 text-white'
-                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                                            ? 'bg-slate-50 text-slate-950'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
                                     }`}
                                 >
-                                    <Icon className="h-3.5 w-3.5" />
-                                    {opt.label}
+                                    <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+
+                                    <span className="min-w-0 flex-1 truncate font-medium">
+                                        {option.label}
+                                    </span>
+
+                                    {isActive && (
+                                        <Check className="h-4 w-4 shrink-0 text-slate-900" />
+                                    )}
                                 </button>
                             );
                         })}
-                    </div>
-                </motion.div>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
-    );
-}
-
-interface SegmentButtonProps {
-    active: boolean;
-    onClick: () => void;
-    icon: React.ReactNode;
-    label: string;
-}
-
-function SegmentButton({ active, onClick, icon, label }: SegmentButtonProps) {
-    return (
-        <button
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={onClick}
-            className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                active
-                    ? 'text-slate-900'
-                    : 'text-slate-500 hover:text-slate-700'
-            }`}
-        >
-            {active && (
-                <motion.span
-                    layoutId="segmented-active-bg"
-                    className="absolute inset-0 rounded-lg bg-white shadow-sm"
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                />
-            )}
-            <span className="relative z-10 flex items-center gap-1.5">
-                {icon}
-                {label}
-            </span>
-        </button>
     );
 }

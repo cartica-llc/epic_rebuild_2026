@@ -10,8 +10,8 @@ interface LearningsHeaderProps {
 export function LearningsHeader({ showReset, onReset }: LearningsHeaderProps) {
     return (
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
+            <div className="hidden">
+                <h2 className=" text-xl font-bold tracking-tight text-slate-900 md:text-2xl">
                     Has this been tried?
                 </h2>
                 <p className="mt-1.5 max-w-lg text-[13px] leading-relaxed text-slate-500">

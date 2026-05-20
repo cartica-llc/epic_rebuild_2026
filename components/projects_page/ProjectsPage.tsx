@@ -6,8 +6,7 @@ import { AnimatePresence } from 'motion/react';
 import { ProjectFilters } from './ProjectFilters';
 import { ProjectsListContainer } from './projectsList/ProjectsListContainer';
 import { QuickQueryVisualization } from './QuickQueryVisualization';
-import { ProjectsMobileToggle } from './ProjectsMobileToggle';
-// import { ProjectsPageHeader } from './ProjectsPageHeader';
+import { ProjectsPageHeader } from './ProjectsPageHeader';
 
 export function ProjectsPage() {
     const searchParams = useSearchParams();
@@ -22,7 +21,6 @@ export function ProjectsPage() {
     );
 
     const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-
     const [searchTerm, setSearchTerm] = useState(() => searchParam ?? '');
 
     // Sync activePrefilter to URL when it changes.
@@ -50,8 +48,12 @@ export function ProjectsPage() {
 
     return (
         <div className="min-h-screen bg-white py-4">
-            <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-                {/* <ProjectsPageHeader viewParam={viewParam} /> */}
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <ProjectsPageHeader
+                    viewParam={viewParam}
+                    activePrefilter={activePrefilter}
+                    onPrefilterChange={setActivePrefilter}
+                />
 
                 <div className="lg:flex lg:gap-6">
                     <aside className="lg:w-[280px] lg:flex-shrink-0">
@@ -63,12 +65,6 @@ export function ProjectsPage() {
                     </aside>
 
                     <div className="flex min-w-0 flex-1 flex-col">
-                        {/* Mobile-only segmented toggle (hidden on lg+) */}
-                        <ProjectsMobileToggle
-                            activePrefilter={activePrefilter}
-                            onPrefilterChange={setActivePrefilter}
-                        />
-
                         <AnimatePresence mode="wait">
                             {activePrefilter &&
                                 activePrefilter !== 'all-projects' && (

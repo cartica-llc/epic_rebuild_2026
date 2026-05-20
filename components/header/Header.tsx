@@ -60,7 +60,7 @@ export function Header({ currentPath }: HeaderProps) {
                 <div className="h-[3px] w-full bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600" />
 
                 <div className="bg-white/85 backdrop-blur-md border-b border-slate-200 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <BrandLogo />
 
