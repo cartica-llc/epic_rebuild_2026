@@ -12,7 +12,7 @@ export function Hero_V2() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="relative w-full overflow-hidden bg-white pt-10 "
+            className="relative w-full overflow-hidden bg-white pt-2 "
         >
             {/* Background chart - decorative */}
             <div className="pointer-events-none absolute inset-0 z-0 opacity-85">
@@ -42,7 +42,7 @@ export function Hero_V2() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.35 }}
-                    className="max-w-2xl text-lg leading-relaxed text-slate-600 pb-6"
+                    className="max-w-2xl text-sm sm:text-lg  leading-relaxed text-slate-600 pb-6"
                 >
                     The Electric Program Investment Charge (EPIC) is a ratepayer-funded initiative driving breakthrough research, development, and deployment of clean energy solutions across California.
                 </motion.p>

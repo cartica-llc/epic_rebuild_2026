@@ -144,11 +144,11 @@ export function InvestmentAreas() {
                     transition={{ duration: 0.6 }}
                     className="header mb-12"
                 >
-                    <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-neutral-900">
+                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight text-slate-900 my-4">
                         Investment Areas
                     </h2>
 
-                    <p className="text-slate-600 max-w-2xl">
+                    <p className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-slate-500 pb-4">
                         Our portfolio covers a wide range of investment areas. This snapshot
                         highlights the largest slices by committed funding so you can see
                         where effort is concentrating at a glance.

@@ -259,11 +259,11 @@ export function ProjectsMap() {
                             Community impact
                         </p>
 
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight text-slate-900 mb-6">
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight text-slate-900 my-4">
                             Powering the places that need it most.
                         </h2>
 
-                        <p className="text-slate-600 leading-relaxed text-lg sm:text-xl mb-8 max-w-lg">
+                        <p className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-slate-500 pb-4">
                             A meaningful share of EPIC&rsquo;s funding goes directly to lower-income
                             and underserved communities across California. Click a region to explore
                             what&rsquo;s being built there.

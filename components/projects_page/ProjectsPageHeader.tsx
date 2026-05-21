@@ -74,27 +74,28 @@ export function ProjectsPageHeader({
     const Icon = activeContent.icon;
 
     return (
-        <section className="relative z-30 mb-10 select-none">
+        <section className="relative z-30 mb-5 sm:mb-10 select-none">
             <div className="relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
-                <div className="hidden lg:block absolute left-0 top-0 h-full w-[5px] bg-gradient-to-b from-sky-600 via-emerald-600 to-rose-600" />
+                <div className="absolute left-0 top-0 hidden h-full w-[5px] bg-gradient-to-b from-sky-600 via-emerald-600 to-rose-600 lg:block" />
 
-                <div className="relative px-5 py-6 md:px-6 lg:pl-8">
+                <div className="relative px-4 py-4 sm:px-6 sm:py-6 lg:pl-8">
                     <div className="pointer-events-none absolute right-6 top-5 hidden h-24 w-24 rounded-full bg-slate-100/80 blur-2xl md:block" />
 
                     <div className="relative min-w-0">
-                        <span className="flex items-center gap-2">
-                            <Icon className="h-4 w-4 text-slate-300" />
+                        <span className="flex items-center gap-1.5 sm:gap-2">
+                            {/* Dropped mobile icon size down to h-3 w-3 */}
+                            <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-slate-300" />
 
-                            <p className="text-xs font-bold uppercase tracking-[0.20em] text-slate-500">
+                            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.20em] text-slate-500">
                                 {activeContent.eyebrow}
                             </p>
                         </span>
 
-                        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">
+                        <h1 className="mt-1.5 sm:mt-4 text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-950">
                             {activeContent.title}
                         </h1>
 
-                        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-600">
+                        <p className="mt-1.5 sm:mt-3 max-w-3xl text-xs sm:text-sm md:text-base leading-relaxed text-slate-600">
                             {activeContent.description}
                         </p>
                     </div>

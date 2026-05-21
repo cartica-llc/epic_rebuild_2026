@@ -21,7 +21,6 @@ export function HeroSearchBar() {
     const [submitting, setSubmitting] = useState(false);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
-    // Cycle the placeholder term to hint at what's searchable
     useEffect(() => {
         const id = setInterval(() => {
             setPlaceholderIndex((i) => (i + 1) % PLACEHOLDER_TERMS.length);
@@ -61,7 +60,7 @@ export function HeroSearchBar() {
                         if (e.key === 'Enter') handleSubmit();
                     }}
                     placeholder={`Try "${PLACEHOLDER_TERMS[placeholderIndex]}"...`}
-                    className="flex-1 bg-transparent px-3 py-4 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                    className="flex-1 bg-transparent px-3 py-4 text-base text-slate-900 placeholder:text-slate-200 focus:outline-none"
                 />
 
                 <button

@@ -1,9 +1,12 @@
+'use client';
+
 import type { CSSProperties } from 'react';
+import { motion } from 'motion/react';
 
 const GRADIENT_BORDER_STYLE: CSSProperties = {
-    background: 'linear-gradient(to right, #0284c7, #059669, #e11d48)',
-    padding: '2px',
-    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+    background: 'linear-gradient(to right, #0284c7, #059669, #e11d48) border-box',
+    border: '2px solid transparent',
+    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
     WebkitMaskComposite: 'xor',
     maskComposite: 'exclude',
 };
@@ -36,25 +39,53 @@ export function FooterSocialLinks() {
     return (
         <div className="flex gap-3">
             {socials.map(({ label, href, path }) => (
-                <a
+                <motion.a
                     key={label}
                     href={href}
                     aria-label={label}
-                    className="group relative flex items-center justify-center w-10 h-10 rounded-lg bg-white transition-all overflow-hidden"
+                    initial="rest"
+                    animate="rest"
+                    whileHover="hover"
+                    className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white transition-all hover:shadow-sm"
                 >
+
                     <span className="absolute inset-0 rounded-lg border border-slate-200 transition-opacity duration-200 group-hover:opacity-0" />
-                    <span
-                        className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+
+                    <motion.span
+                        className="pointer-events-none absolute inset-0 rounded-lg"
                         style={GRADIENT_BORDER_STYLE}
+                        variants={{
+                            rest: {
+                                opacity: 0,
+                                clipPath: 'polygon(0 0, 0 0, 0 0, 0 0, 0 0)',
+                                transition: { duration: 0.2 },
+                            },
+                            hover: {
+                                opacity: 1,
+                                clipPath: [
+                                    'polygon(0 0, 0 0, 0 0, 0 0, 0 0)',
+                                    'polygon(0 0, 100% 0, 100% 0, 100% 0, 100% 0)',
+                                    'polygon(0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%)',
+                                    'polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 100%)',
+                                    'polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0)',
+                                ],
+                                transition: {
+                                    duration: 0.5,
+                                    ease: 'linear',
+                                },
+                            },
+                        }}
                     />
+
+                    {/* Foreground Content */}
                     <svg
-                        className="relative z-10 w-5 h-5 text-slate-700"
+                        className="relative z-10 h-5 w-5 text-slate-500 transition-colors group-hover:text-slate-900"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                     >
                         <path d={path} />
                     </svg>
-                </a>
+                </motion.a>
             ))}
         </div>
     );

@@ -9,8 +9,8 @@ const links = [
     { href: '/',          label: 'Home',                 external: false },
     { href: '/projects',  label: 'Projects',             external: false },
     { href: '#',          label: 'About EPIC',           external: true },
-    { href: '#',          label: 'Funding Opportunities', external: true },
-    { href: '#',          label: 'Research & Results',   external: true },
+    { href: '/projects?view=market',          label: 'Funding Opportunities', external: true },
+    { href: '/projects?view=technology',          label: 'Research & Results',   external: true },
 ] as const;
 
 export function FooterNav() {

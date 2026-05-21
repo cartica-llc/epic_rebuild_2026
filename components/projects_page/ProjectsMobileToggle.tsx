@@ -48,7 +48,7 @@ interface ProjectsMobileToggleProps {
 }
 
 const selectedLineClass =
-    'absolute bottom-0 left-4 right-4 h-[3px] rounded-full bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600';
+    'absolute bottom-0 left-3 right-3 sm:left-4 sm:right-4 h-[2px] sm:h-[3px] rounded-full bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600';
 
 export function ProjectsMobileToggle({
                                          activePrefilter,
@@ -147,13 +147,13 @@ export function ProjectsMobileToggle({
                     role="tab"
                     aria-selected={isProjects}
                     onClick={handleSelectProjects}
-                    className={`relative flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition ${
+                    className={`relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 py-3 sm:px-4 sm:py-4 text-xs sm:text-sm font-medium transition ${
                         isProjects
                             ? 'text-slate-950'
                             : 'text-slate-500 hover:text-slate-800'
                     }`}
                 >
-                    <LayoutList className="h-4 w-4" />
+                    <LayoutList className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     Projects
 
                     {isProjects && (
@@ -172,16 +172,16 @@ export function ProjectsMobileToggle({
                     aria-selected={isInsight}
                     aria-expanded={open}
                     onClick={handleInsightButton}
-                    className={`relative flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition ${
+                    className={`relative flex items-center justify-center gap-1.5 sm:gap-2 px-2 py-3 sm:px-4 sm:py-4 text-xs sm:text-sm font-medium transition ${
                         isInsight
                             ? 'text-slate-950'
                             : 'text-slate-500 hover:text-slate-800'
                     }`}
                 >
                     {isInsight ? (
-                        <ActiveInsightIcon className="h-4 w-4" />
+                        <ActiveInsightIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     ) : (
-                        <Sparkles className="h-4 w-4" />
+                        <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     )}
 
                     <span className="truncate">
@@ -189,7 +189,7 @@ export function ProjectsMobileToggle({
                     </span>
 
                     <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
+                        className={`h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform ${
                             open ? 'rotate-180' : ''
                         }`}
                     />
@@ -223,20 +223,20 @@ export function ProjectsMobileToggle({
                                     key={option.id}
                                     type="button"
                                     onClick={() => handleSelectInsight(option.id)}
-                                    className={`cursor-pointer flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition ${
+                                    className={`cursor-pointer flex w-full items-center gap-2 sm:gap-3 px-3 py-2.5 sm:px-4 sm:py-3 text-left text-xs sm:text-sm transition ${
                                         isActive
                                             ? 'bg-slate-50 text-slate-950'
                                             : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
                                     }`}
                                 >
-                                    <Icon className="h-4 w-4 shrink-0 text-slate-400" />
+                                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-slate-400" />
 
                                     <span className="min-w-0 flex-1 truncate font-medium">
                                         {option.label}
                                     </span>
 
                                     {isActive && (
-                                        <Check className="h-4 w-4 shrink-0 text-slate-900" />
+                                        <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-slate-900" />
                                     )}
                                 </button>
                             );

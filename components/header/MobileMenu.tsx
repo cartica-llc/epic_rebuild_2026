@@ -98,7 +98,7 @@ export function MobileMenu({ isOpen, onClose, activePath, isSignedIn, onSignIn }
                         exit={{ x: '-100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                         className="fixed left-0 top-0 bottom-0 w-64 overflow-y-auto rounded-r-2xl bg-white shadow-2xl"
-                        style={{ zIndex: 9999, height: '100vh' }}
+                        style={{ zIndex: 9999, height: '100dvh' }}
                     >
                         <div className="flex h-full flex-col">
                             {/* Logo section */}

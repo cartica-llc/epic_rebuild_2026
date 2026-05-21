@@ -5,11 +5,11 @@ import { motion } from 'motion/react';
 
 
 const links = [
-    { href: '#', label: 'FAQ' },
+    { href: '/faq', label: 'FAQ' },
     { href: '#', label: 'Documentation' },
     { href: '#', label: 'Privacy Policy' },
     { href: '#', label: 'Accessibility' },
-    { href: '#', label: 'Contact Us' },
+    { href: '/contact', label: 'Contact Us' },
 ] as const;
 
 export function FooterResources() {
