@@ -9,7 +9,8 @@ interface NavLinksProps {
 const links = [
     { href: '/', label: 'Home' },
     { href: '/projects', label: 'Projects' },
-    // { href: '#', label: 'FAQ' },
+    { href: '/about', label: 'About' },
+    { href: '/contact', label: 'Contact' },
 ] as const;
 
 function isActive(href: string, activePath: string) {

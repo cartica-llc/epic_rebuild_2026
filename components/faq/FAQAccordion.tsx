@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
-import Image from "next/image";
+// import Image from "next/image";
 
 import { faqItems, faqCategories, type FAQCategory, type FAQItem } from "./faqData";
 
@@ -41,14 +41,14 @@ export default function FAQPage() {
                             transition={{ duration: 0.4 }}
                         >
                             <div className="mb-8 inline-flex items-center gap-3">
-                                <Image
-                                    src="/logo/CAgov-logo.svg"
-                                    alt="California Government Logo"
-                                    width={48}
-                                    height={48}
-                                    className="h-12 w-auto object-contain"
-                                    priority
-                                />
+                                {/*<Image*/}
+                                {/*    src="/logo/CAgov-logo.svg"*/}
+                                {/*    alt="California Government Logo"*/}
+                                {/*    width={48}*/}
+                                {/*    height={48}*/}
+                                {/*    className="h-12 w-auto object-contain"*/}
+                                {/*    priority*/}
+                                {/*/>*/}
                             </div>
 
                             <h1 className="mb-4 text-3xl font-semibold tracking-tight lg:text-4xl">

@@ -6,9 +6,9 @@ import { motion } from 'motion/react';
 
 const links = [
     { href: '/faq', label: 'FAQ' },
-    { href: '#', label: 'Documentation' },
-    { href: '#', label: 'Privacy Policy' },
-    { href: '#', label: 'Accessibility' },
+    { href: '/docs', label: 'Documentation' },
+    { href: '/privacy', label: 'Privacy Policy' },
+    { href: '/conditions-of-use', label: 'Conditions of Use' },
     { href: '/contact', label: 'Contact Us' },
 ] as const;
 

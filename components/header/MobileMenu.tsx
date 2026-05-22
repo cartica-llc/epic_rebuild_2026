@@ -73,9 +73,8 @@ export function MobileMenu({ isOpen, onClose, activePath, isSignedIn, onSignIn }
     const navLinks = [
         { href: '/', label: 'Home' },
         { href: '/projects', label: 'Projects' },
-        // { href: '#', label: 'About EPIC' },
-        // { href: '#', label: 'FAQ' },
-        // { href: '#', label: 'Contact' },
+        { href: '/about', label: 'About' },
+        { href: '/contact', label: 'Contact' },
     ] as const;
 
     return (
