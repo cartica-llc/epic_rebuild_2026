@@ -166,7 +166,7 @@ function StagePanel({ stage }: { stage: Stage }) {
 
 
 export function ComplianceSection() {
-    const [activeTab, setActiveTab] = useState<TabId>('new-project');
+    const [activeTab, setActiveTab] = useState<TabId | null>(null);
 
     const activeStage = STAGES.find((s) => s.id === activeTab);
 
@@ -176,7 +176,7 @@ export function ComplianceSection() {
             <div className="mb-8">
                 <h2 className="text-xl font-semibold text-slate-900">Project Compliance</h2>
                 <p className="mt-1 text-sm text-slate-400">
-                    Required fields by project lifecycle stage and compliance flags raised in the admin dashboard.
+                    Required fields by project lifecycle stage.
                 </p>
             </div>
 
@@ -207,17 +207,18 @@ export function ComplianceSection() {
                 })}
             </div>
 
-            {/* Tab content */}
             <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.18 }}
-                >
-                    {activeStage && <StagePanel stage={activeStage} />}
-                </motion.div>
+                {activeStage && (
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.18 }}
+                    >
+                        <StagePanel stage={activeStage} />
+                    </motion.div>
+                )}
             </AnimatePresence>
         </section>
     );
