@@ -66,7 +66,7 @@ export function HowToSection() {
             const el = document.getElementById('how-to-section');
             el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-    }, []);
+    }, [guideParam]);
 
     const selectItem = (item: HowToItem) => {
         const params = new URLSearchParams(searchParams.toString());

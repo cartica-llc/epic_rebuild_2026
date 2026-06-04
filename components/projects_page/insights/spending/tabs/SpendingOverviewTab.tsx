@@ -41,6 +41,7 @@ interface OverviewResponse {
         expended: number;
     }[];
     topLeads: {
+        id: number;
         name: string;
         committed: number;
         contracted: number;
@@ -168,6 +169,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                     <NestedBarList
                         rows={sortedTopLeads.map((l) => ({
                             label: l.name,
+                            href: `/projects?leadCompanyId=${l.id}`,
                             committed: l.committed,
                             contracted: l.contracted,
                             expended: l.expended,

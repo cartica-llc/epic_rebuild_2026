@@ -48,17 +48,19 @@ function AnimatedValue({
     const [display, setDisplay] = useState(format(0));
 
     useEffect(() => {
-        const unsub = motionVal.on('change', (v) => setDisplay(format(v)));
+        const unsub = motionVal.on("change", (v) => setDisplay(format(v)));
+
         const controls = animate(motionVal, value, {
             duration: 1.6,
             delay,
             ease: [0.0, 0.0, 0.2, 1],
         });
+
         return () => {
             controls.stop();
             unsub();
         };
-    }, [value]);
+    }, [motionVal, value, delay, format]);
 
     return <span className={className}>{display}</span>;
 }

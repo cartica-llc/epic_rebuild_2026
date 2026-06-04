@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { ProjectFallbackArt } from './ProjectFallbackArt';
 
 interface CompletedProject {
     id: number;
@@ -17,10 +18,9 @@ interface CompletedProject {
     imageUrl: string | null;
 }
 
-const DEFAULT_IMAGE = '/images/home/complete/defaultCompleted.webp';
-
 function ProjectCard({ project, index }: { project: CompletedProject; index: number }) {
-    const [imgSrc, setImgSrc] = useState<string>(project.imageUrl ?? DEFAULT_IMAGE);
+    const [imgError, setImgError] = useState(false);
+    const showFallback = !project.imageUrl || imgError;
 
     return (
         <motion.div
@@ -37,19 +37,25 @@ function ProjectCard({ project, index }: { project: CompletedProject; index: num
             <Link href={`/projects/${project.id}`} className="group block">
                 <article className="flex flex-col">
                     <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-slate-200/60 bg-slate-100 shadow-sm">
-                        <Image
-                            src={imgSrc}
-                            alt={project.name}
-                            fill
-                            sizes="(max-width: 640px) 75vw, (max-width: 1024px) 280px, 320px"
-                            className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
-                            onError={() => setImgSrc(DEFAULT_IMAGE)}
-                        />
+                        {showFallback ? (
+                            <ProjectFallbackArt organizationShort={project.organizationShort} />
+                        ) : (
+                            <Image
+                                src={project.imageUrl as string}
+                                alt={project.name}
+                                fill
+                                sizes="(max-width: 640px) 75vw, (max-width: 1024px) 280px, 320px"
+                                className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+                                onError={() => setImgError(true)}
+                            />
+                        )}
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                        {!showFallback && (
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                        )}
 
                         {project.amount && (
-                            <div className="absolute bottom-3 left-3">
+                            <div className="absolute bottom-3 left-3 z-30">
                                 <span className="rounded-lg bg-white/95 px-2.5 py-1 text-[10px] font-bold tracking-tight text-slate-900 shadow-sm backdrop-blur-md">
                                     {project.amount}
                                 </span>

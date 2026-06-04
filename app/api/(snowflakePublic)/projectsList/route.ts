@@ -1,4 +1,4 @@
-// app/api/projectsList/awardbands.ts
+// app/api/projectsList/route.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
@@ -117,6 +117,9 @@ function buildQuery(sp: URLSearchParams) {
 
     const investmentPeriodId = safeInt(sp.get('investmentPeriodId') ?? '');
     if (investmentPeriodId !== null) wheres.push(`p.INVESTMENT_PROGRAM_PERIOD_PERIOD_ID = ${investmentPeriodId}`);
+
+    const leadCompanyId = safeInt(sp.get('leadCompanyId') ?? '');
+    if (leadCompanyId !== null) wheres.push(`p.PROJECT_LEAD_COMPANY_ID = ${leadCompanyId}`);
 
     const assemblyDistrictId = safeInt(sp.get('assemblyDistrictId') ?? '');
     if (assemblyDistrictId !== null) {

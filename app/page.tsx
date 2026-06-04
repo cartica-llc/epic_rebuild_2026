@@ -1,7 +1,7 @@
 // import {Hero} from '@/components/home/home_1_hero/Hero';
-import {ProgramIntro} from '@/components/home/home_2_intro/ProgramIntro';
-
-import {QuickActionButtons} from '@/components/home/QuickActionButtons';
+// import {ProgramIntro} from '@/components/home/home_2_intro/ProgramIntro';
+//
+// import {QuickActionButtons} from '@/components/home/QuickActionButtons';
 import {RecentlyCompletedProjects} from '@/components/home/RecentlyCompletedProjects';
 import {ProjectsMapWithParallax} from '@/components/home/ProjectsMapWithParallax';
 import {InvestmentAreas} from '@/components/home/InvestmentAreas';

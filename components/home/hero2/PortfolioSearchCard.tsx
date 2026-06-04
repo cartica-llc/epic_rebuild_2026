@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { motion, useMotionValue, animate } from 'motion/react';
 import { Search, ArrowRight, Loader2 } from 'lucide-react';
 
-
 const GRADIENT_BORDER_STYLE: CSSProperties = {
     background: 'linear-gradient(to right, #0284c7, #059669, #e11d48) border-box',
     border: '2px solid transparent',
@@ -42,6 +41,16 @@ function abbreviate(n: number): string {
     if (n >= 1_000_000) return `$${fmt2(floorTo(n / 1_000_000, 1))}M`;
     if (n >= 1_000) return `$${fmt2(floorTo(n / 1_000, 1))}K`;
     return `$${Math.floor(n)}`;
+}
+
+function Skeleton({ style, className }: { style?: React.CSSProperties; className?: string }) {
+    return (
+        <span
+            aria-hidden="true"
+            className={`animate-pulse rounded-md bg-slate-200 inline-block ${className ?? ''}`}
+            style={style}
+        />
+    );
 }
 
 function AnimatedValue({
@@ -83,11 +92,13 @@ function StatCell({
                       value,
                       sublabel,
                       accent,
+                      loading,
                   }: {
     label: string;
     value: React.ReactNode;
     sublabel: string;
     accent: string;
+    loading?: boolean;
 }) {
     return (
         <motion.div
@@ -118,12 +129,19 @@ function StatCell({
                 className="mt-1 font-bold leading-none tracking-tight text-slate-900"
                 style={{ fontSize: 'clamp(1.3rem, 5vw, 2.75rem)' }}
             >
-                <AnimatedValue value={0} format={() => ''} />
-                {value}
+                {loading ? (
+                    <Skeleton style={{ width: '4.5rem', height: '2rem', borderRadius: '0.375rem', display: 'inline-block', verticalAlign: 'middle' }} />
+                ) : (
+                    value
+                )}
             </p>
 
             <p className="mt-1.5 hidden truncate text-xs text-slate-400 sm:block">
-                {sublabel}
+                {loading ? (
+                    <Skeleton style={{ width: '5rem', height: '0.625rem', borderRadius: '0.25rem', display: 'inline-block' }} />
+                ) : (
+                    sublabel
+                )}
             </p>
         </motion.div>
     );
@@ -138,11 +156,11 @@ export function PortfolioSearchCard() {
         funding: 0,
         matchFunding: 0,
     });
+    const [kpiLoading, setKpiLoading] = useState(true);
 
     const [value, setValue] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
-
     const [placeholderText, setPlaceholderText] = useState('projects, technologies, recipients...');
 
     useEffect(() => {
@@ -153,7 +171,8 @@ export function PortfolioSearchCard() {
                 const json: KPIData = await res.json();
                 setData(json);
             } catch {
-
+            } finally {
+                setKpiLoading(false);
             }
         }, 400);
         return () => clearTimeout(timer);
@@ -206,6 +225,7 @@ export function PortfolioSearchCard() {
                     }
                     sublabel="In progress today"
                     accent="sky"
+                    loading={kpiLoading}
                 />
                 <StatCell
                     label="Committed Funding"
@@ -218,6 +238,7 @@ export function PortfolioSearchCard() {
                     }
                     sublabel={data.funding > 0 ? fmt.format(data.funding) : 'Ratepayer dollars'}
                     accent="emerald"
+                    loading={kpiLoading}
                 />
                 <StatCell
                     label="Match Funding"
@@ -232,6 +253,7 @@ export function PortfolioSearchCard() {
                         data.matchFunding > 0 ? fmt.format(data.matchFunding) : 'Outside investment'
                     }
                     accent="rose"
+                    loading={kpiLoading}
                 />
             </div>
 
@@ -246,7 +268,7 @@ export function PortfolioSearchCard() {
                     whileHover="active"
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
-                    className="group relative flex items-center overflow-hidden rounded-xl bg-white "
+                    className="group relative flex items-center overflow-hidden rounded-xl bg-white"
                 >
                     <span className="absolute inset-0 rounded-xl border border-slate-200 transition-opacity duration-200 group-hover:opacity-0 group-focus-within:opacity-0" />
 
@@ -302,10 +324,7 @@ export function PortfolioSearchCard() {
                         {submitting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                            <>
-
-                                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            </>
+                            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         )}
                     </button>
                 </motion.div>

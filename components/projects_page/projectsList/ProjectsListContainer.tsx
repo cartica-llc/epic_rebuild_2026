@@ -32,6 +32,7 @@ const FILTER_PARAM_KEYS: (keyof FilterValues)[] = [
     'utilityServiceId',
     'assemblyDistrictId',
     'senateDistrictId',
+    'leadCompanyId',
     'contractMin',
     'contractMax',
     'disadvantaged',

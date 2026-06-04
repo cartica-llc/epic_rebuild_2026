@@ -35,6 +35,7 @@ interface ByPeriodRow {
 }
 
 interface TopLeadRow {
+    COMPANY_ID: number | null;
     COMPANY_NAME: string | null;
     COMMITTED: number | null;
     CONTRACTED: number | null;
@@ -116,6 +117,7 @@ export async function GET(req: Request) {
             safeQuery<TopLeadRow[]>('overview:topLeads', () =>
                 query(`
                     SELECT
+                        c.COMPANY_ID,
                         c.COMPANY_NAME,
                         SUM(COALESCE(fd.COMMITED_FUNDING_AMT, 0))      AS COMMITTED,
                         SUM(COALESCE(fd.CONTRACT_AMOUNT, 0))           AS CONTRACTED,
@@ -130,7 +132,7 @@ export async function GET(req: Request) {
                         ON p.INVESTMENT_PROGRAM_PERIOD_PERIOD_ID = ipp.PERIOD_ID
                     ${areaJoin}
                     WHERE ${whereClause} AND c.COMPANY_NAME IS NOT NULL
-                    GROUP BY c.COMPANY_NAME
+                    GROUP BY c.COMPANY_ID, c.COMPANY_NAME
                     ORDER BY COMMITTED DESC NULLS LAST
                     LIMIT 10
                 `) as Promise<TopLeadRow[]>,
@@ -164,13 +166,16 @@ export async function GET(req: Request) {
                     contracted: toNum(r.CONTRACTED),
                     expended: toNum(r.EXPENDED),
                 })),
-            topLeads: (topLeadsRows ?? []).map((r) => ({
-                name: r.COMPANY_NAME ?? 'Unknown',
-                committed: toNum(r.COMMITTED),
-                contracted: toNum(r.CONTRACTED),
-                expended: toNum(r.EXPENDED),
-                projectCount: toNum(r.PROJECT_COUNT),
-            })),
+            topLeads: (topLeadsRows ?? [])
+                .filter((r) => r.COMPANY_ID !== null)
+                .map((r) => ({
+                    id: r.COMPANY_ID!,
+                    name: r.COMPANY_NAME ?? 'Unknown',
+                    committed: toNum(r.COMMITTED),
+                    contracted: toNum(r.CONTRACTED),
+                    expended: toNum(r.EXPENDED),
+                    projectCount: toNum(r.PROJECT_COUNT),
+                })),
         };
 
         return applyInsightCache(NextResponse.json(body));

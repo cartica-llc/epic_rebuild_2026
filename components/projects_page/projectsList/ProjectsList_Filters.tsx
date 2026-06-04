@@ -24,6 +24,7 @@ interface LookupData {
     utilityServiceAreas: LookupOption[];
     assemblyDistricts: LookupOption[];
     senateDistricts: LookupOption[];
+    leadCompanies: LookupOption[];
 }
 
 export interface FilterValues {
@@ -38,6 +39,7 @@ export interface FilterValues {
     utilityServiceId: string;
     assemblyDistrictId: string;
     senateDistrictId: string;
+    leadCompanyId: string;
     contractMin: string;
     contractMax: string;
     disadvantaged: boolean;
@@ -58,6 +60,7 @@ export const defaultFilters: FilterValues = {
     utilityServiceId: '',
     assemblyDistrictId: '',
     senateDistrictId: '',
+    leadCompanyId: '',
     contractMin: '',
     contractMax: '',
     disadvantaged: false,
@@ -85,6 +88,7 @@ export function filtersToParams(f: FilterValues): Record<string, string> {
     if (f.utilityServiceId) p.utilityServiceId = f.utilityServiceId;
     if (f.assemblyDistrictId) p.assemblyDistrictId = f.assemblyDistrictId;
     if (f.senateDistrictId) p.senateDistrictId = f.senateDistrictId;
+    if (f.leadCompanyId) p.leadCompanyId = f.leadCompanyId;
     if (f.contractMin) p.contractMin = f.contractMin;
     if (f.contractMax) p.contractMax = f.contractMax;
     if (f.disadvantaged) p.disadvantaged = '1';
@@ -112,6 +116,7 @@ export function getActiveFilterLabels(
     if (f.utilityServiceId) items.push({ key: 'utilityServiceId', label: 'Utility Service', value: findName(lookups?.utilityServiceAreas, f.utilityServiceId) });
     if (f.assemblyDistrictId) items.push({ key: 'assemblyDistrictId', label: 'Assembly District', value: findName(lookups?.assemblyDistricts, f.assemblyDistrictId) });
     if (f.senateDistrictId) items.push({ key: 'senateDistrictId', label: 'Senate District', value: findName(lookups?.senateDistricts, f.senateDistrictId) });
+    if (f.leadCompanyId) items.push({ key: 'leadCompanyId', label: 'Project Lead', value: findName(lookups?.leadCompanies, f.leadCompanyId) });
     if (f.contractMin) items.push({ key: 'contractMin', label: 'Min Contract', value: f.contractMin });
     if (f.contractMax) items.push({ key: 'contractMax', label: 'Max Contract', value: f.contractMax });
     if (f.disadvantaged) items.push({ key: 'disadvantaged', label: 'Disadvantaged', value: 'Yes' });
@@ -272,6 +277,7 @@ export function ProjectFilters({ filters, onFiltersChange, canViewInactive = fal
                                         <SelectField label="Investment Period" value={filters.investmentPeriodId} onChange={(v) => update('investmentPeriodId', v)} options={lookups.investmentProgramPeriods} className={sel} />
                                         <SelectField label="CPUC Proceedings" value={filters.cpucProceedingId} onChange={(v) => update('cpucProceedingId', v)} options={lookups.cpucProceedings} className={sel} />
                                         <SelectField label="Business Classification" value={filters.businessClassId} onChange={(v) => update('businessClassId', v)} options={lookups.businessClassifications} className={sel} />
+                                        <SelectField label="Project Lead" value={filters.leadCompanyId} onChange={(v) => update('leadCompanyId', v)} options={lookups.leadCompanies} className={sel} />
 
                                         <CollapsibleSection title="Funding" open={showFunding} onToggle={() => setShowFunding(!showFunding)}>
                                             <div className="space-y-4 pt-3">

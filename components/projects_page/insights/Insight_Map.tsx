@@ -75,10 +75,7 @@ export function Insight_Map() {
 
     const response = data ?? EMPTY_RESPONSE;
 
-    const selectedProject = useMemo(
-        () => response.projects.find((p) => p.id === selectedId) ?? null,
-        [response.projects, selectedId],
-    );
+
 
     const handleAreaChange = (v: string) => {
         setArea(v);

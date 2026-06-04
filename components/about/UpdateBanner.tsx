@@ -36,7 +36,7 @@ export default function UpdateBanner({
                 <p className="text-sm leading-relaxed text-gray-600">
                     {body ?? (
                         <>
-                            The CPUC adopted a set of 13 Strategic Objectives to guide investments in the EPIC 5 investment period (2026–2030). Strategic Objectives are clear, measurable, and robust targets to guide EPIC investment plan strategies to scale and deploy innovation to align with EPIC's Strategic Goals (adopted on March 7, 2024).
+                            The CPUC adopted a set of 13 Strategic Objectives to guide investments in the EPIC 5 investment period (2026–2030). Strategic Objectives are clear, measurable, and robust targets to guide EPIC investment plan strategies to scale and deploy innovation to align with EPIC&#39;s Strategic Goals (adopted on March 7, 2024).
                         </>
                     )}
                 </p>

@@ -1,3 +1,5 @@
+// app/api/projectsList/lookups/route.ts
+
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
 
@@ -22,6 +24,7 @@ export async function GET() {
             utilityServiceAreas,
             assemblyDistricts,
             senateDistricts,
+            leadCompanies,
         ] = await Promise.all([
             query(`SELECT INVESTMENT_AREA_ID AS ID, INVESTMENT_AREA_NAME AS NAME FROM ${t}.INVESTMENT_AREA ORDER BY NAME`),
             query(`SELECT PROJECT_TYPE_ID AS ID, PROJECT_TYPE_NAME AS NAME FROM ${t}.PROJECT_TYPE ORDER BY NAME`),
@@ -34,11 +37,19 @@ export async function GET() {
             query(`SELECT UTILITY_SERVICE_AREA_ID AS ID, UTILITY_SERVICE_AREA_NAME AS NAME FROM ${t}.UTILITY_SERVICE_AREA ORDER BY NAME`),
             query(`SELECT ASSEMBLY_DISTRICT_ID AS ID, ASSEMBLY_DISTRICT_ID AS NAME FROM ${t}.ASSEMBLY_DISTRICT ORDER BY ID`),
             query(`SELECT SENATE_DISTRICT_ID AS ID, SENATE_DISTRICT_ID AS NAME FROM ${t}.SENATE_DISTRICT ORDER BY ID`),
+            query(`
+                SELECT DISTINCT c.COMPANY_ID AS ID, c.COMPANY_NAME AS NAME
+                FROM ${t}.COMPANY c
+                INNER JOIN ${t}.PROJECT p ON p.PROJECT_LEAD_COMPANY_ID = c.COMPANY_ID
+                WHERE c.COMPANY_NAME IS NOT NULL
+                  AND COALESCE(p.IS_ACTIVE, 1) = 1
+                ORDER BY NAME
+            `),
         ]) as [
             LookupRow[], LookupRow[], LookupRow[],
             { NAME: string }[],
             LookupRow[], LookupRow[], LookupRow[], LookupRow[],
-            LookupRow[], LookupRow[], LookupRow[],
+            LookupRow[], LookupRow[], LookupRow[], LookupRow[],
         ];
 
         const mapIdName = (rows: LookupRow[]) =>
@@ -56,6 +67,7 @@ export async function GET() {
             utilityServiceAreas: mapIdName(utilityServiceAreas),
             assemblyDistricts: mapIdName(assemblyDistricts),
             senateDistricts: mapIdName(senateDistricts),
+            leadCompanies: mapIdName(leadCompanies),
         };
 
         const res = NextResponse.json(body);

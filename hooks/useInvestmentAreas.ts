@@ -65,7 +65,7 @@ export function useInvestmentAreas(): State {
     );
 
     useEffect(() => {
-        if (state.data) return;
+        if (cached) return;
 
         let cancelled = false;
 
@@ -82,7 +82,6 @@ export function useInvestmentAreas(): State {
         return () => {
             cancelled = true;
         };
-
     }, []);
 
     return state;

@@ -49,6 +49,15 @@ const DESKTOP_COMMITTED_SIZE = 'clamp(1.75rem, 2.8vw, 2.5rem)';
 const DESKTOP_AMOUNT_SIZE    = 'clamp(4rem, 6vw, 5.25rem)';
 const DESKTOP_LABEL_SIZE     = 'clamp(1.2rem, 1.8vw, 1.6rem)';
 
+function Skeleton({ style, className }: { style?: React.CSSProperties; className?: string }) {
+    return (
+        <span
+            aria-hidden="true"
+            className={`animate-pulse rounded-lg bg-slate-200 inline-block ${className ?? ''}`}
+            style={style}
+        />
+    );
+}
 
 function EyebrowBadge() {
     return (
@@ -59,7 +68,6 @@ function EyebrowBadge() {
             className="pt-6 mb-6 inline-flex items-center gap-1.5"
         >
             <motion.span
-
                 transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity, delay: 0.6 }}
                 className="inline-block h-[7px] w-[7px] rounded-full bg-emerald-700"
             />
@@ -201,7 +209,6 @@ function AnimatedLabel({
     );
 }
 
-
 function ProgressBar({ rotateMs }: { rotateMs: number }) {
     return (
         <div className="h-px w-full overflow-hidden rounded-full bg-slate-100">
@@ -293,7 +300,25 @@ function LensList({
     );
 }
 
-// ─── Mobile only ────────────────────────────────────────────
+function LensListSkeleton() {
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
+            className="hidden w-52 shrink-0 lg:block xl:w-60"
+            aria-hidden="true"
+        >
+            <Skeleton style={{ width: '7rem', height: '0.625rem', marginBottom: '0.75rem', borderRadius: '0.25rem', display: 'block' }} />
+            {Array.from({ length: TOP_N }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2.5 py-2">
+                    <Skeleton style={{ width: '0.375rem', height: '0.375rem', borderRadius: '9999px', flexShrink: 0 }} />
+                    <Skeleton style={{ width: `${5 + (i % 3) * 2}rem`, height: '0.75rem', borderRadius: '0.25rem' }} />
+                </div>
+            ))}
+        </motion.div>
+    );
+}
 
 function DotNav({
                     count,
@@ -354,6 +379,7 @@ export function RotatingHeadline() {
         return () => clearInterval(id);
     }, [paused, lenses.length]);
 
+    // const loading = isLoading ?? !data;
     const hasData = lenses.length > 0;
     const safeIndex = hasData ? index % lenses.length : 0;
     const current = hasData ? lenses[safeIndex] : null;
@@ -414,17 +440,16 @@ export function RotatingHeadline() {
                                     </span>
                                 </>
                             ) : (
-                                <span
-                                    aria-hidden="true"
-                                    className="invisible block"
-                                    style={{
-                                        fontFamily: "'DM Serif Display', Georgia, serif",
-                                        fontSize: MOBILE_AMOUNT_SIZE,
-                                        lineHeight: 1,
-                                    }}
-                                >
-                                    $000.0M
-                                </span>
+                                <>
+                                    <Skeleton
+                                        className="lg:hidden"
+                                        style={{ width: '7rem', height: '4.25rem', borderRadius: '0.5rem', display: 'block' }}
+                                    />
+                                    <Skeleton
+                                        className="hidden lg:block"
+                                        style={{ width: '10rem', height: '5.25rem', borderRadius: '0.5rem', display: 'block' }}
+                                    />
+                                </>
                             )}
                         </motion.div>
 
@@ -480,21 +505,25 @@ export function RotatingHeadline() {
                                 </span>
 
                                 <span className="relative min-w-0 lg:hidden">
-                                    {current && (
+                                    {current ? (
                                         <AnimatedLabel
                                             label={current.label}
                                             safeIndex={safeIndex}
                                             fontSize={MOBILE_LABEL_SIZE}
                                         />
+                                    ) : (
+                                        <Skeleton style={{ width: '9rem', height: '1.5rem', borderRadius: '0.375rem', display: 'block' }} />
                                     )}
                                 </span>
                                 <span className="relative hidden min-w-0 lg:inline">
-                                    {current && (
+                                    {current ? (
                                         <AnimatedLabel
                                             label={current.label}
                                             safeIndex={safeIndex}
                                             fontSize={DESKTOP_LABEL_SIZE}
                                         />
+                                    ) : (
+                                        <Skeleton style={{ width: '12rem', height: '1.75rem', borderRadius: '0.375rem', display: 'block' }} />
                                     )}
                                 </span>
                             </span>
@@ -508,13 +537,15 @@ export function RotatingHeadline() {
                     )}
                 </div>
 
-                {hasData && (
+                {hasData ? (
                     <LensList
                         lenses={lenses}
                         active={safeIndex}
                         rotateMs={ROTATE_MS}
                         onSelect={handleSelect}
                     />
+                ) : (
+                    <LensListSkeleton />
                 )}
             </div>
         </div>
