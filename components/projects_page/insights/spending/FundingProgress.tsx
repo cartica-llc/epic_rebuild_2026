@@ -2,7 +2,7 @@
 
 'use client';
 
-import { formatCount, formatMoneyShort, formatPct } from './shared/format';
+import { formatCount, formatMoneyFull, formatMoneyShort, formatPct } from './shared/format';
 import {
     FUNDING_COLORS,
     type FundingLayer,
@@ -37,7 +37,6 @@ export function FundingProgress({
     const contractedOfCommitted = committed > 0 ? (contracted / committed) * 100 : 0;
     const expendedOfContracted = contracted > 0 ? (expended / contracted) * 100 : 0;
 
-    // Toggle: clicking active layer deselects it; clicking another switches.
     const toggle = (layer: FundingLayer) =>
         onIsolate(isolated === layer ? null : layer);
 
@@ -50,7 +49,6 @@ export function FundingProgress({
             aria-label="Funding overview"
             className="rounded-md border border-slate-200 bg-white p-5 md:p-6"
         >
-            {/* Three-up value display + project count */}
             <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                 <MetricButton
                     label="Committed"
@@ -92,7 +90,6 @@ export function FundingProgress({
                 />
             </div>
 
-            {/* Nested progress bar */}
             <div className="mt-6">
                 <div
                     className="relative h-3 overflow-hidden rounded-full bg-slate-50 ring-1 ring-inset ring-slate-200"
@@ -140,7 +137,6 @@ export function FundingProgress({
                     )}
                 </div>
 
-                {/* Legend / interaction hint */}
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-1.5">
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] text-slate-500">
                         <LegendDot color={FUNDING_COLORS.committed.dot} label="Committed" muted={isolated !== null && isolated !== 'committed'} />
@@ -215,7 +211,10 @@ function MetricButton({
             {loading ? (
                 <div className="mt-2 h-8 w-28 animate-pulse rounded bg-slate-100" />
             ) : (
-                <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900">
+                <p
+                    className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900"
+                    title={formatMoneyFull(value)}
+                >
                     {formatMoneyShort(value)}
                 </p>
             )}
