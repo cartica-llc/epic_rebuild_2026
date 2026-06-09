@@ -19,18 +19,6 @@ export default function Home() {
                 </section>
                 <div className="flex flex-col gap-4 ">
 
-                    {/*<section className="max-w-7xl mx-auto">*/}
-                    {/*    <div className="px-6 mx-auto flex w-full  flex-col gap-8  lg:flex-row lg:items-center">*/}
-
-                    {/*        <div className="w-full lg:w-1/2">*/}
-                    {/*            <ProgramIntro/>*/}
-                    {/*        </div>*/}
-
-                    {/*        <div className="w-full lg:w-1/2">*/}
-                    {/*            <QuickActionButtons/>*/}
-                    {/*        </div>*/}
-                    {/*    </div>*/}
-                    {/*</section>*/}
                     <section className="w-full pl-6 max-w-7xl mx-auto">
                         <RecentlyCompletedProjects/>
                     </section>

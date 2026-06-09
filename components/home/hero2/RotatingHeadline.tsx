@@ -49,11 +49,28 @@ const DESKTOP_COMMITTED_SIZE = 'clamp(1.75rem, 2.8vw, 2.5rem)';
 const DESKTOP_AMOUNT_SIZE    = 'clamp(4rem, 6vw, 5.25rem)';
 const DESKTOP_LABEL_SIZE     = 'clamp(1.2rem, 1.8vw, 1.6rem)';
 
-function Skeleton({ style, className }: { style?: React.CSSProperties; className?: string }) {
+function Skeleton({
+                      style,
+                      className = '',
+                  }: {
+    style?: React.CSSProperties;
+    className?: string;
+}) {
     return (
         <span
             aria-hidden="true"
-            className={`animate-pulse rounded-lg bg-slate-200 inline-block ${className ?? ''}`}
+            className={`
+                relative inline-block overflow-hidden rounded-lg
+                bg-slate-200/80
+                before:absolute before:inset-0
+                before:-translate-x-full
+                before:animate-[shimmer_1.6s_infinite]
+                before:bg-gradient-to-r
+                before:from-transparent
+                before:via-white/60
+                before:to-transparent
+                ${className}
+            `}
             style={style}
         />
     );
