@@ -27,6 +27,13 @@ const fmt = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
 });
 
+const fmtFull = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
 function floorTo(n: number, decimals: number): number {
     const factor = Math.pow(10, decimals);
     return Math.floor(n * factor) / factor;
@@ -236,7 +243,7 @@ export function PortfolioSearchCard() {
                             delay={0.1}
                         />
                     }
-                    sublabel={data.funding > 0 ? fmt.format(data.funding) : 'Ratepayer dollars'}
+                    sublabel={data.funding > 0 ? fmtFull.format(floorTo(data.funding, 2)) : 'Ratepayer dollars'}
                     accent="emerald"
                     loading={kpiLoading}
                 />
@@ -250,7 +257,7 @@ export function PortfolioSearchCard() {
                         />
                     }
                     sublabel={
-                        data.matchFunding > 0 ? fmt.format(data.matchFunding) : 'Outside investment'
+                        data.matchFunding > 0 ? fmtFull.format(floorTo(data.matchFunding, 2)) : 'Outside investment'
                     }
                     accent="rose"
                     loading={kpiLoading}
