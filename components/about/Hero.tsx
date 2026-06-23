@@ -38,7 +38,7 @@ export default function Hero() {
                     initial={{ scale: 1.0 }}
                     animate={{ scale: 1.08 }}
                     transition={{ duration: 22, ease: "easeOut" }}
-                    className="h-[140%] w-full object-cover opacity-70"
+                    className="h-[140%] w-full object-cover opacity-70 !blur-[3px]"
                     style={{ }}
                 />
             </motion.div>
