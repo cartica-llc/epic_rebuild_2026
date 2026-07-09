@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useInsightFetch } from './spending/shared/useInsightFetch';
 import { MapHeader } from './map/MapHeader';

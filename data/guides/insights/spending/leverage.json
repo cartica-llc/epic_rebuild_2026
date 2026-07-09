@@ -1,0 +1,52 @@
+{
+  "id": "insights-spending-leverage",
+  "slug": "insights-spending-leverage",
+  "title": "Spending - Leverage & Match",
+  "category": "Insights",
+  "summary": "Understand how EPIC contract funding is supported by match funding and leveraged funds across the project portfolio.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects?view=spending",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Leverage & Match tab overview",
+      "body": "The Leverage & Match tab is located within the Spending Insight on the Projects page. This tab helps users understand how EPIC contract funding is supported by other funding sources.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F3F98LMACSnx3FJYgAXzmwc%2Fprog6Fu7coMrMAkZmSsMHn_doc.png?alt=media&token=0f124450-3611-4257-9b71-8ebbf08d824c",
+      "alt": "Leverage Tab Location Explained"
+    },
+    {
+      "n": 2,
+      "title": "Review funding summary cards",
+      "body": "At the top, users can see totals for Match Funding, Leveraged Funds, Contract Amount, and Leverage Ratio. These numbers help users compare EPIC funding with the additional support connected to the projects.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F3F98LMACSnx3FJYgAXzmwc%2FaYPjNRExNs6NDLs9dfeTvr_doc.png?alt=media&token=fccd505e-24ca-4460-9e73-5defb75afe3e",
+      "alt": "Funding Summary Cards"
+    },
+    {
+      "n": 3,
+      "title": "Understand match funding",
+      "body": "Match funding is funding that is committed alongside the EPIC award.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F3F98LMACSnx3FJYgAXzmwc%2Fw1tHMEYzxJhJs57FsqoheS_doc.png?alt=media&token=f98adabd-c07f-439c-8716-3007deb84903",
+      "alt": "Match Funding"
+    },
+    {
+      "n": 4,
+      "title": "Understand leveraged funds",
+      "body": "Leveraged funds are additional funds connected to the project that help expand or continue the work beyond the EPIC contract.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F3F98LMACSnx3FJYgAXzmwc%2F6XbbcVcQK84qfm9VyqjySE_doc.png?alt=media&token=da86cb67-876e-4dfd-ad51-1fb6c22abbd4",
+      "alt": "Leveraged Funds"
+    },
+    {
+      "n": 5,
+      "title": "Review funding by EPIC period",
+      "body": "The first section shows match funding, leveraged funds, and contract amounts by EPIC period. This helps users see how additional funding compares across different EPIC cycles.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F3F98LMACSnx3FJYgAXzmwc%2FuxRjto3R6CteBEMQ7dUbfm_doc.png?alt=media&token=ce4f1730-e28f-422f-b47f-b4b5ac2afeb0",
+      "alt": "Funding By EPIC Period"
+    },
+    {
+      "n": 6,
+      "title": "Review funding by investment area",
+      "body": "The next section shows match and leveraged funds by investment area. Users can use this to see which investment areas have the most additional funding support.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F3F98LMACSnx3FJYgAXzmwc%2FiKKhARDyDPq7akBTvBixUy_doc.png?alt=media&token=69642b05-e763-4e62-b8a0-d93d91edbf25",
+      "alt": "Funding by Investment Area"
+    }
+  ]
+}

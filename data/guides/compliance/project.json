@@ -1,0 +1,38 @@
+{
+  "id": "project-compliance",
+  "slug": "project-compliance",
+  "title": "Project Compliance",
+  "category": "Compliance",
+  "summary": "Review project compliance requirements across the Entry, Active, and Closeout stages, including required creation fields and ongoing update expectations.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Project compliance overview",
+      "body": "Compliance is organized into three stages: Entry, Active, and Closeout. Each stage includes required fields that help keep the project record complete, accurate, and ready for reporting. The tracker uses checkmarks to show completed requirements and empty circles to show missing information. Entry requirements must be completed before a project can be submitted.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2Frcsau6MzkZrAMVVhdGSVyP%2FhQ3YLzG48KoXStm42URcJV_doc.png?alt=media&token=5a8a7716-f555-452e-bfca-15e588ae8587",
+      "alt": "Project Compliance"
+    },
+    {
+      "n": 2,
+      "title": "Entry stage",
+      "body": "The Entry stage includes the required fields needed to create and submit a project. These fields collect the basic setup information for the project, including who owns the project, where it belongs, and how it should be categorized. Required Entry fields include Project Name, Project Number, Project Status, Project Lead, Project Lead Contact Info, EPIC Period, Investment Area, Program Administrator, Project Type, Administrator Project Manager, Assembly District, Senate District, Classification of the Business, and Utility Service Area. Some Entry fields usually only need to be entered once, such as Project Number, EPIC Period, Investment Area, and Program Administrator. Other Entry fields should be updated whenever information changes, such as Project Status, Project Lead, contact information, districts, business classification, and utility service area.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2Frcsau6MzkZrAMVVhdGSVyP%2F6FmTuyL6L8hM2kCAM1tweB_doc.png?alt=media&token=8bdc874c-88c9-4eb6-8afc-051a7424122d",
+      "alt": "Entry Stage"
+    },
+    {
+      "n": 3,
+      "title": "Active stage details",
+      "body": "The Active stage applies once a project is awarded or in progress. This stage captures the project timeline, project narrative, funding information, reporting flags, and ongoing updates. Timeline fields include Award Date, Start Date, and End Date. Award Date and Start Date are usually entered once, while End Date should be reviewed annually or updated when the project schedule changes. The main quarterly funding updates are Committed Funding, Funds Expended to Date, Match Funding, and Leveraged Funds. Other funding fields, such as Encumbered Funding, Admin and Overhead Cost, Total Match Funding, and Match Funding Partners, should be reviewed annually or updated when funding details change. Narrative fields and reporting fields should be updated when project scope, goals, barriers, benefits, impacts, partners, or expected outcomes change.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2Frcsau6MzkZrAMVVhdGSVyP%2Fcuj6WNAfU9o5oTBba8yRCv_doc.png?alt=media&token=4b3e2554-8719-4267-9dfb-95e2f504e81b",
+      "alt": "Active Stage Details"
+    },
+    {
+      "n": 4,
+      "title": "Closeout stage",
+      "body": "The Closeout stage applies when a project is completed. This stage captures final documentation, final outcomes, lessons learned, impacts, and how project results will be shared. Required Closeout fields include Final Report, Key Learnings, Scalability, Standards, Confidential Information Categories, Cybersecurity Narrative, GHG Impacts, Environmental Impact – non-GHG, Ratepayer Benefits, Community Benefits Description, Energy Impacts, Infrastructure Cost Reductions, Other Impacts, and Information Dissemination. Most Closeout fields are required once at the end of the project, unless final information changes, a correction is needed, or additional final documentation becomes available.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2Frcsau6MzkZrAMVVhdGSVyP%2F9tGM4XQfhwtVQW23BydJzY_doc.png?alt=media&token=cc9b315a-f8e5-4bb8-8f1d-05958341a4c9",
+      "alt": "Closeout Stage"
+    }
+  ]
+}

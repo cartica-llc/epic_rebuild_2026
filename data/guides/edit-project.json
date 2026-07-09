@@ -1,0 +1,38 @@
+{
+  "id": "edit-project",
+  "slug": "edit-project",
+  "title": "How to Edit a Project",
+  "category": "Projects",
+  "summary": "Update an existing project's details, funding, contacts, and images.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Access the project edit button",
+      "body": "After logging in, go to the Projects page. Search for a specific project or filter by your organization to view associated projects, then click Edit next to the project you want to update.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FtRa3a5pecAMmkaXupk1H7g%2Fjr1U5ZQQKGYEmQgBUNabSG_doc.png?alt=media&token=f6fbf8b3-1504-4a59-844b-d6867ba9ae0f",
+      "alt": "Access Project Edit Button"
+    },
+    {
+      "n": 2,
+      "title": "Update the project name",
+      "body": "For example, to update the project name, edit the Project Name field.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FtRa3a5pecAMmkaXupk1H7g%2FqP5cZe7TDLsJ6UyMCAmcTr_doc.png?alt=media&token=883da2c6-7676-4b97-a8a5-db9b43b505dd",
+      "alt": "Update Project Name And Save"
+    },
+    {
+      "n": 3,
+      "title": "Confirm and save changes",
+      "body": "A confirmation dialog will appear showing the changes made. Click Confirm and Save. Saving may take a few moments while your changes are processed.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FtRa3a5pecAMmkaXupk1H7g%2FrR8Les32vUKW5N54aMWKsQ_doc.png?alt=media&token=ec715e2d-67aa-4e06-a052-8ddc062c9a3c",
+      "alt": "Confirm And Save Changes"
+    },
+    {
+      "n": 4,
+      "title": "View the post-save confirmation",
+      "body": "Once the update is complete, a confirmation message will appear showing that the project has been successfully updated.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FtRa3a5pecAMmkaXupk1H7g%2FjibVxVz1CiW69VaU7sn7zF_doc.png?alt=media&token=5d1e1deb-50c1-4670-a78a-3fcd970d1a15",
+      "alt": "View Post-Save Confirmation"
+    }
+  ]
+}

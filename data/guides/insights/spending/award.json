@@ -1,0 +1,39 @@
+{
+  "id": "insights-spending-award-size",
+  "slug": "insights-spending-award-size",
+  "title": "Spending - Award Size",
+  "category": "Insights",
+  "summary": "Understand how project award amounts are distributed across the EPIC project portfolio.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects?view=spending",
+
+  "steps": [
+    {
+      "n": 1,
+      "title": "Award Size tab overview",
+      "body": "The Award Size tab is located within the Spending Insight on the Projects page. This tab helps users understand how project award amounts are distributed across the portfolio.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FerppVdg5khCrTHJwsgyVpk%2F55HMKEeHFSPtkD6SWLUCx2_doc.png?alt=media&token=e627af36-971a-4330-8183-15de65c8d796",
+      "alt": "Award Size Tab Location"
+    },
+    {
+      "n": 2,
+      "title": "Review key funding cards",
+      "body": "At the top, the key funding cards show the total number of projects, average award size, median award size, and largest award size. These cards give users a quick snapshot of overall award funding.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FerppVdg5khCrTHJwsgyVpk%2F19iSJw32Sb41uR4WAbyJj1_doc.png?alt=media&token=7e8dc126-750e-4b20-956d-876e3a6f3dbe",
+      "alt": "Key Funding Cards Overview"
+    },
+    {
+      "n": 3,
+      "title": "Review distribution by award size",
+      "body": "The Distribution by Award Size section groups projects into different funding ranges. This helps users see how many projects fall into each award size category.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FerppVdg5khCrTHJwsgyVpk%2FgCMpp5tGCUMGswdXWFfkC7_doc.png?alt=media&token=aed0ba11-0235-4250-aa44-844441fb252b",
+      "alt": "Distribution By Award Size Intro"
+    },
+    {
+      "n": 4,
+      "title": "Open projects by award size",
+      "body": "Once you find an award size range you want to review, click the project count to open the Projects List page filtered to projects within that award size range.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FerppVdg5khCrTHJwsgyVpk%2F5SWnJAXiDcvHfn2uwtgq2P_doc.png?alt=media&token=2383a179-7fa1-41ef-afed-7e8efd1abb9d",
+      "alt": "Award Size Ranges Explained"
+    }
+  ]
+}

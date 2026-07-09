@@ -153,3 +153,46 @@ body {
 .mapboxgl-ctrl-attrib {
     display: none !important;
 }
+
+
+
+
+
+
+/**/
+/**/
+/*DOCUMENTATION GUIDE STYLING START*/
+
+
+@theme {
+    --color-brand-sky: #0284c7;     /* sky-600     */
+    --color-brand-emerald: #059669; /* emerald-600 */
+    --color-brand-rose: #e11d48;    /* rose-600    */
+
+    --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Signature gradient used across the app (header underline, accents). */
+.brand-gradient {
+    background-image: linear-gradient(
+            to right,
+            var(--color-brand-sky),
+            var(--color-brand-emerald),
+            var(--color-brand-rose)
+    );
+}
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+
+/**/
+/**/
+/*DOCUMENTATION GUIDE STYLING END*/

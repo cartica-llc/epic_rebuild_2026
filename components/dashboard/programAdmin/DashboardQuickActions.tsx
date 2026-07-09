@@ -3,7 +3,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutGrid, PlusCircle, EyeOff } from 'lucide-react';
+import { LayoutGrid, PlusCircle, EyeOff, BookOpen } from 'lucide-react';
 
 interface QuickActionProps {
     href: string;
@@ -51,17 +51,17 @@ export function DashboardQuickActions({ programAdminId }: Props) {
             label: 'Create Project',
             description: 'Add a new project to the portfolio',
         },
-        // {
-        //     href: `/projects${scopeParam ? scopeParam + '&view=spending' : '?view=spending'}`,
-        //     icon: <BarChart2 className="h-4 w-4" />,
-        //     label: 'Spending Analytics',
-        //     description: 'View funding and expenditure breakdowns',
-        // },
         {
             href: `/projects${inactiveScopeParam}`,
             icon: <EyeOff className="h-4 w-4" />,
             label: 'Unpublished Projects',
             description: 'Review projects hidden from the public site',
+        },
+        {
+            href: `/dashboard/program/docs`,
+            icon: <BookOpen className="h-4 w-4" />,
+            label: 'EPIC Database Guides',
+            description: 'View our walkthrough guides',
         },
     ];
 
@@ -71,6 +71,7 @@ export function DashboardQuickActions({ programAdminId }: Props) {
                 <h2 className="text-base font-semibold text-slate-900">Quick Actions</h2>
                 <p className="mt-0.5 text-sm text-slate-500">Shortcuts to common tasks.</p>
             </div>
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {actions.map((action) => (
                     <QuickAction key={action.href} {...action} />

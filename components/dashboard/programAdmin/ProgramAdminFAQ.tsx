@@ -1,6 +1,7 @@
 // components/dashboard/programAdmin/ProgramAdminFAQ.tsx
 'use client';
 
+import Image from 'next/image';
 import React, { useState } from 'react';
 import { HelpCircle, ChevronDown, X, PlayCircle } from 'lucide-react';
 
@@ -164,11 +165,14 @@ export function ProgramAdminFAQ() {
                                 </div>
 
                                 <div className="overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
-                                    <div className="aspect-video max-h-[240px] w-full bg-slate-100">
-                                        <img
+                                    <div className="relative aspect-video max-h-[240px] w-full bg-slate-100">
+                                        <Image
                                             src={selectedFAQ.gifSrc}
                                             alt={selectedFAQ.title}
-                                            className="h-full w-full object-cover"
+                                            fill
+                                            sizes="(min-width: 1024px) 520px, 100vw"
+                                            className="object-cover"
+                                            unoptimized
                                         />
                                     </div>
                                 </div>

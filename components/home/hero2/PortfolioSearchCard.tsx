@@ -20,12 +20,6 @@ type KPIData = {
     matchFunding: number;
 };
 
-const fmt = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-});
 
 const fmtFull = new Intl.NumberFormat('en-US', {
     style: 'currency',

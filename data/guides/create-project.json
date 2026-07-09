@@ -1,0 +1,127 @@
+{
+  "id": "create-project",
+  "slug": "create-project",
+  "title": "How to Create a Project",
+  "category": "Projects",
+  "summary": "Create a new project entry in the EPIC Database, from required fields through confirmation.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects/create",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Introduction",
+      "body": "This guide shows how to create a new project in the EPIC Database.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FwsT3UchYRh46tBkLMmAugY_doc.png?alt=media&token=84878490-4ca0-45f7-8a63-93fd7bc21e1b",
+      "alt": "Introduction"
+    },
+    {
+      "n": 2,
+      "title": "Initiate project creation",
+      "body": "After logging in, click Create Project to begin a new project entry.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FkjN4ZQz9GKtb6Qem9WVKVk_doc.png?alt=media&token=2e6f320b-fe0d-4b91-943e-caa74e8c6222",
+      "alt": "Initiate project creation"
+    },
+    {
+      "n": 3,
+      "title": "Access project entry",
+      "body": "The progress bar tracks required fields across each project stage: Entry, Active, and Closeout.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2F7ZGiMUDhi3uas8RvFGXAb4_doc.png?alt=media&token=276a42ee-2253-435b-801c-697976df4168",
+      "alt": "Access project entry"
+    },
+    {
+      "n": 4,
+      "title": "Complete required fields",
+      "body": "To create a project, all Entry stage requirements must be completed before submission.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FboTAyGweB3iFZ94WKHyR6X_doc.png?alt=media&token=8230a1ec-c755-471a-a854-cf66ede860e1",
+      "alt": "Complete required fields"
+    },
+    {
+      "n": 5,
+      "title": "Enter the project name",
+      "body": "Type the name of the project in the Project Name field.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FgrX4VpVC7uLymZoXzBxS4M_doc.png?alt=media&token=adc92b73-8768-4eed-9867-f1410b7cb20a",
+      "alt": "Enter the project name"
+    },
+    {
+      "n": 6,
+      "title": "Enter the project number",
+      "body": "The organization prefix is added automatically. The system also checks whether the project number is already in use.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FaywifLkYaJEbngzYMGDAr9_doc.png?alt=media&token=941e0a14-6c23-44be-b079-34785a85af37",
+      "alt": "Enter the project number"
+    },
+    {
+      "n": 7,
+      "title": "Upload the main project image",
+      "body": "Upload the main project image. This appears as the project's primary image in the project list.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FwTdoU5ZSRbBGpfoMeYgpee_doc.png?alt=media&token=a6e85def-1047-4af7-8431-7c77488b5a7a",
+      "alt": "Upload the main project image"
+    },
+    {
+      "n": 8,
+      "title": "Add gallery images",
+      "body": "You can upload up to 6 additional images to create a project gallery slideshow on the project page.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FntaD9XhuXLTxvC39nYvP58_doc.png?alt=media&token=10c02ea9-6253-41fc-9fd3-f7a04f4b9203",
+      "alt": "Add gallery images"
+    },
+    {
+      "n": 9,
+      "title": "Review the final entry",
+      "body": "Before submitting, make sure all Entry requirements are completed. Missing required fields will prevent the project from being created until they are filled in.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2Fbk1QSTvh1qLcSJPg2AMJ2Z_doc.png?alt=media&token=fa76fbf0-9014-40ad-9d1b-b49fecf63cb3",
+      "alt": "Review the final entry"
+    },
+    {
+      "n": 10,
+      "title": "Finalize project creation",
+      "body": "Click Create Project to submit the new project.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2F8bfLcreRWMtJaWqp4M574g_doc.png?alt=media&token=b7ff8092-e668-4fb9-9ead-2e583f73afcd",
+      "alt": "Finalize project creation"
+    },
+    {
+      "n": 11,
+      "title": "Confirm project creation",
+      "body": "The system may take a few seconds to create the project.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FaQLjoLVV5972WNnqNKtxXL_doc.png?alt=media&token=248f5056-9f8e-4308-a4bf-b4a7846049e0",
+      "alt": "Confirm project creation"
+    },
+    {
+      "n": 12,
+      "title": "View the confirmation",
+      "body": "Once the project is created, you'll see a confirmation message and be redirected to the project page.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FcjMp7kLDLJ8NdznB6kTbX1_doc.png?alt=media&token=f8ce38bd-2702-49ea-a31d-f199772a9e6b",
+      "alt": "View the confirmation"
+    },
+    {
+      "n": 13,
+      "title": "Browse the gallery",
+      "body": "Use the Next arrow to browse through the project gallery.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FgT5TrfPwhRTRGDA5m5Dy2e_doc.png?alt=media&token=900b0e30-41bc-4249-b31b-019f68c0cc3a",
+      "alt": "Browse the gallery"
+    },
+    {
+      "n": 14,
+      "title": "Continue through images",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FeF4eCXVRqM2vRuJw5PRxS5_doc.png?alt=media&token=ff7be59b-66b8-4e34-afd6-4126581332b7",
+      "alt": "Continue through images"
+    },
+    {
+      "n": 15,
+      "title": "Browse remaining images",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2F9ZbRJbDttEGsRkDjt7Junb_doc.png?alt=media&token=2ff63409-b1ee-46ea-b129-1826d857c92d",
+      "alt": "Browse remaining images"
+    },
+    {
+      "n": 16,
+      "title": "Review project details",
+      "body": "Use the project tabs to view the information entered during creation, including goals, funding, contacts, images, and other project details.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FmGnAi732MvZ2zd3mTAWomT_doc.png?alt=media&token=cbe616e8-c987-40b5-a30e-3cb2163c9afc",
+      "alt": "Review project details"
+    },
+    {
+      "n": 17,
+      "title": "You're done",
+      "body": "Your project has been created successfully. For questions or issues, reach out to the support team.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F14Ccsii5JATMb29MQikJmr%2FkrtohzuKPJ9Ffb4azEQ9Vm_doc.png?alt=media&token=c079d392-3bca-439d-898f-e3f6c79a2fa0",
+      "alt": "You're done"
+    }
+  ]
+}

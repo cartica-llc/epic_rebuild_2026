@@ -1,0 +1,66 @@
+{
+  "id": "quick-insights-project-map",
+  "slug": "quick-insights-project-map",
+  "title": "Project Map",
+  "category": "Insights",
+  "summary": "Explore where EPIC projects are located across California and filter map results by investment area, disadvantaged communities, and low-income communities.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects?view=map",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Project map overview",
+      "body": "The Project Map insight helps users explore where EPIC projects are located across California.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FawqNFKDNSabnetgr4cLZQJ%2F8Aumnd5KBXN2rFvum9SdbR_doc.png?alt=media&token=04bd60ee-1c35-4289-bae9-1d5f74661b43",
+      "alt": "Project Map Overview"
+    },
+    {
+      "n": 2,
+      "title": "Access the Project Map tab",
+      "body": "Go to the Projects page and select the Project Map insight tab under Quick Insights.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FawqNFKDNSabnetgr4cLZQJ%2FrQxNrQkBu2PL75APGtBcJE_doc.png?alt=media&token=6e9a8102-ead4-4924-af46-724e016f8ca9",
+      "alt": "Accessing Project Map Tab"
+    },
+    {
+      "n": 3,
+      "title": "Review project points and clusters",
+      "body": "Each point on the map represents a project. Clusters show areas where multiple projects are located close together, helping users understand the geographic reach of EPIC investments.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FawqNFKDNSabnetgr4cLZQJ%2Ff7s2DZ7Ur7d6xjFkqWqGbc_doc.png?alt=media&token=62668ad7-06ea-434b-804b-f852a1f9f4bc",
+      "alt": "Project Points And Clusters"
+    },
+    {
+      "n": 4,
+      "title": "View project details",
+      "body": "Click a project point to view details such as the project name, status, city, funding amount, and funding progress. You can also click the project link to open the full project page.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FawqNFKDNSabnetgr4cLZQJ%2F55KUz5nhGPUgeLPrgZdE1n_doc.png?alt=media&token=48b7bace-4e19-4051-8c82-afc6ae44f620",
+      "alt": "Viewing Project Details"
+    },
+    {
+      "n": 5,
+      "title": "Use the project list with the map",
+      "body": "When no filters are applied, you can scroll through the project list and select a project. The map will automatically move to that project’s location.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FawqNFKDNSabnetgr4cLZQJ%2Fx5H9GuK5BkywxjD1McsebP_doc.png?alt=media&token=0e146c56-7f86-4c2c-96ae-cae20892cabe",
+      "alt": "Project List And Map Sync"
+    },
+    {
+      "n": 6,
+      "title": "Filter by investment area",
+      "body": "Apply filters to narrow the map by investment area. For example, select Energy Efficiency to view only projects in that category.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FawqNFKDNSabnetgr4cLZQJ%2FiugGkEjbL7waM3AitPuTPp_doc.png?alt=media&token=0537530a-34cd-4ef2-be9b-c3f505ccf361",
+      "alt": "Filtering By Investment Area"
+    },
+    {
+      "n": 7,
+      "title": "Filter by DAC and LI communities",
+      "body": "You can also filter for projects serving disadvantaged communities and low-income communities. When selected, those project points are highlighted with gold points.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FawqNFKDNSabnetgr4cLZQJ%2F2AeYwN6MCRaMLy3KMmAXcM_doc.png?alt=media&token=d94c969f-e771-4e85-8cf9-4821b35844be",
+      "alt": "Reset And Reapply Filters"
+    },
+    {
+      "n": 8,
+      "title": "Include geocoordinates for map display",
+      "body": "Projects appear on the map because the related company address includes geocoordinates. When adding a company and address, make sure geocoordinates are included so the project can display correctly on the Project Map.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FawqNFKDNSabnetgr4cLZQJ%2FfemrTh5jZVNeYicY18yDdR_doc.png?alt=media&token=f8e4d269-2c0b-4928-a71b-d9540ce7786c",
+      "alt": "Geocoordinates Importance For Map"
+    }
+  ]
+}

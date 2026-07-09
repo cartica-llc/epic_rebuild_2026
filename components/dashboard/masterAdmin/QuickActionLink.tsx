@@ -1,12 +1,21 @@
+// QuickActionLink.tsx
+
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Plus, Users, UserPlus, ShieldCheck } from "lucide-react"
+import {
+    ArrowRight,
+    Plus,
+    Users,
+    UserPlus,
+    ShieldCheck,
+    BookOpen,
+} from "lucide-react"
 
 export interface QuickAction {
     label: string
     href: string
-    icon: "plus" | "users" | "user-plus" | "shield-check"
+    icon: "plus" | "users" | "user-plus" | "shield-check" | "book-open"
 }
 
 const iconMap = {
@@ -14,6 +23,7 @@ const iconMap = {
     users: Users,
     "user-plus": UserPlus,
     "shield-check": ShieldCheck,
+    "book-open": BookOpen,
 } as const
 
 interface QuickActionLinkProps {
@@ -32,6 +42,7 @@ export function QuickActionLink({ action }: QuickActionLinkProps) {
         <Icon className="h-4 w-4" />
           {action.label}
       </span>
+
             <ArrowRight className="h-4 w-4 text-slate-400" />
         </Link>
     )

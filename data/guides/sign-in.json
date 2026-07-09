@@ -1,0 +1,59 @@
+{
+  "id": "sign-in",
+  "slug": "sign-in",
+  "title": "How to Sign In",
+  "category": "Getting Started",
+  "summary": "Access the EPIC Database with your organization credentials.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Introduction",
+      "body": "This guide shows how to securely sign in and sign out of the EPIC Database system.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F1EctiwRV1KaRaALKmBLVcN%2FhvxAhm5nsKBj9HS24fYN8y_doc.png?alt=media&token=0301fe67-b25e-4575-a3a6-998631d206e1",
+      "alt": "Introduction"
+    },
+    {
+      "n": 2,
+      "title": "Access the sign-in page",
+      "body": "Click Sign In to begin the authentication process for the EPIC Database system.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F1EctiwRV1KaRaALKmBLVcN%2Fo4M4izmaDy7VTjQQMVUi7b_doc.png?alt=media&token=72f6b229-c2cc-49fb-aab2-16f521c5b192",
+      "alt": "Access Sign In Page"
+    },
+    {
+      "n": 3,
+      "title": "Enter your credentials",
+      "body": "After entering your email and password, click Sign In to submit your credentials and log in.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F1EctiwRV1KaRaALKmBLVcN%2F8HGPrfMUYDZDCxHje9PHFA_doc.png?alt=media&token=72d04aa6-368c-403c-99ef-174e1fb76abf",
+      "alt": "Enter your credentials"
+    },
+    {
+      "n": 4,
+      "title": "Continue verification",
+      "body": "Complete the verification step to continue signing in.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F1EctiwRV1KaRaALKmBLVcN%2FrgENHt6Q8GgGwH8WRttJ9j_doc.png?alt=media&token=6f7dd57b-7c9e-4515-9515-e30cb96b47ee",
+      "alt": "Continue Verification"
+    },
+    {
+      "n": 5,
+      "title": "Access the user dashboard",
+      "body": "After successful verification, you will be taken to your user dashboard.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F1EctiwRV1KaRaALKmBLVcN%2F1DSMHs6Ypwdn9LQwgbsVQX_doc.png?alt=media&token=b2344638-6c34-493b-8fdd-fff4824b840d",
+      "alt": "Access User Dashboard"
+    },
+    {
+      "n": 6,
+      "title": "View and edit projects",
+      "body": "Once logged in, you can view and edit projects within your organization.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F1EctiwRV1KaRaALKmBLVcN%2F7WszZP5XyowppxmP2775Ri_doc.png?alt=media&token=4f8f14ca-0498-442b-a84b-e0644d445b36",
+      "alt": "View and edit projects"
+    },
+    {
+      "n": 7,
+      "title": "Sign out",
+      "body": "Once you are done, click Sign Out to securely log out of the EPIC Database system.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F1EctiwRV1KaRaALKmBLVcN%2FiZTuZ57zZwpaVD5gJnkKFh_doc.png?alt=media&token=37a7d7cb-0f5d-450b-9193-10df4aa224ae",
+      "alt": "Sign out"
+    }
+  ]
+}

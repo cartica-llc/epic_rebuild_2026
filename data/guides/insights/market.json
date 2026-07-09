@@ -1,0 +1,52 @@
+{
+  "id": "quick-insights-market-maturity",
+  "slug": "quick-insights-market-maturity",
+  "title": "Market Maturity",
+  "category": "Insights",
+  "summary": "Understand project maturity, readiness signals, and how close projects may be to market.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects?view=market",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Market maturity overview",
+      "body": "The Market Maturity insight on the Projects page shows where projects are in development and how close they may be to market, based on maturity stage and signal score.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FesMG71125x8tbv8fap393K%2FfouJxnoCkRsGL3PEhrWMrs_doc.png?alt=media&token=4f6f9e87-5434-4447-bbb4-b5bf58581e10",
+      "alt": "Market Maturity Overview"
+    },
+    {
+      "n": 2,
+      "title": "Understand how maturity is determined",
+      "body": "The maturity stage comes from the project's assigned development stage. If a project has multiple stages, the most advanced stage is used.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FesMG71125x8tbv8fap393K%2Fn7j5rdYjXn7T2X89C88gkK_doc.png?alt=media&token=d2c625b4-7806-420d-adaf-9c771aeef549",
+      "alt": "How Maturity Is Determined"
+    },
+    {
+      "n": 3,
+      "title": "Review the signal score",
+      "body": "The signal score shows how much supporting evidence exists for a project's readiness. Projects receive points for items such as a final report, completed status, match funding, leveraged funds, documented key learnings, and scaling plans.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FesMG71125x8tbv8fap393K%2F2dCC4Y8mJfWGLCfYpfSVoc_doc.png?alt=media&token=8d5a2436-165f-463b-b574-d828329ed693",
+      "alt": "Signal Score"
+    },
+    {
+      "n": 4,
+      "title": "Understand readiness bands",
+      "body": "Readiness is grouped into three bands: Strong, Emerging, and Early. Strong means the project has more readiness evidence, Emerging means it has some evidence, and Early means limited evidence is available.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FesMG71125x8tbv8fap393K%2Fux2fzGtk8bWJfB8MxeHVgg_doc.png?alt=media&token=6711cc63-b107-4bac-a791-e310aec847cd",
+      "alt": "Readiness Bands"
+    },
+    {
+      "n": 5,
+      "title": "Filter projects",
+      "body": "Filter projects by maturity stage, readiness band, or score. The project list updates based on the selected filters and shows details such as project number, project name, project lead company, maturity stage, band, and score.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FesMG71125x8tbv8fap393K%2F6jvvPzyyQuTpyVzTKnoL58_doc.png?alt=media&token=f0a5bcc3-ac4b-4d85-a6b0-7760422b8e6a",
+      "alt": "Filtering Projects"
+    },
+    {
+      "n": 6,
+      "title": "Review portfolio composition",
+      "body": "The portfolio composition section shows how projects are distributed across maturity stages. Click a section to see which projects fall into that group and compare it to the rest of the portfolio.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FesMG71125x8tbv8fap393K%2F9g1cs7nzoGyyJBCnz3Dy47_doc.png?alt=media&token=8cfb28b4-ebff-453e-ae00-c5eff5435497",
+      "alt": "Portfolio Composition"
+    }
+  ]
+}

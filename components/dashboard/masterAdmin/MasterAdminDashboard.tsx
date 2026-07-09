@@ -9,10 +9,15 @@ import type { QuickAction } from './QuickActionLink';
 import type { MasterDashboardData } from './types';
 
 const quickActions: QuickAction[] = [
-    { label: 'Manage Users', href: '/dashboard/master/users', icon: 'users' },
-    { label: 'Add User', href: '/dashboard/master/users/create', icon: 'user-plus' },
-    { label: 'Compliance', href: '/dashboard/master/compliance', icon: 'shield-check' },
-];
+    { label: "Manage Users", href: "/dashboard/master/users", icon: "users" },
+    { label: "Add User", href: "/dashboard/master/users/create", icon: "user-plus" },
+    { label: "Compliance", href: "/dashboard/master/compliance", icon: "shield-check" },
+    {
+        label: "EPIC Database Guides",
+        href: "/dashboard/master/docs",
+        icon: "book-open",
+    },
+]
 
 interface Props {
     userName: string;
@@ -48,6 +53,10 @@ export function MasterAdminDashboard({ userName, userEmail, data }: Props) {
                     <div className="lg:col-span-1">
                         <QuickActions actions={quickActions} />
                     </div>
+
+
+
+
                 </div>
             </div>
         </main>

@@ -1,0 +1,80 @@
+{
+  "id": "export-projects",
+  "slug": "export-projects",
+  "title": "How to Export Projects",
+  "category": "Projects",
+  "summary": "Export project data for reporting and offline review.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Introduction",
+      "body": "This guide shows how to export project data from the EPIC Database, including all projects or only projects that match selected filters.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2FsEVuKNGiSkuuTVV52Z7cJA_doc.png?alt=media&token=82a97327-17d4-4ba9-b193-f96e4bfefd6f",
+      "alt": "Introduction"
+    },
+    {
+      "n": 2,
+      "title": "Open export options",
+      "body": "Click the download icon to open the export options.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2FiPwWwy79bzjUM4FDD1LQW4_doc.png?alt=media&token=4b042bd0-f95a-403f-b304-b8c9c146bf8a",
+      "alt": "Open Export Options"
+    },
+    {
+      "n": 3,
+      "title": "Choose export content",
+      "body": "Choose how you want to customize and export your project data.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2FpfPcGGeHsPEn26wDVdPJwJ_doc.png?alt=media&token=37c43136-5b2c-4554-ad1b-660815259982",
+      "alt": "Choose Export Content"
+    },
+    {
+      "n": 4,
+      "title": "Export the entire database",
+      "body": "Click Entire Database to export all data records from the EPIC Database without applying filters.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2FtkQwRKbs3Rj7vANebHDA5p_doc.png?alt=media&token=f69673d0-4be3-44be-8270-e8764f038df3",
+      "alt": "Select Entire Database Export"
+    },
+    {
+      "n": 5,
+      "title": "Open project filters",
+      "body": "To export only selected projects, click the filter icon to review and apply project filters before exporting.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2FfKoxeNBRAfics17v9DU3Ab_doc.png?alt=media&token=f642deba-4b4e-41b3-8e24-c96b7b902713",
+      "alt": "Open Project Selection Menu"
+    },
+    {
+      "n": 6,
+      "title": "Select your filters",
+      "body": "Use the available filter options to narrow the project list before exporting.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2FtdsxhcrTzcT6cyfq7YHZnw_doc.png?alt=media&token=13a530f0-1e9d-4727-9f0f-70b15ab03ef5",
+      "alt": "Select Your Filters"
+    },
+    {
+      "n": 7,
+      "title": "Filter by program administration",
+      "body": "For example, filter projects by Program Administration so the export only includes projects assigned to that program area.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2FrHcgccBrHaFEaY6UK4eNfs_doc.png?alt=media&token=471b3a5d-8d74-441f-9e31-2b0a20433acb",
+      "alt": "Select Multiple Projects"
+    },
+    {
+      "n": 8,
+      "title": "Filter by low-income community",
+      "body": "You can also select Low Income Community to include only projects that serve low-income communities.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2FuTWXxXE9vPRQ4kQVECm4Gg_doc.png?alt=media&token=f3631922-b84f-48fc-9de4-ae2bff044081",
+      "alt": "Filter by Low Income Community"
+    },
+    {
+      "n": 9,
+      "title": "Return to export options",
+      "body": "After applying the filters, click the download icon again to continue with the export.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2Fn88JkRMvaqgQTGT6CajhYr_doc.png?alt=media&token=de0eb2b2-e618-453f-a636-19f294076011",
+      "alt": "Proceed to Export Settings"
+    },
+    {
+      "n": 10,
+      "title": "Export filtered results",
+      "body": "Click Filtered Results to export only the projects that match your applied filters.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2FrdTdEUzQavppGE4kYgMyok%2Fvms8M6wkduqBhPhWgCdvze_doc.png?alt=media&token=01c7e646-142c-4b36-ab53-d8ce7a8af885",
+      "alt": "View Filtered Results"
+    }
+  ]
+}

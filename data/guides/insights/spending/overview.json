@@ -1,0 +1,52 @@
+{
+  "id": "insights-spending-overview",
+  "slug": "insights-spending-overview",
+  "title": "Spending - Overview",
+  "category": "Insights",
+  "summary": "Understand how EPIC funding is committed, contracted, and spent across the project portfolio.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects?view=spending",
+  "steps": [
+    {
+      "n": 1,
+      "title": "Spending overview",
+      "body": "The Spending Overview tab is located within the Spending Insight on the Projects page. It helps users understand how EPIC funding is committed, contracted, and spent across the project portfolio.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F81Si6VeEiUpKnLLiCTxpaK%2F5CqBS3DbMdgPfvQVZhm6NC_doc.png?alt=media&token=f5c30142-72e8-4f1e-b4b1-6450b47f916d",
+      "alt": "Spending Overview"
+    },
+    {
+      "n": 2,
+      "title": "Review funding summary cards",
+      "body": "At the top, users can see the main funding totals: Committed, Contracted, and Expended. Committed shows total funding allocated, Contracted shows the amount currently under contract, and Expended shows the amount already paid out.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F81Si6VeEiUpKnLLiCTxpaK%2Fb3XvxRT11ooqLHLQWqdfwp_doc.png?alt=media&token=bb7af1af-6a07-4c55-937b-e4d3f48a4f51",
+      "alt": "Funding Summary Cards"
+    },
+    {
+      "n": 3,
+      "title": "View top investment areas",
+      "body": "The first section shows the top investment areas ordered by committed funding. Click an investment area to open the project list already filtered to that category.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F81Si6VeEiUpKnLLiCTxpaK%2FihMC8ag5sRsXswF464qN2P_doc.png?alt=media&token=d0bc9078-a1db-451e-8185-505736af9e89",
+      "alt": "Top Investment Areas"
+    },
+    {
+      "n": 4,
+      "title": "Open a filtered investment area",
+      "body": "For example, click Grid Decarbonization to view projects filtered to that investment area. You can return to the Spending Overview after reviewing the filtered results.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F81Si6VeEiUpKnLLiCTxpaK%2Ffs4u6NNsHMHNYPWJnUsSNP_doc.png?alt=media&token=8096fcb9-c3e6-41aa-ae38-60a5add93581",
+      "alt": "Grid Decarbonization Filter Example"
+    },
+    {
+      "n": 5,
+      "title": "Review spending by EPIC period",
+      "body": "The next section shows spending by EPIC period. Click a period to review the projects connected to that EPIC cycle.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F81Si6VeEiUpKnLLiCTxpaK%2FsZZnZritk1uF3CN9duzzXh_doc.png?alt=media&token=9a514ec5-4c38-4652-85d0-39f4cae07d9e",
+      "alt": "Spending by EPIC Period"
+    },
+    {
+      "n": 6,
+      "title": "Review top project leads",
+      "body": "The last section shows the top project lead companies ordered by committed funding. Click a company name to view the projects led by that company.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F81Si6VeEiUpKnLLiCTxpaK%2FhmTe5fhtnhuAXKEhy7BfHo_doc.png?alt=media&token=2eb1d331-73f1-4645-ac69-5171ba122816",
+      "alt": "Top Project Leads"
+    }
+  ]
+}

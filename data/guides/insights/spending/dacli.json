@@ -1,0 +1,39 @@
+{
+  "id": "insights-spending-community-investments",
+  "slug": "insights-spending-community-investments",
+  "title": "Spending - Community Investments",
+  "category": "Insights",
+  "summary": "Understand how EPIC funding is expended toward disadvantaged and low-income communities across the project portfolio.",
+  "appUrl": "https://main.d3jw16rt1hm0q7.amplifyapp.com/projects?view=spending",
+
+  "steps": [
+    {
+      "n": 1,
+      "title": "Community investments overview",
+      "body": "The Community Investments tab is located within the Spending Insight on the Projects page. This tab helps users understand how much EPIC funding has been expended toward disadvantaged and low-income communities.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F2rXtkGkvWVuFw4dZ9Y5myT%2F8T8tzabPcrrNkQCubM2xhs_doc.png?alt=media&token=e79cf5fe-e766-4eb8-aa1a-adbdeabae6f0",
+      "alt": "Community Investment Overview"
+    },
+    {
+      "n": 2,
+      "title": "Review funding cards",
+      "body": "At the top, users can see the total expended amount, the DAC / LI expended amount, and the DAC / LI share of total spending. This gives users a quick view of how much spending is supporting priority communities.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F2rXtkGkvWVuFw4dZ9Y5myT%2FkTAyPHR4dGodNYZsxseCnk_doc.png?alt=media&token=feed745b-c610-4600-967a-145dce433064",
+      "alt": "Funding Cards"
+    },
+    {
+      "n": 3,
+      "title": "Review DAC / LI share by EPIC period",
+      "body": "The next section breaks down DAC / LI spending by EPIC period. Users can compare each EPIC period to see how much spending went toward disadvantaged and low-income communities.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F2rXtkGkvWVuFw4dZ9Y5myT%2FdJrkbibshrSn15ZKKJSvUu_doc.png?alt=media&token=b2078fd2-672f-40b3-8389-0fb5794ebc7c",
+      "alt": "DAC / LI Share by EPIC Period"
+    },
+    {
+      "n": 4,
+      "title": "Review spending by investment area",
+      "body": "The final section shows DAC / LI spending by investment area. This helps users see which investment areas have the highest DAC / LI expenditures.",
+      "image": "https://static.guidde.com/v0/qg%2FdBV7fEXdlwgYMDP58SYz14Y2S7p1%2F2rXtkGkvWVuFw4dZ9Y5myT%2F97dPKSfgXzoKxWmnQPWavS_doc.png?alt=media&token=3228a220-ccec-4f4b-ab50-feed7786bc67",
+      "alt": "Spending By Investment Area"
+    }
+  ]
+}
