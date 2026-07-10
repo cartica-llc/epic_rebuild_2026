@@ -294,7 +294,7 @@ export function ProjectsListContainer({
                 ) : (
                     <>
                         <strong>Unpublished projects only</strong> — hidden from the public.{' '}
-                        {inactiveScopeAdminId ? 'Scoped to your organization.' : ''}
+                        {inactiveScopeAdminId ? '' : ''}
                     </>
                 )}
             </span>
