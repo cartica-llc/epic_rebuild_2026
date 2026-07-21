@@ -1,9 +1,10 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { Chips, FieldLabel, HR, STitle, Txt } from '../shared/atoms';
-import { fmtC, fmtPct2, has } from '../shared/format';
+import { Chips, FieldLabel, HR, Txt } from '../shared/atoms';
+import { has } from '../shared/format';
 import { useFinanceDetails } from '../shared/useProjectData';
+import { FinanceHistorySection } from './FinanceHistorySection';
 
 type Props = {
     projectId: number | string;
@@ -30,38 +31,9 @@ export function FinanceTab({ projectId }: Props) {
 
     const f = state.data;
 
-    const rows: [string, string][] = [
-        ['Committed Funding', fmtC(f.commitedFundingAmt)],
-        ['Contract Amount', fmtC(f.contractAmount)],
-        ['Encumbered', fmtC(f.encumberedFundingAmount)],
-        ['Expended to Date', fmtC(f.expendedToDate)],
-        ['Admin Costs', fmtC(f.adminCost)],
-        ['Match Funding', fmtC(f.matchFunding)],
-        ['Match Split', fmtPct2(f.matchFundingSplit)],
-        ['Leveraged Funds', fmtC(f.leveragedFunds)],
-    ];
-
     return (
         <div className="space-y-12">
-            <section>
-                <STitle c="Financial Summary" />
-                <div className="mt-6">
-                    <table className="w-full text-sm">
-                        <tbody className="divide-y divide-slate-100">
-                            {rows.map(([l, v]) => (
-                                <tr key={l} className="group">
-                                    <td className="py-3 pr-4 text-slate-500 group-hover:text-slate-700">
-                                        {l}
-                                    </td>
-                                    <td className="py-3 text-right font-semibold tabular-nums text-slate-900">
-                                        {v}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <FinanceHistorySection projectId={projectId} />
 
             <HR />
 

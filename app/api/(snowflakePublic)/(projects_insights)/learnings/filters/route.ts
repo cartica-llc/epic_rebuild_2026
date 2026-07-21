@@ -38,7 +38,6 @@ export async function GET() {
         };
 
         const res = NextResponse.json(body);
-        // Cache 5 minutes — these change rarely.
         res.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
         return res;
     } catch (err) {

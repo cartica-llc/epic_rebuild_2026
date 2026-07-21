@@ -1,4 +1,4 @@
-//app/api/(snowflakeUser)/projectEdit/[id]/awardbands.ts
+//app/api/(snowflakeUser)/projectEdit/[id]/route.ts
 // GET  — fetch ALL project data for the edit form (all tabs)
 // PUT  — update a project (with org-based permission enforcement)
 
@@ -18,11 +18,6 @@ function safeIntOrNull(v: unknown): string {
     const n = parseInt(String(v), 10);
     return isNaN(n) ? 'NULL' : String(n);
 }
-function safeFloatOrNull(v: unknown): string {
-    if (v === '' || v === null || v === undefined) return 'NULL';
-    const n = parseFloat(String(v).replace(/[$,]/g, ''));
-    return isNaN(n) ? 'NULL' : String(n);
-}
 function safeDateOrNull(v: unknown): string {
     if (!v || v === '') return 'NULL';
     return `'${safeStr(v)}'`;
@@ -38,8 +33,6 @@ function toISODate(v: unknown): string {
 }
 
 interface JunctionRow { ID: number; }
-
-// ─── GET — full project for edit form ────────────────────────────────
 
 export async function GET(
     _request: Request,
@@ -64,7 +57,6 @@ export async function GET(
             return NextResponse.json({ error: 'Invalid project id' }, { status: 400 });
         }
 
-        // ── Main query: PROJECT + PROJECT_DETAIL + FINANCE_DETAIL ──
         const rows = await query(`
             SELECT
                 -- PROJECT
@@ -104,7 +96,6 @@ export async function GET(
                 p.PROJECT_DETAIL_PROJECT_DETAIL_ID,
                 p.FINANCE_DETAIL_FINANCE_DETAIL_ID,
                 p.PROJECT_METRIC_PROJECT_METRIC_ID,
-                -- PROJECT_DETAIL
                 pd.DETAILED_PROJECT_DESCRIPTION,
                 pd.SUMMARY_PROJECT_DESCRIPTION,
                 pd.PROJECT_UPDATE AS PD_PROJECT_UPDATE,
@@ -119,7 +110,9 @@ export async function GET(
                 pd.SCALABILITY,
                 pd.CYBER_SECURITY_NARRATIVE,
                 pd.FINAL_REPORT_URL,
-                -- FINANCE_DETAIL
+                -- FINANCE_DETAIL (current quarter)
+                fd.REPORTING_YEAR,
+                fd.REPORTING_QUARTER,
                 fd.COMMITED_FUNDING_AMT,
                 fd.ENCUMBERED_FUNDING_AMT,
                 fd.FUNDS_EXPENDED_TO_DATE,
@@ -145,8 +138,6 @@ export async function GET(
 
         const r = rows[0];
 
-        // ── Per-project permission check ──
-        // MasterAdmin can view any project for edit; ProgramAdmin only their org's
         if (!isMasterAdmin(groups)) {
             const userOrg = (session.user as { organization?: string | null }).organization ?? null;
             const projectAdminId = r.PROGRAM_ADMIN_PROGRAM_ADMIN_ID as number | null;
@@ -169,7 +160,7 @@ export async function GET(
             }
         };
 
-        // ── Junction table IDs (parallel) ──
+
         const [iaRows, dsRows, cpRows, bcRows, usRows, partnerRows, fmRows, cicRows, mfpRows] = await Promise.all([
             safeQuery('investmentAreas',
                 `SELECT INVESTMENT_AREA_INVESTMENT_AREA_ID AS ID FROM ${t}.PROJECT_HAS_INVESTMENT_AREA WHERE PROJECT_PROJECT_ID = ${pid}`),
@@ -206,7 +197,6 @@ export async function GET(
                 : Promise.resolve([]),
         ]);
 
-        // ── PROJECT_METRIC (Additional Info tab) ──
         let metricData: Record<string, string> = {
             electricitySystemReliabilityImpact: '',
             electricitySystemSafetyImpact: '',
@@ -248,7 +238,6 @@ export async function GET(
             }
         }
 
-        // Strip prefix from project number — DB stores lowercase, form displays uppercase
         const fullNumber = (r.PROJECT_NUMBER as string) ?? '';
         const dashIdx = fullNumber.indexOf('-');
         const numberWithoutPrefix = dashIdx >= 0 ? fullNumber.slice(dashIdx + 1) : fullNumber;
@@ -256,11 +245,10 @@ export async function GET(
         const numOrEmpty = (v: unknown) => (v != null && v !== 0 ? v : '');
         const strOrEmpty = (v: unknown) => (v != null ? String(v) : '');
         const numStr = (v: unknown) => (v != null ? String(v) : '');
-        // Handles all Snowflake NUMBER return types: JS number 1, string '1', or BigInt
         const boolFlag = (v: unknown) => v === 1 || v === true || v === '1' || Number(v) === 1;
 
         return NextResponse.json({
-            // ── Project tab ──
+
             projectName: strOrEmpty(r.PROJECT_NAME),
             programAdminId: r.PROGRAM_ADMIN_PROGRAM_ADMIN_ID ?? '',
             projectNumber: numberWithoutPrefix,
@@ -318,18 +306,19 @@ export async function GET(
             scalability: strOrEmpty(r.SCALABILITY),
             cyberSecurityNarrative: strOrEmpty(r.CYBER_SECURITY_NARRATIVE),
             finalReportUrl: strOrEmpty(r.FINAL_REPORT_URL),
-            // ── Finance tab ──
+            reportingYear: r.REPORTING_YEAR != null ? Number(r.REPORTING_YEAR) : null,
+            reportingQuarter: r.REPORTING_QUARTER != null ? Number(r.REPORTING_QUARTER) : null,
             committedFundingAmt: numStr(r.COMMITED_FUNDING_AMT),
             encumberedFunding: numStr(r.ENCUMBERED_FUNDING_AMT),
             fundsExpended: numStr(r.FUNDS_EXPENDED_TO_DATE),
             adminAndOverheadCost: numStr(r.ADMIN_AND_OVERHEAD_COST),
-            numOfBidders: numStr(r.NUM_OF_BIDDERS),
-            rankOfSelectedBidders: numStr(r.RANK_OF_SELECTED_BIDDERS),
+            matchFunding: numStr(r.MATCH_FUNDING),
             contractAmount: numStr(r.CONTRACT_AMOUNT),
-            bidderDescription: strOrEmpty(r.BIDDER_DESCRIPTION),
             leveragedFunds: numStr(r.LEVERAGED_FUNDS),
             matchFundingSplit: numStr(r.MATCH_FUNDING_SPLIT),
-            // ── Additional Info tab (from PROJECT_METRIC) ──
+            numOfBidders: numStr(r.NUM_OF_BIDDERS),
+            rankOfSelectedBidders: numStr(r.RANK_OF_SELECTED_BIDDERS),
+            bidderDescription: strOrEmpty(r.BIDDER_DESCRIPTION),
             ...metricData,
         });
     } catch (err: unknown) {
@@ -472,7 +461,10 @@ export async function PUT(
             `);
         }
 
-        // ── Upsert FINANCE_DETAIL ──
+        // ── Upsert FINANCE_DETAIL (non-quarterly fields ONLY) ──
+        // Quarterly dollar amounts, MATCH_FUNDING, and MATCH_FUNDING_SPLIT are
+        // managed exclusively by /api/projectEdit/[id]/financeQuarters so this
+        // PUT can never clobber the current quarter's record.
         if (fdId == null) {
             await query(`INSERT INTO ${t}.FINANCE_DETAIL (IS_ACTIVE) VALUES (1)`);
             const fdIdRows = (await query(`SELECT MAX(FINANCE_DETAIL_ID) AS ID FROM ${t}.FINANCE_DETAIL`)) as { ID: number }[];
@@ -484,16 +476,9 @@ export async function PUT(
         if (fdId != null) {
             await query(`
                 UPDATE ${t}.FINANCE_DETAIL SET
-                    COMMITED_FUNDING_AMT = ${safeFloatOrNull(body.committedFundingAmt)},
-                    ENCUMBERED_FUNDING_AMT = ${safeFloatOrNull(body.encumberedFunding)},
-                    FUNDS_EXPENDED_TO_DATE = ${safeFloatOrNull(body.fundsExpended)},
-                    ADMIN_AND_OVERHEAD_COST = ${safeFloatOrNull(body.adminAndOverheadCost)},
                     NUM_OF_BIDDERS = ${safeIntOrNull(body.numOfBidders)},
                     RANK_OF_SELECTED_BIDDERS = ${safeIntOrNull(body.rankOfSelectedBidders)},
-                    CONTRACT_AMOUNT = ${safeFloatOrNull(body.contractAmount)},
                     BIDDER_DESCRIPTION = '${safeStr(body.bidderDescription)}',
-                    LEVERAGED_FUNDS = ${safeFloatOrNull(body.leveragedFunds)},
-                    MATCH_FUNDING_SPLIT = ${safeFloatOrNull(body.matchFundingSplit)},
                     MODIFIED_DATE = CURRENT_TIMESTAMP()
                 WHERE FINANCE_DETAIL_ID = ${fdId}
             `);

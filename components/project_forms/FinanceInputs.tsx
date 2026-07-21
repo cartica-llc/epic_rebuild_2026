@@ -1,16 +1,12 @@
 // ─── components/project_forms/FinanceInputs.tsx ──────────────────────
-// Specialized numeric inputs for the Finance tab.
-//
-// CurrencyInput  — $ prefix, comma-formatted on blur, over-max red state
-// RatioInput     — decimal 0–1 stored in DB, % equivalent shown live
-// IntegerInput   — whole numbers, # prefix badge
+
 
 'use client';
 
 import { useState } from 'react';
 import { FINANCE_MAX } from './types';
 
-// ─── CurrencyInput ───────────────────────────────────────────────────
+
 
 function formatCurrencyForDisplay(raw: string): string {
     const n = parseFloat(raw);
@@ -123,7 +119,6 @@ export function CurrencyInput({
     );
 }
 
-// ─── RatioInput ──────────────────────────────────────────────────────
 
 export function RatioInput({
                                value,

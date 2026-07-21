@@ -83,4 +83,28 @@ export function useProjectImages(projectId: number | string) {
     return useProjectFetch<ProjectImages>(`${base(projectId)}/images`);
 }
 
+// ─── Quarterly finance history (public, read-only) ───────────────────
+
+export interface PublicFinanceQuarter {
+    source: 'current' | 'history';
+    reportingYear: number;
+    reportingQuarter: number;           // 1–4
+    committedFunding: number | null;
+    encumberedFunding: number | null;
+    expendedToDate: number | null;
+    adminOverhead: number | null;
+    matchFunding: number | null;
+    contractAmount: number | null;
+    leveragedFunds: number | null;
+    matchFundingSplit: number | null;   // ratio 0–1
+}
+
+export interface FinanceHistory {
+    quarters: PublicFinanceQuarter[];   // oldest first — chart-ready
+}
+
+export function useProjectFinanceHistory(projectId: number | string) {
+    return useProjectFetch<FinanceHistory>(`${base(projectId)}/financeHistory`);
+}
+
 export type { State as FetchState };

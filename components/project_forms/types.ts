@@ -1,5 +1,4 @@
 // ─── components/project_forms/types.ts ───────────────────────────────
-// Shared types, constants, and helpers for the ProjectForm system.
 
 import { ADMIN_ID_TO_ORG, ORG_TO_ADMIN_ID } from '@/lib/permissions';
 
@@ -87,12 +86,8 @@ export interface ProjectFormData {
     cyberSecurityNarrative: string;
     finalReportUrl: string;
     utilityServiceAreaIds: number[];
-    // Final report transient state — never sent to the DB directly.
-    // The actual S3 upload/delete happens in ProjectForm.executeSave after
-    // the main project save succeeds.
-    pendingReportFile: unknown;            // staged File — typed as unknown to keep this module server-safe (File is browser-only)
-    reportMarkedForDeletion: boolean;     // user clicked "Remove"
-    // Finance tab
+    pendingReportFile: unknown;
+    reportMarkedForDeletion: boolean;
     fundingMechanismIds: number[];
     matchFundingPartnerIds: number[];
     committedFundingAmt: string;
@@ -103,9 +98,12 @@ export interface ProjectFormData {
     rankOfSelectedBidders: string;
     contractAmount: string;
     leveragedFunds: string;
+    matchFunding: string;
     matchFundingSplit: string;
     bidderDescription: string;
-    // Additional tab
+
+    quarters: QuarterInput[];
+
     electricitySystemReliabilityImpact: string;
     electricitySystemSafetyImpact: string;
     ghgImpacts: string;
@@ -119,12 +117,11 @@ export interface ProjectFormData {
     informationDissemination: string;
 }
 
-// ─── Shared setter type ──────────────────────────────────────────────
+
 
 export type FormValue = ProjectFormData[keyof ProjectFormData] | (string | number)[];
 export type FormSetter = (key: string, val: FormValue) => void;
 
-// ─── Empty form defaults ─────────────────────────────────────────────
 
 export const EMPTY_FORM: ProjectFormData = {
     projectName: '', programAdminId: '', projectNumber: '', startDate: '', endDate: '',
@@ -145,12 +142,47 @@ export const EMPTY_FORM: ProjectFormData = {
     pendingReportFile: null, reportMarkedForDeletion: false,
     fundingMechanismIds: [], matchFundingPartnerIds: [], committedFundingAmt: '', encumberedFunding: '',
     fundsExpended: '', adminAndOverheadCost: '', numOfBidders: '', rankOfSelectedBidders: '',
-    contractAmount: '', leveragedFunds: '', matchFundingSplit: '', bidderDescription: '',
+    contractAmount: '', leveragedFunds: '', matchFunding: '', matchFundingSplit: '', bidderDescription: '',
+    quarters: [],
     electricitySystemReliabilityImpact: '', electricitySystemSafetyImpact: '', ghgImpacts: '',
     environmentalImpactNonGhg: '', projectedProjectBenefits: '', ratepayersBenefits: '',
     communityBenefitsDesc: '', energyImpact: '', infrastructureCostReductions: '', otherImpacts: '',
     informationDissemination: '',
 };
+
+
+
+export interface FinanceQuarter {
+    source: 'current' | 'history';
+    historyId: number | null;
+    reportingYear: number | null;
+    reportingQuarter: number | null;
+    committedFundingAmt: string;
+    encumberedFunding: string;
+    fundsExpended: string;
+    adminAndOverheadCost: string;
+    matchFunding: string;
+    contractAmount: string;
+    leveragedFunds: string;
+    matchFundingSplit: string;
+}
+
+export type QuarterFormState = Pick<FinanceQuarter,
+    'committedFundingAmt' | 'encumberedFunding' | 'fundsExpended' |
+    'adminAndOverheadCost' | 'matchFunding' | 'contractAmount' | 'leveragedFunds'>;
+
+export const EMPTY_QUARTER_FORM: QuarterFormState = {
+    committedFundingAmt: '', encumberedFunding: '', fundsExpended: '',
+    adminAndOverheadCost: '', matchFunding: '', contractAmount: '', leveragedFunds: '',
+};
+
+// A quarter staged locally in CREATE mode (no project row exists yet).
+// Sent as `quarters[]` in the project-create payload; the newest becomes the
+// FINANCE_DETAIL row, the rest go to FINANCE_DETAIL_HISTORY.
+export interface QuarterInput extends QuarterFormState {
+    reportingYear: number;
+    reportingQuarter: number;
+}
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -230,7 +262,8 @@ export const FIELD_LABELS: Record<string, string> = {
     fundsExpended: 'Funds Expended', adminAndOverheadCost: 'Admin & Overhead',
     numOfBidders: '# of Bidders', rankOfSelectedBidders: 'Rank of Selected Bidder',
     contractAmount: 'Contract Amount', bidderDescription: 'Bidder Description',
-    leveragedFunds: 'Leveraged Funds', matchFundingSplit: 'Match Funding Split',
+    leveragedFunds: 'Leveraged Funds', matchFunding: 'Match Funding',
+    matchFundingSplit: 'Match Funding Split', quarters: 'Quarterly Records',
     electricitySystemReliabilityImpact: 'Electricity Reliability Impact',
     electricitySystemSafetyImpact: 'Electricity Safety Impact',
     ghgImpacts: 'GHG Impacts', environmentalImpactNonGhg: 'Non-GHG Environmental Impact',
@@ -241,8 +274,6 @@ export const FIELD_LABELS: Record<string, string> = {
     mainImage: 'Main Image', galleryImages: 'Gallery Images',
 };
 
-// deletedImages, pendingReportFile, and reportMarkedForDeletion are transient
-// UI state — exclude them from the change-detection diff shown to the user.
 export const SKIP_FIELDS = new Set<keyof ProjectFormData>([
     'deletedImages',
     'pendingReportFile',

@@ -1,5 +1,4 @@
 // ─── components/project_forms/ProjectForm.tsx ────────────────────────
-// Shared tabbed form for Create and Edit project pages.
 
 'use client';
 
@@ -9,7 +8,6 @@ import { useSession } from 'next-auth/react';
 import { Loader2 } from 'lucide-react';
 import { AddCompanyModal } from './AddCompanyModal';
 
-// ─── Local modules ───────────────────────────────────────────────────
 import {
     type ProjectFormData,
     type LookupData,
@@ -583,6 +581,10 @@ export function ProjectForm({ mode, projectId, initialData }: ProjectFormProps) 
                     setAddCompanyContext('matchFunding');
                     setShowAddCompany(true);
                 }}
+                // Edit mode → SERVER mode quarterly table loads this project's
+                // records from /api/projectEdit/[id]/financeQuarters.
+                // Create mode → LOCAL mode quarters staged in data.quarters.
+                projectId={mode === 'edit' && projectId !== undefined ? Number(projectId) : null}
             />
         ),
         additional: <AdditionalTab data={effectiveData} set={set} />,

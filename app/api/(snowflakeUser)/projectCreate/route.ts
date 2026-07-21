@@ -1,4 +1,15 @@
-//app/api/(snowflakeUser)/projectCreate/awardbands.ts
+//app/api/(snowflakeUser)/projectCreate/route.ts
+//
+// CHANGED for quarterly finance records:
+//   • The create form stages quarterly records locally and submits them as
+//     body.quarters[] ({ reportingYear, reportingQuarter, ...values }).
+//     The NEWEST staged quarter becomes the FINANCE_DETAIL row; any others
+//     are inserted into FINANCE_DETAIL_HISTORY. Duplicate periods rejected.
+//   • Backward compatible: if body.quarters is absent/empty, falls back to
+//     the flat fields stamped with the current calendar quarter.
+//   • MATCH_FUNDING is now inserted from the form.
+//   • MATCH_FUNDING_SPLIT is computed server-side:
+//       match ÷ (match + committed) — no longer trusted from the client.
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
@@ -35,6 +46,50 @@ function safeFinanceOrNull(v: unknown, fieldName: string): string {
         throw new Error(`${fieldName} exceeds the maximum value of $999,999,999,999.`);
     }
     return String(n);
+}
+
+function computeMatchSplit(matchFunding: string, committed: string): string {
+    if (matchFunding === 'NULL' || committed === 'NULL') return 'NULL';
+    const m = parseFloat(matchFunding);
+    const c = parseFloat(committed);
+    if (!Number.isFinite(m) || !Number.isFinite(c) || m + c === 0) return 'NULL';
+    return (m / (m + c)).toFixed(6);
+}
+
+
+interface ParsedQuarter {
+    year: number;
+    quarter: number;
+    committedFundingAmt: string;
+    encumberedFunding: string;
+    fundsExpended: string;
+    adminAndOverheadCost: string;
+    matchFunding: string;
+    contractAmount: string;
+    leveragedFunds: string;
+    matchFundingSplit: string;
+}
+
+function parseQuarter(q: Record<string, unknown>): ParsedQuarter {
+    const year = parseInt(String(q.reportingYear), 10);
+    const quarter = parseInt(String(q.reportingQuarter), 10);
+    if (!Number.isFinite(year) || year < 2000 || year > 2100 ||
+        !Number.isFinite(quarter) || quarter < 1 || quarter > 4) {
+        throw new Error('Each quarterly record needs a valid reporting year and quarter (1–4).');
+    }
+    const committedFundingAmt = safeFinanceOrNull(q.committedFundingAmt, 'Committed funding amount');
+    const matchFunding = safeFinanceOrNull(q.matchFunding, 'Match funding');
+    return {
+        year, quarter,
+        committedFundingAmt,
+        encumberedFunding: safeFinanceOrNull(q.encumberedFunding, 'Encumbered funding'),
+        fundsExpended: safeFinanceOrNull(q.fundsExpended, 'Funds expended'),
+        adminAndOverheadCost: safeFinanceOrNull(q.adminAndOverheadCost, 'Admin & overhead cost'),
+        matchFunding,
+        contractAmount: safeFinanceOrNull(q.contractAmount, 'Contract amount'),
+        leveragedFunds: safeFinanceOrNull(q.leveragedFunds, 'Leveraged funds'),
+        matchFundingSplit: computeMatchSplit(matchFunding, committedFundingAmt),
+    };
 }
 
 export async function POST(request: Request) {
@@ -85,29 +140,91 @@ export async function POST(request: Request) {
         )) as { ID: number }[];
         const sharedId = seqRows[0].ID;
 
-        // ── Create FINANCE_DETAIL ──
+        // ── Create FINANCE_DETAIL (+ FINANCE_DETAIL_HISTORY for extra quarters) ──
+        // The create form stages quarters in body.quarters[]. The NEWEST one
+        // becomes the FINANCE_DETAIL row (the current quarter); any others are
+        // inserted into FINANCE_DETAIL_HISTORY. If no quarters were staged,
+        // fall back to the flat fields stamped with the current calendar quarter.
+        const rawQuarters: Record<string, unknown>[] = Array.isArray(body.quarters) ? body.quarters : [];
+        let parsedQuarters = rawQuarters.map(parseQuarter);
+
+        // One entry per quarter — reject duplicates in the payload.
+        const seen = new Set<string>();
+        for (const q of parsedQuarters) {
+            const key = `${q.year}-Q${q.quarter}`;
+            if (seen.has(key)) {
+                return NextResponse.json(
+                    { error: `Duplicate quarterly record for Q${q.quarter} ${q.year}.` },
+                    { status: 400 },
+                );
+            }
+            seen.add(key);
+        }
+
+        if (parsedQuarters.length === 0) {
+            // Backward-compatible fallback: flat fields = current calendar quarter.
+            const now = new Date();
+            parsedQuarters = [parseQuarter({
+                reportingYear: now.getFullYear(),
+                reportingQuarter: Math.floor(now.getMonth() / 3) + 1,
+                committedFundingAmt: body.committedFundingAmt,
+                encumberedFunding: body.encumberedFunding,
+                fundsExpended: body.fundsExpended,
+                adminAndOverheadCost: body.adminAndOverheadCost,
+                matchFunding: body.matchFunding,
+                contractAmount: body.contractAmount,
+                leveragedFunds: body.leveragedFunds,
+            })];
+        }
+
+        // Newest first — index 0 becomes FINANCE_DETAIL, the rest go to history.
+        parsedQuarters.sort((a, b) => (b.year * 4 + b.quarter) - (a.year * 4 + a.quarter));
+        const [currentQ, ...priorQs] = parsedQuarters;
+
         await query(`
             INSERT INTO ${t}.FINANCE_DETAIL (
                 FINANCE_DETAIL_ID,
+                REPORTING_YEAR, REPORTING_QUARTER,
                 COMMITED_FUNDING_AMT, ENCUMBERED_FUNDING_AMT, FUNDS_EXPENDED_TO_DATE,
-                ADMIN_AND_OVERHEAD_COST, NUM_OF_BIDDERS, RANK_OF_SELECTED_BIDDERS,
+                ADMIN_AND_OVERHEAD_COST, MATCH_FUNDING, NUM_OF_BIDDERS, RANK_OF_SELECTED_BIDDERS,
                 CONTRACT_AMOUNT, BIDDER_DESCRIPTION, LEVERAGED_FUNDS, MATCH_FUNDING_SPLIT,
                 CREATE_DATE, MODIFIED_DATE, IS_ACTIVE
             ) VALUES (
                 ${sharedId},
-                ${safeFinanceOrNull(body.committedFundingAmt,  'Committed funding amount')},
-                ${safeFinanceOrNull(body.encumberedFunding,    'Encumbered funding')},
-                ${safeFinanceOrNull(body.fundsExpended,        'Funds expended')},
-                ${safeFinanceOrNull(body.adminAndOverheadCost, 'Admin & overhead cost')},
+                ${currentQ.year}, ${currentQ.quarter},
+                ${currentQ.committedFundingAmt},
+                ${currentQ.encumberedFunding},
+                ${currentQ.fundsExpended},
+                ${currentQ.adminAndOverheadCost},
+                ${currentQ.matchFunding},
                 ${safeIntOrNull(body.numOfBidders)},
                 ${safeIntOrNull(body.rankOfSelectedBidders)},
-                ${safeFinanceOrNull(body.contractAmount,       'Contract amount')},
+                ${currentQ.contractAmount},
                 '${safeStr(body.bidderDescription)}',
-                ${safeFinanceOrNull(body.leveragedFunds,       'Leveraged funds')},
-                ${safeFinanceOrNull(body.matchFundingSplit,    'Match funding split')},
+                ${currentQ.leveragedFunds},
+                ${currentQ.matchFundingSplit},
                 CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1
             )
         `);
+
+        // Prior quarters → FINANCE_DETAIL_HISTORY (bidder info intentionally
+        // not duplicated — it lives only in FINANCE_DETAIL).
+        for (const q of priorQs) {
+            await query(`
+                INSERT INTO ${t}.FINANCE_DETAIL_HISTORY (
+                    FINANCE_DETAIL_ID, REPORTING_YEAR, REPORTING_QUARTER,
+                    COMMITED_FUNDING_AMT, ENCUMBERED_FUNDING_AMT, FUNDS_EXPENDED_TO_DATE,
+                    ADMIN_AND_OVERHEAD_COST, MATCH_FUNDING, CONTRACT_AMOUNT,
+                    LEVERAGED_FUNDS, MATCH_FUNDING_SPLIT, CREATE_DATE, MODIFIED_DATE
+                ) VALUES (
+                    ${sharedId}, ${q.year}, ${q.quarter},
+                    ${q.committedFundingAmt}, ${q.encumberedFunding}, ${q.fundsExpended},
+                    ${q.adminAndOverheadCost}, ${q.matchFunding}, ${q.contractAmount},
+                    ${q.leveragedFunds}, ${q.matchFundingSplit},
+                    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                )
+            `);
+        }
 
         // ── Create PROJECT_DETAIL ──
         await query(`
@@ -231,7 +348,6 @@ export async function POST(request: Request) {
             )
         `);
 
-        // ── Junction table helper ──
         const insertJunction = async (
             table: string,
             fkCol: string,
