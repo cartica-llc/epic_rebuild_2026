@@ -693,7 +693,7 @@ export function FinanceQuarterTable({ projectId, value, onChange }: {
                         <h3 className="text-sm font-semibold text-slate-900">Quarterly Records</h3>
                         <p className="mt-0.5 text-[10px] text-slate-400">
                             {serverMode
-                                ? 'Newest first · one record per quarter · adding a newer quarter moves the current record to history'
+                                ? 'Newest first · one record per quarter'
                                 : 'Newest first · one record per quarter · saved with the project when you submit the form'}
                         </p>
                     </div>
