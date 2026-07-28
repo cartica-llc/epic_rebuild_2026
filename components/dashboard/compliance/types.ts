@@ -1,5 +1,9 @@
 // components/dashboard/compliance/types.ts
 
+
+export type { ClusterName, FieldScore, FieldMeta, NarrativeFieldKey, Rating } from './comprehensivenessRubric';
+import type { FieldScore } from './comprehensivenessRubric';
+
 export type Cadence = 'once' | 'if-needed' | 'quarterly' | 'annual';
 
 
@@ -46,6 +50,11 @@ export interface ComplianceProject {
     fieldStatus: Record<string, boolean>;
     endDate: string | null;
     lastUpdate: string | null;
+    // 0-5 comprehensiveness score per narrative field (Appendix B rubric).
+    // Computed on-the-fly in the API route from the same narrative text
+    // already read for completeness — always present, may be an empty
+    // array only if scoring failed to run.
+    comprehensiveness: FieldScore[];
 }
 
 export interface ComplianceApiResponse {

@@ -12,6 +12,7 @@ import {
     X,
 } from 'lucide-react';
 
+import { ComprehensivenessSummary } from './ComprehensivenessSummary';
 import { exportComplianceToExcel } from './exportExcel';
 import { PROJECTS_PER_PAGE } from './fieldRequirements';
 import { enrichProject, isOutOfCompliance } from './helpers';
@@ -126,6 +127,15 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
 
         return { compliant, flagged, outOfCompliance, closedComplete, total: enriched.length };
     }, [enriched]);
+
+    // Flat list of every scored narrative field across every project — feeds the
+    // portfolio-wide comprehensiveness summary (cluster averages, score
+    // distribution). Independent of the table filters below on purpose, same
+    // as `totals`, so it always reflects the full portfolio.
+    const allComprehensivenessScores = React.useMemo(
+        () => enriched.flatMap((p) => p.comprehensiveness ?? []),
+        [enriched],
+    );
 
     const baseSet = React.useMemo(() => {
         switch (viewFilter) {
@@ -267,6 +277,9 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                     active={viewFilter === 'flagged'}
                 />
             </div>
+
+            {/* ─── Comprehensiveness (Appendix B rubric) ─── */}
+            <ComprehensivenessSummary allScores={allComprehensivenessScores} />
 
             {/* ─── Filter toolbar ─── */}
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">

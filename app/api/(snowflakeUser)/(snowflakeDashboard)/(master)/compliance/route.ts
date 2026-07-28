@@ -1,10 +1,11 @@
-// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/compliance/awardbands.ts
+// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/compliance/route.ts
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { query } from '@/lib/snowflake';
 
 import type { ComplianceApiResponse, ComplianceProject } from '@/components/dashboard/compliance';
+import { scoreProjectNarratives } from '@/components/dashboard/compliance/comprehensivenessRubric';
 
 const DB = process.env.DEV_SNOWFLAKE_DATABASE;
 const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
@@ -361,6 +362,35 @@ export async function GET() {
             fs.OTHER_IMPACTS = hasText(pick(r, 'OTHER_IMPACTS'));
             fs.INFORMATION_DISSEMINATION = hasText(pick(r, 'INFORMATION_DISSEMINATION'));
 
+            // ── Comprehensiveness (Appendix B rubric, 0-5 per narrative field) ──
+            // Computed on-the-fly from the same raw narrative text already
+            // selected above for the completeness (hasText) checks — no
+            // extra query, no new columns. See comprehensivenessRubric.ts
+            // for the scoring rules and their calibration caveats.
+            const comprehensiveness = scoreProjectNarratives({
+                DETAILED_PROJECT_DESCRIPTION: str(pick(r, 'DETAILED_PROJECT_DESCRIPTION')),
+                DELIVERABLES: str(pick(r, 'DELIVERABLES')),
+                PROJECT_GOALS: str(pick(r, 'PROJECT_GOALS')) || str(pick(r, 'SUMMARY_PROJECT_DESCRIPTION')),
+                PROJECT_UPDATE: str(pick(r, 'PROJECT_UPDATE')),
+                STATE_POLICY_SUPPORT_TEXT: str(pick(r, 'STATE_POLICY_SUPPORT_TEXT')),
+                TECHNICAL_BARRIERS: str(pick(r, 'TECHNICAL_BARRIERS')),
+                MARKET_BARRIERS: str(pick(r, 'MARKET_BARRIERS')),
+                POLICY_REGULATORY_BARRIERS: str(pick(r, 'POLICY_AND_REGULATORY_BARRIERS')),
+                GETTING_TO_SCALE: str(pick(r, 'GETTING_TO_SCALE')),
+                KEY_INNOVATIONS: str(pick(r, 'KEY_INNOVATIONS')),
+                KEY_LEARNINGS: str(pick(r, 'KEY_LEARNINGS')),
+                SCALABILITY: str(pick(r, 'SCALABILITY')),
+                PROJECTED_PROJECT_BENEFITS: str(pick(r, 'PROJECTED_PROJECT_BENEFITS')),
+                ELEC_RELIABILITY_IMPACTS: str(pick(r, 'ELECTRICITY_SYSTEM_RELIABILITY_IMPACTS')),
+                ELEC_SAFETY_IMPACTS: str(pick(r, 'ELECTRICITY_SYSTEM_SAFETY_IMPACTS')),
+                ENVIRONMENTAL_IMPACT_NON_GHG: str(pick(r, 'ENVIRONMENTAL_IMPACTS_NON_GHG')),
+                RATEPAYER_BENEFITS: str(pick(r, 'RATEPAYERS_BENEFITS')),
+                COMMUNITY_BENEFITS_DESC: str(pick(r, 'COMMUNITY_BENEFITS_DESC')),
+                ENERGY_IMPACTS: str(pick(r, 'ENERGY_IMPACTS')),
+                INFRASTRUCTURE_COST_REDUCTIONS: str(pick(r, 'INFRASTRUCTURE_COST_REDUCTIONS_AND_ECONOMIC_BENEFITS')),
+                OTHER_IMPACTS: str(pick(r, 'OTHER_IMPACTS')),
+            });
+
             return {
                 projectId,
                 projectNumber: str(pick(r, 'PROJECT_NUMBER')).toUpperCase(),
@@ -369,6 +399,7 @@ export async function GET() {
                 epicPeriod,
                 programAdmin,
                 fieldStatus: fs,
+                comprehensiveness,
                 endDate: toIso(pick(r, 'PROJECT_END_DATE')),
                 lastUpdate: toIso(pick(r, 'MODIFIED_DATE')),
             };
