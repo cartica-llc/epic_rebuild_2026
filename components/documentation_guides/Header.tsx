@@ -9,7 +9,7 @@ export default function Header() {
         <Link href="/" className="flex shrink-0 select-none items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo/CAgov-logo.svg"
+            src="/logo/cpuc-logo.png"
             alt="California Government Logo"
             width={40}
             height={40}

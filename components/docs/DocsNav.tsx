@@ -48,7 +48,7 @@ export function DocsNav({ active, onChange }: DocsNavProps) {
             {/* Logo + title */}
             <div className="flex items-center gap-3">
                 <Image
-                    src="/logo/CAgov-logo.svg"
+                    src="/logo/cpuc-logo.png"
                     alt="California Government Logo"
                     width={40}
                     height={40}

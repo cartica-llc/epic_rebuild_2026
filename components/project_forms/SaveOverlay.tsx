@@ -20,7 +20,7 @@ export function SaveOverlay({ state, mode, onDismissError }: {
 
             {/* Logo */}
             <div className="mb-8">
-                <Image src="/logo/CAgov-logo.svg" alt="California State Logo" width={160} height={48} priority unoptimized />
+                <Image src="/logo/cpuc-logo.png" alt="California State Logo" width={160} height={48} priority unoptimized />
             </div>
 
             {/* ── Saving phase ── */}

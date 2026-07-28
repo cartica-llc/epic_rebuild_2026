@@ -5,7 +5,7 @@ export function BrandLogo() {
     return (
         <Link href="/" className=" select-none flex items-center gap-3 shrink-0">
             <Image
-                src="/logo/CAgov-logo.svg"
+                src="/logo/cpuc-logo.png"
                 alt="California Government Logo"
                 width={40}
                 height={40}

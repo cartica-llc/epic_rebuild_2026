@@ -15,7 +15,7 @@ export default function FAQPage() {
             <header className="px-8 py-6">
                 <div className="mx-auto flex max-w-7xl items-center gap-3">
                     <Image
-                        src="/logo/CAgov-logo.svg"
+                        src="/logo/cpuc-logo.png"
                         alt="California Government Logo"
                         width={32}
                         height={32}

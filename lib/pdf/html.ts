@@ -27,7 +27,7 @@ function esc(s: string): string {
 /** Brand logo as a data URI (reads /public, with an inline fallback). */
 function logoDataUri(): string {
   try {
-    const p = path.join(process.cwd(), "public", "logo", "CAgov-logo.svg");
+    const p = path.join(process.cwd(), "public", "logo", "cpuc-logo.png");
     return `data:image/svg+xml;base64,${fs.readFileSync(p).toString("base64")}`;
   } catch {
     const fallback =

@@ -12,7 +12,7 @@ export default function UnauthorizedPage() {
                 {/* Logo */}
                 <div className=" flex justify-center">
                     <Image
-                        src="/logo/CAgov-logo.svg"
+                        src="/logo/cpuc-logo.png"
                         alt="California Government Logo"
                         width={48}
                         height={48}

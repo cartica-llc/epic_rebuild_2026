@@ -16,7 +16,7 @@ export function FooterBrand() {
         >
             <Link href="/">
                 <Image
-                    src="/logo/CAgov-logo.svg"
+                    src="/logo/cpuc-logo.png"
                     alt="California Energy Commission Logo"
                     width={64}
                     height={64}

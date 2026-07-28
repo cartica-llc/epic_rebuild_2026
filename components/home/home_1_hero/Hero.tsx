@@ -26,7 +26,7 @@ export function Hero() {
                 <div className="flex flex-1 items-center justify-center px-4 sm:px-6 lg:px-8">
                     <motion.div style={{ opacity: logoOpacity, y: logoY }}>
                         <Image
-                            src="/logo/CAgov-logo.svg"
+                            src="/logo/cpuc-logo.png"
                             alt="California Government Logo"
                             width={220}
                             height={220}

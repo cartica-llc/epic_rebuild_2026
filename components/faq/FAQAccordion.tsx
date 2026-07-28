@@ -42,7 +42,7 @@ export default function FAQPage() {
                         >
                             <div className="mb-8 inline-flex items-center gap-3">
                                 {/*<Image*/}
-                                {/*    src="/logo/CAgov-logo.svg"*/}
+                                {/*    src="/logo/cpuc-logo.png"*/}
                                 {/*    alt="California Government Logo"*/}
                                 {/*    width={48}*/}
                                 {/*    height={48}*/}

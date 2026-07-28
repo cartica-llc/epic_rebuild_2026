@@ -312,7 +312,7 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                             <div className="pr-10">
                                 <div className="mb-5 flex items-center justify-center sm:justify-start">
                                     <Image
-                                        src="/logo/CAgov-logo.svg"
+                                        src="/logo/cpuc-logo.png"
                                         alt="California Government Logo"
                                         width={40}
                                         height={40}

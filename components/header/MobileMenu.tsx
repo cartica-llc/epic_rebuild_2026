@@ -105,7 +105,7 @@ export function MobileMenu({ isOpen, onClose, activePath, isSignedIn, onSignIn }
                                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-600 via-emerald-600 to-rose-600" />
                                 <Link href="/" onClick={onClose} className="flex flex-col items-center gap-2 text-center">
                                     <Image
-                                        src="/logo/CAgov-logo.svg"
+                                        src="/logo/cpuc-logo.png"
                                         alt="California Government Logo"
                                         width={48}
                                         height={48}
