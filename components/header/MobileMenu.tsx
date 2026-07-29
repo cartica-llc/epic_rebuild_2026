@@ -113,9 +113,9 @@ export function MobileMenu({ isOpen, onClose, activePath, isSignedIn, onSignIn }
                                     />
                                     <div className="">
                                         <h2 className="text-xs font-semibold leading-tight text-slate-900">
-                                            California Energy Commission
+                                            California Public Utilities Commission
                                         </h2>
-                                        <p className="mt-0.5 text-[0.625rem] text-slate-600">Infrastructure Portfolio</p>
+                                        <p className="mt-0.5 text-[0.625rem] text-slate-600">EPIC Database</p>
                                     </div>
                                 </Link>
                             </div>
