@@ -12,7 +12,7 @@ export function BrandLogo() {
                 className="h-10 w-auto object-contain"
                 priority
             />
-            <div className="hidden ">
+            <div className=" ">
                 <h1 className="text-lg font-semibold text-slate-900 whitespace-nowrap">
                     California Public Utilities Commission
                 </h1>
