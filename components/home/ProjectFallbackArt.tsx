@@ -10,81 +10,76 @@ interface ProjectFallbackArtProps {
 export function ProjectFallbackArt({ organizationShort }: ProjectFallbackArtProps) {
     return (
         <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#2f85b0] via-[#3a7a6f] to-[#326130]" />
+            {/* Cool, Desaturated Blue-Grey Background Gradient (Matching Map Palette) */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-slate-100 to-blue-200" />
 
+            {/* Ambient Sun/Light Glow Effect */}
             <div
-                className="absolute inset-0 opacity-60"
+                className="absolute inset-0 opacity-80"
                 style={{
                     background:
-                        'radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.18) 0%, transparent 55%)',
+                        'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.9) 0%, transparent 65%)',
                 }}
             />
 
+            {/* Organization Short Text — Fades in on hover (Updated Color) */}
             <motion.div
                 initial={false}
                 className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center opacity-0 transition-opacity duration-500 group-hover:opacity-100"
             >
-                <span className="text-white/20 text-2xl sm:text-3xl font-bold tracking-tight drop-shadow-lg">
+                <span className="text-slate-950/60 text-2xl sm:text-3xl font-bold tracking-tight drop-shadow-sm">
                     {organizationShort || 'EPIC'}
                 </span>
             </motion.div>
 
-            <div className="absolute inset-0 z-10">
-                <div className="absolute inset-0 flex items-center justify-center transition-opacity duration-500 group-hover:opacity-0">
-                    <svg
-                        viewBox="0 0 3000 837"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-[85%] max-w-[280px]"
-                        aria-hidden="true"
-                    >
-                        <g fill="white" fillOpacity="0.25">
-                            {/* C */}
-                            <path d="M422 836c87 0 155-18 214-50l13-32c-21 3-40 6-55 6h-7l-7-2c-15-4-33-14-54-30-8-6-20-16-30-30-22 5-46 8-72 8-171 0-291-119-291-290 0-161 126-287 287-287 90 0 170 36 244 110l52-133C636 38 533 0 425 0c-114 0-220 41-298 114C46 191 1 298 1 417c0 247 173 419 422 419" />
-                            {/* A */}
-                            <path d="M888 338c4-1 11-1 14-1 28 0 59 11 88 22 4 2 7 3 11 4 2 1 3 1 5 2l61-157 58 150c2-0 5-0 7-1c5-0 11-0 17-0 2 0 3 0 5 0 1 0 1 0 2 0c39 1 76 5 111 13L1137 30h-143l-121 312c5-2 10-3 15-4" />
-                            {/* g */}
-                            <path d="M1901 291c-48 0-93 19-126 54-34 36-53 87-53 143 0 112 79 197 184 197 47 0 82-15 116-48l3-3v4c0 34 0 63-25 86-18 17-48 26-83 26-42 0-71-11-90-33h-104c27 79 93 119 198 119 59 0 105-14 139-43 41-35 58-82 58-162v-329h-94v44l-3-3c-38-36-76-52-121-52ZM2030 489c0 65-43 110-106 110s-108-47-108-111 45-111 106-111 107 46 108 112" />
-                            {/* o */}
-                            <path d="M2539 350c-38-38-89-58-144-58-109 0-198 91-198 202s88 201 199 201 203-89 203-202c0-55-21-105-60-143m-141 257c-62 0-106-47-106-114s44-113 106-113 108 47 108 114-44 113-108 113" />
-                            {/* v */}
-                            <path d="M2905 302 l-98 230 l-99 -230 h-95 l164 383 h60 l163 -383" />
-                        </g>
-                    </svg>
-                </div>
-
-                {/* Star — fades out on hover */}
-                <div className="absolute inset-0 flex items-center justify-center transition-all duration-500 group-hover:opacity-0 group-hover:scale-90">
-                    <svg
-                        viewBox="0 0 3000 837"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-[85%] max-w-[280px]"
-                        aria-hidden="true"
-                    >
-                        <path
-                            fill="#fff"
-                            fillOpacity="0.2"
-                            d="M1550 250l-28 -80l-28 80h-84l68 52l-24 80l68 -52l68 52l-24 -80l68 -52h-84Z"
-                        />
-                    </svg>
-                </div>
-
-                {/* Bear — stays visible, travels to bottom-right on hover */}
-                <div
-                    className="absolute inset-0 flex items-center justify-center transition-transform duration-700 ease-[cubic-bezier(0.21,0.47,0.32,0.98)] group-hover:translate-x-[28%] group-hover:translate-y-[32%] group-hover:scale-75"
+            {/* Floating Energy Icon Centerpiece */}
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
+                <motion.div
+                    animate={{
+                        y: [0, -6, 0],
+                    }}
+                    transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                    }}
+                    className="relative flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:opacity-20"
                 >
-                    <svg
-                        viewBox="0 0 3000 837"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-[85%] max-w-[280px] drop-shadow-md"
+                    {/* Rotating Outer Energy/Grid Ring (Updated Color) */}
+                    <motion.svg
+                        animate={{ rotate: 360 }}
+                        transition={{
+                            duration: 30,
+                            repeat: Infinity,
+                            ease: 'linear',
+                        }}
+                        viewBox="0 0 100 100"
+                        className="w-28 h-28 text-slate-400/30 absolute"
                         aria-hidden="true"
                     >
+                        <circle
+                            cx="50"
+                            cy="50"
+                            r="42"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeDasharray="6 6"
+                        />
+                    </motion.svg>
+
+                    {/* Central Minimal Energy Icon (Single Lightning Bolt - Updated Color) */}
+                    <svg
+                        viewBox="0 0 100 100"
+                        className="w-20 h-20 text-slate-600 fill-current drop-shadow-sm relative z-10"
+                        aria-hidden="true"
+                    >
+                        {/* Minimalistic Lightning Bolt */}
                         <path
-                            fill="#fff"
-                            fillOpacity="0.2"
-                            d="M1454 635c-1-23-20-71-37-86 7-21-3-32-9-39-3-4-15-7-20-9-18-27-56-52-110-68-35-10-76-17-122-18-2 0-4 0-7 0-5 0-10 0-16 1-43 2-108 12-123 12c-6 0-22-7-41-15-22-9-48-18-67-18-2 0-4 0-6 0-18 2-60 29-76 38-11 6-45 21-55 27-2 1-7 1-9 1-25 8-42 37-50 41-1-3-10-16-23-16-2 0-3 0-5 1-16 7-15 18-15 24-3-1-8-7-16-7-3 0-7 1-11 3-18 9-8 25-12 30-6 8-27 29-35 43-3 6 0 21-2 27-7 17-44 47-48 53-1 3 9 13 21 23 11 9 24 17 32 19 23 0 71-9 82-11h2c3 0 9 2 16 4 6 2 14 3 23 3 2 0 5 0 7 0 11-2 19-7 25-13 10-10 16-23 27-28 9-4 20-7 30-7 5 0 9 1 13 2-18 33-14 77-21 83-7 7-13 14-17 21-16 24-18 46-26 51-2 1-5 2-8 2-9 0-20-4-29-4-2 0-4 0-5 1-10 4-33 25-24 30 3 0 40 0 79 0h34c1 0 22-19 23-19h55c5-1 5-9 29-21 27-11 14-63 49-103 0 0 11-10 13-10 12 0 32 22 105 22s90-25 100-25c5 0 15 8 15 10-33 55 49 117 43 121 0 0-1 0-1 0-3 0-11-4-23-4-5 0-10 1-16 3-13 4-24 21-14 26 3 0 35 0 68 0 18 0 36 0 49 0 4-1 4-8 4-16 0-5 0-10 1-13 3-4 6-20 15-31 9-9 15-16 22-16 3 0 6 1 9 4 15 8 52 13 73 21 9 3 15 7 15 11 0 3-2 3-5 3-1 0-3 0-4 0-5-1-12-2-18-2-3 0-7 1-10 2-10 4-19 14-22 21-1 4-1 7 3 8h87c10 0 6-20 29-64 3-12-28-30-33-53-3-16-7-76-7-76Z"
+                            d="M50 15 L30 50 H45 L35 85 L70 45 H55 Z"
                         />
                     </svg>
-                </div>
+                </motion.div>
             </div>
         </div>
     );
