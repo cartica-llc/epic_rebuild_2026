@@ -461,7 +461,7 @@ export function scoreRatepayerBenefits(text: string | null | undefined): ScoreRe
     const t = String(text);
     const relevant = RATEPAYER_RE.test(t);
     const dollar = DOLLAR_RE.test(t);
-    let score = !relevant ? 1 : dollar ? (t.length >= 220 ? 5 : 4) : 2;
+    const score = !relevant ? 1 : dollar ? (t.length >= 220 ? 5 : 4) : 2;
     return { ...base, score: clamp(score, 0, 5), coverage: true, notes: note([relevant ? 'References ratepayer benefits.' : 'Does not clearly frame benefits in ratepayer terms.', dollar ? 'Includes dollar-denominated benefit estimates.' : 'Missing dollar-denominated benefit estimates (required), ideally projected at scale.']) };
 }
 
