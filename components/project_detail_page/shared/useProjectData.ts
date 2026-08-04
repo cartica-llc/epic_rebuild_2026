@@ -97,6 +97,9 @@ export interface PublicFinanceQuarter {
     contractAmount: number | null;
     leveragedFunds: number | null;
     matchFundingSplit: number | null;   // ratio 0–1
+    numOfBidders: number | null;
+    rankOfSelectedBidders: number | null;
+    bidderDescription: string | null;
 }
 
 export interface FinanceHistory {

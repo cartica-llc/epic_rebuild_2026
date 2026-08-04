@@ -16,12 +16,21 @@ export interface PublicFinanceQuarter {
     contractAmount: number | null;
     leveragedFunds: number | null;
     matchFundingSplit: number | null;   // ratio 0–1
+    numOfBidders: number | null;
+    rankOfSelectedBidders: number | null;
+    bidderDescription: string | null;
 }
 
 const num = (v: unknown): number | null => {
     if (v == null) return null;
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
+};
+
+const str = (v: unknown): string | null => {
+    if (v == null) return null;
+    const s = String(v).trim();
+    return s.length > 0 ? s : null;
 };
 
 function mapRow(r: Record<string, unknown>, source: 'current' | 'history'): PublicFinanceQuarter | null {
@@ -40,6 +49,9 @@ function mapRow(r: Record<string, unknown>, source: 'current' | 'history'): Publ
         contractAmount: num(r.CONTRACT_AMOUNT),
         leveragedFunds: num(r.LEVERAGED_FUNDS),
         matchFundingSplit: num(r.MATCH_FUNDING_SPLIT),
+        numOfBidders: num(r.NUM_OF_BIDDERS),
+        rankOfSelectedBidders: num(r.RANK_OF_SELECTED_BIDDERS),
+        bidderDescription: str(r.BIDDER_DESCRIPTION),
     };
 }
 
@@ -80,13 +92,19 @@ export async function GET(
                     SELECT REPORTING_YEAR, REPORTING_QUARTER, COMMITED_FUNDING_AMT,
                            ENCUMBERED_FUNDING_AMT, FUNDS_EXPENDED_TO_DATE,
                            ADMIN_AND_OVERHEAD_COST, MATCH_FUNDING, CONTRACT_AMOUNT,
-                           LEVERAGED_FUNDS, MATCH_FUNDING_SPLIT
+                           LEVERAGED_FUNDS, MATCH_FUNDING_SPLIT, NUM_OF_BIDDERS,
+                           RANK_OF_SELECTED_BIDDERS, BIDDER_DESCRIPTION
                     FROM ${T}.FINANCE_DETAIL WHERE FINANCE_DETAIL_ID = ${fdId}
                 `) as Promise<Record<string, unknown>[]>,
                 [],
             ),
             safeQuery(
                 'financeHistory:history',
+                // NOTE: bidder fields intentionally NOT selected here — they
+                // live only on FINANCE_DETAIL (current), and may not exist
+                // as columns on FINANCE_DETAIL_HISTORY. Bidder info doesn't
+                // change quarter to quarter anyway, so the current row is
+                // the only one that needs it (see mapRow / BiddingSection).
                 () => query(`
                     SELECT REPORTING_YEAR, REPORTING_QUARTER, COMMITED_FUNDING_AMT,
                            ENCUMBERED_FUNDING_AMT, FUNDS_EXPENDED_TO_DATE,

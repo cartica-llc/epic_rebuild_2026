@@ -360,7 +360,9 @@ function FundingJourneyChart({ quarters }: { quarters: PublicFinanceQuarter[] })
             </AnimatePresence>
 
             {/* No bottom legend — the direct end-labels on each line make it
-                redundant. */}
+                redundant. Bidder/contract fields intentionally live in their
+                own section (see BiddingSection below), not in this chart or
+                its tooltip. */}
         </div>
     );
 }
@@ -368,10 +370,6 @@ function FundingJourneyChart({ quarters }: { quarters: PublicFinanceQuarter[] })
 // ─── Utilization gauge (inside the stat-chip row) ─────────────────────
 
 function UtilizationGauge({ ratio }: { ratio: number | null }) {
-    // Robust at ANY value: the semicircle is drawn ONCE and progress is
-    // revealed via a pathLength-normalized dash offset — no arc-flag math to
-    // break above 50% (the old computed-endpoint version flipped largeArc and
-    // drew the long way around the circle).
     const valid = ratio != null && Number.isFinite(ratio) && ratio >= 0;
     const frac = valid ? Math.min(ratio as number, 1) : 0;   // arc caps at 100%
     const over = valid && (ratio as number) > 1;             // text shows the real value
@@ -443,6 +441,45 @@ function StatChip({ label, value, sub, delay = 0 }: {
     );
 }
 
+// ─── Bidding & contract details ────────────────────────────────────────
+//
+// Bidder info is set once for the contract and doesn't change quarter to
+// quarter, so — unlike everything else in this file — it's NOT rendered
+// per-quarter. Just a minimal text block: whichever record has the data
+// (most recent first), no table, no card, no "Current" badge.
+
+function BiddingSection({ quarters }: { quarters: PublicFinanceQuarter[] }) {
+    const record = [...quarters].reverse().find(
+        (q) => q.numOfBidders != null || q.rankOfSelectedBidders != null || q.bidderDescription,
+    );
+    if (!record) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22, duration: 0.4, ease: 'easeOut' }}
+        >
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                Bidding &amp; Contract
+            </p>
+            <p className="mt-2 text-sm text-slate-600">
+                {record.numOfBidders != null && (
+                    <>Number of bidders <span className="font-semibold text-slate-800">{record.numOfBidders}</span></>
+                )}
+                {record.numOfBidders != null && record.rankOfSelectedBidders != null && (
+                    <span className="mx-2 text-slate-300">·</span>
+                )}
+                {record.rankOfSelectedBidders != null && (
+                    <>Selected bidder rank <span className="font-semibold text-slate-800">{record.rankOfSelectedBidders}</span></>
+                )}
+            </p>
+            {record.bidderDescription && (
+                <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">{record.bidderDescription}</p>
+            )}
+        </motion.div>
+    );
+}
+
 // ─── Main section ─────────────────────────────────────────────────────
 
 export function FinanceHistorySection({ projectId }: { projectId: number | string }) {
@@ -501,6 +538,21 @@ export function FinanceHistorySection({ projectId }: { projectId: number | strin
                 <StatChip delay={0.26} label="Match split" value={fmtPct2(latest.matchFundingSplit)}
                           sub={<span className="text-[10px] text-slate-400">as of {qLabel(latest)}</span>} />
             </div>
+
+            {/* Contract amount / leveraged funds — plain text, not chips */}
+            {(latest.contractAmount != null || latest.leveragedFunds != null) && (
+                <p className="-mt-4 text-xs text-slate-500">
+                    {latest.contractAmount != null && (
+                        <>Contract amount <span className="font-mono font-semibold text-slate-700">{fmtC(latest.contractAmount)}</span></>
+                    )}
+                    {latest.contractAmount != null && latest.leveragedFunds != null && (
+                        <span className="mx-2 text-slate-300">·</span>
+                    )}
+                    {latest.leveragedFunds != null && (
+                        <>Leveraged funds <span className="font-mono font-semibold text-slate-700">{fmtC(latest.leveragedFunds)}</span></>
+                    )}
+                </p>
+            )}
 
             {/* Quarter list — newest first, before the graph */}
             <motion.div
@@ -578,9 +630,13 @@ export function FinanceHistorySection({ projectId }: { projectId: number | strin
                 </motion.div>
             ) : (
                 <p className="text-xs italic text-slate-400">
-                    The funding journey chart will appear once a second quarterly record is added.
+                    {/*The funding journey chart will appear once a second quarterly record is added.*/}
                 </p>
             )}
+
+            {/* Bidding & contract details — now placed at the very bottom,
+                below the graph. */}
+            <BiddingSection quarters={quarters} />
         </section>
     );
 }
