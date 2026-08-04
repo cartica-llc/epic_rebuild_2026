@@ -24,10 +24,6 @@
 //      "pge-3-15" example) implied the original scorer picked up
 //      problem/result framing from paraphrased language that a plain
 //      keyword regex won't always catch. Expect this engine to be
-//      *directionally* correct (low/med/high buckets should line up) but
-//      not bit-for-bit identical to the published per-project scores.
-//
-
 
 export type ClusterName =
     | 'Foundation / Status'
