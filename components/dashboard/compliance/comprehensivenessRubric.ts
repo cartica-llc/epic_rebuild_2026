@@ -27,13 +27,7 @@
 //      *directionally* correct (low/med/high buckets should line up) but
 //      not bit-for-bit identical to the published per-project scores.
 //
-// If exact reproduction becomes important, the fields most likely to
-// diverge are the ones relying on "component present" keyword detection
-// (Detailed Project Description, State Policy Support, the three Barrier
-// fields, and the four Scaling/Innovation fields) — those would benefit
-// most from an LLM-assisted pass per the alternative discussed with the
-// team. Everything here computes on-the-fly from the same raw narrative
-// text the completeness checks already read; no new DB columns needed.
+
 
 export type ClusterName =
     | 'Foundation / Status'
