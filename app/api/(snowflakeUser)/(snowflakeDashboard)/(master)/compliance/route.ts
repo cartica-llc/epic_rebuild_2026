@@ -1,4 +1,4 @@
-// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/compliance/route.ts
+// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/compliance/awardbands.ts
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
@@ -391,6 +391,22 @@ export async function GET() {
                 OTHER_IMPACTS: str(pick(r, 'OTHER_IMPACTS')),
             });
 
+            // ── Data consistency inputs ──
+            // Raw values (not just presence/absence) for the three cross-field
+            // "logical discrepancy" checks computed in helpers.ts —
+            // computeConsistencyFlags(). These columns are already selected
+            // above for the hasDate/hasNumber completeness checks; this just
+            // also carries their actual values through.
+            const committedFunding = hasNumber(pick(r, 'COMMITED_FUNDING_AMT'))
+                ? num(pick(r, 'COMMITED_FUNDING_AMT'))
+                : null;
+            const fundsExpended = hasNumber(pick(r, 'FUNDS_EXPENDED_TO_DATE'))
+                ? num(pick(r, 'FUNDS_EXPENDED_TO_DATE'))
+                : null;
+            const encumberedFunding = hasNumber(pick(r, 'ENCUMBERED_FUNDING_AMT'))
+                ? num(pick(r, 'ENCUMBERED_FUNDING_AMT'))
+                : null;
+
             return {
                 projectId,
                 projectNumber: str(pick(r, 'PROJECT_NUMBER')).toUpperCase(),
@@ -402,6 +418,11 @@ export async function GET() {
                 comprehensiveness,
                 endDate: toIso(pick(r, 'PROJECT_END_DATE')),
                 lastUpdate: toIso(pick(r, 'MODIFIED_DATE')),
+                projectStartDate: toIso(pick(r, 'PROJECT_START_DATE')),
+                projectAwardDate: toIso(pick(r, 'PROJECT_AWARD_DATE')),
+                committedFunding,
+                encumberedFunding,
+                fundsExpended,
             };
         });
 

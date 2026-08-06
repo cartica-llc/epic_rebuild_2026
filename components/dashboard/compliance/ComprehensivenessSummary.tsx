@@ -1,159 +1,281 @@
-// components/dashboard/compliance/ComprehensivenessSummary.tsx
 'use client';
 
 import React from 'react';
+import { ChevronDown, Download, SquareArrowOutUpRight } from 'lucide-react';
 
-import {
-    scoreDistribution,
-    summarizeByCluster,
-    summarizeByField,
-    type ClusterName,
-    type FieldScore,
-} from './comprehensivenessRubric';
+import { FIELD_META, type NarrativeFieldKey } from './comprehensivenessRubric';
+import { exportNarrativeFieldIssuesToExcel, type NarrativeFieldIssueRow } from './exportExcel';
+import type { EnrichedProject } from './types';
 import { Section } from './uiPrimitives';
 
-// Mirrors the report's cluster ordering (Foundation -> Policy -> Innovation -> Impacts),
-// which is also roughly strongest-to-weakest in the 2026 results.
-const CLUSTER_ORDER: ClusterName[] = ['Foundation / Status', 'Policy / Barriers', 'Innovation / Scaling', 'Impacts / Metrics'];
+function projectEditHref(projectId: number): string {
+    return `/projects/${projectId}/edit`;
+}
 
-const SCORE_COLORS: Record<number, string> = {
-    0: 'bg-rose-400',
-    1: 'bg-rose-300',
-    2: 'bg-amber-300',
-    3: 'bg-amber-400',
-    4: 'bg-teal-400',
-    5: 'bg-teal-500',
+type Status = 'Needs attention' | 'Developing' | 'Strong';
+
+const STATUS_STYLE: Record<Status, string> = {
+    'Needs attention': 'bg-white text-rose-600 ring-1 ring-inset ring-rose-200',
+    Developing: 'bg-white text-amber-600 ring-1 ring-inset ring-amber-200',
+    Strong: 'bg-white text-emerald-600 ring-1 ring-inset ring-emerald-200',
 };
 
-function scoreColorClass(score: number): string {
-    if (score >= 4) return 'bg-teal-500';
-    if (score >= 3) return 'bg-amber-400';
-    if (score >= 2) return 'bg-amber-300';
-    return 'bg-rose-400';
+function statusFor(completenessPct: number, avgScore: number | null): Status {
+    if (completenessPct < 30 || (avgScore !== null && avgScore < 2)) return 'Needs attention';
+    if (completenessPct < 70 || avgScore === null || avgScore < 3.5) return 'Developing';
+    return 'Strong';
 }
 
-// Compact cluster row: name, average, and a one-line count. The low/high
-// split moved into the tooltip instead of always-on text — it's useful but
-// secondary, and having it on-screen for all four clusters was adding up.
-function ClusterBar({ cluster, avgScore, scoredCount, lowPct, highPct }: { cluster: ClusterName; avgScore: number; scoredCount: number; lowPct: number; highPct: number }) {
-    const pct = (avgScore / 5) * 100;
-    return (
-        <div title={`${lowPct}% low (0-2) · ${highPct}% high (4-5)`}>
-            <div className="mb-1 flex items-baseline justify-between">
-                <span className="text-xs font-medium text-slate-700">{cluster}</span>
-                <span className="font-mono text-xs tabular-nums text-slate-500">
-                    {avgScore.toFixed(2)} <span className="text-slate-400">/ 5</span>
-                    <span className="ml-2 text-[10px] text-slate-400">{scoredCount.toLocaleString()} scored</span>
-                </span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                <div className={`h-full rounded-full ${scoreColorClass(avgScore)}`} style={{ width: `${pct}%` }} />
-            </div>
-        </div>
-    );
+interface FieldRow {
+    key: NarrativeFieldKey;
+    label: string;
+    completenessPct: number;
+    avgScore: number | null;
+    scoredCount: number;
+    status: Status;
 }
 
-// Fixed-pixel bar track (TRACK_HEIGHT), not a flex-1 auto-height wrapper —
-// percentage heights only resolve against a definite height, and the
-// previous flex-1-inside-items-end layout had no definite height anywhere
-// in the chain, so every bar silently rendered at 0px.
-const TRACK_HEIGHT = 72;
+export function ComprehensivenessSummary({ projects, today }: { projects: EnrichedProject[]; today?: Date }) {
+    const [showAll, setShowAll] = React.useState(false);
+    const [expandedKey, setExpandedKey] = React.useState<NarrativeFieldKey | null>(null);
+    const [isExporting, setIsExporting] = React.useState(false);
 
-function DistributionHistogram({ buckets }: { buckets: { score: number; count: number; pct: number }[] }) {
-    const max = Math.max(1, ...buckets.map((b) => b.pct));
-    return (
-        <div className="flex items-end gap-2" style={{ height: TRACK_HEIGHT + 34 }}>
-            {buckets.map((b) => (
-                <div key={b.score} className="flex flex-1 flex-col items-center gap-1">
-                    <span className="text-[10px] font-medium text-slate-500">{b.pct}%</span>
-                    <div className="flex w-full items-end" style={{ height: TRACK_HEIGHT }}>
-                        <div
-                            className={`w-full rounded-t ${SCORE_COLORS[b.score]}`}
-                            style={{ height: `${Math.max(4, (b.pct / max) * 100)}%` }}
-                            title={`Score ${b.score}: ${b.count.toLocaleString()} entries (${b.pct}%)`}
-                        />
-                    </div>
-                    <span className="text-[10px] text-slate-400">{b.score}</span>
-                </div>
-            ))}
-        </div>
-    );
-}
+    const rows = React.useMemo<FieldRow[]>(() => {
+        const total = projects.length;
+        if (total === 0) return [];
 
-export function ComprehensivenessSummary({ allScores }: { allScores: FieldScore[] }) {
-    const clusters = React.useMemo(() => {
-        const summary = summarizeByCluster(allScores);
-        return CLUSTER_ORDER.map((c) => summary.find((s) => s.cluster === c)!);
-    }, [allScores]);
+        return FIELD_META.map((meta) => {
+            const filledCount = projects.filter((p) => p.fieldStatus[meta.key]).length;
+            const completenessPct = Math.round((filledCount / total) * 1000) / 10;
 
-    const distribution = React.useMemo(() => scoreDistribution(allScores), [allScores]);
+            const scored = projects
+                .flatMap((p) => p.comprehensiveness ?? [])
+                .filter((s) => s.key === meta.key && s.coverage);
+            const avgScore = scored.length
+                ? Math.round((scored.reduce((sum, s) => sum + s.score, 0) / scored.length) * 100) / 100
+                : null;
 
-    const fieldRanking = React.useMemo(() => {
-        const fields = summarizeByField(allScores).filter((f) => f.scoredCount > 0);
-        return [...fields].sort((a, b) => a.avgScore - b.avgScore).slice(0, 3);
-    }, [allScores]);
+            return {
+                key: meta.key,
+                label: meta.label,
+                completenessPct,
+                avgScore,
+                scoredCount: scored.length,
+                status: statusFor(completenessPct, avgScore),
+            };
+        }).sort((a, b) => a.completenessPct - b.completenessPct);
+    }, [projects]);
 
-    const scoredTotal = allScores.filter((s) => s.coverage).length;
-    const overallAvg = scoredTotal
-        ? Math.round((allScores.filter((s) => s.coverage).reduce((sum, s) => sum + s.score, 0) / scoredTotal) * 100) / 100
-        : 0;
+    const drilldown = React.useMemo(() => {
+        if (!expandedKey) return null;
 
-    // Collapsed by default: the distribution histogram is genuinely secondary
-    // to the four cluster averages, which fit in a glance. Clicking through
-    // to per-field detail is a deliberate choice, not the default view.
-    const [showDistribution, setShowDistribution] = React.useState(false);
+        const missing = projects.filter((p) => !p.fieldStatus[expandedKey]);
 
-    if (allScores.length === 0) {
-        return null;
-    }
+        const weak = projects
+            .map((p) => {
+                const score = (p.comprehensiveness ?? []).find((s) => s.key === expandedKey && s.coverage);
+                return score && score.score <= 2 ? { project: p, score: score.score } : null;
+            })
+            .filter((x): x is { project: EnrichedProject; score: number } => !!x);
+
+        return { missing, weak };
+    }, [projects, expandedKey]);
+
+    const exportRows = React.useMemo<NarrativeFieldIssueRow[]>(() => {
+        return rows.flatMap((r): NarrativeFieldIssueRow[] => {
+            const missing = projects
+                .filter((p) => !p.fieldStatus[r.key])
+                .map((project): NarrativeFieldIssueRow => ({
+                    project,
+                    fieldLabel: r.label,
+                    issue: 'Missing',
+                    score: null,
+                }));
+
+            const weak = projects
+                .map((p) => {
+                    const score = (p.comprehensiveness ?? []).find((s) => s.key === r.key && s.coverage);
+                    return score && score.score <= 2
+                        ? ({ project: p, fieldLabel: r.label, issue: 'Weak', score: score.score } as NarrativeFieldIssueRow)
+                        : null;
+                })
+                .filter((x): x is NarrativeFieldIssueRow => !!x);
+
+            return [...missing, ...weak];
+        });
+    }, [rows, projects]);
+
+    const handleExport = async () => {
+        if (isExporting) return;
+        setIsExporting(true);
+        try {
+            await exportNarrativeFieldIssuesToExcel(exportRows, today ?? new Date());
+        } catch (err) {
+            console.error('Narrative field quality export failed:', err);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    if (rows.length === 0) return null;
+
+    const needsAttention = rows.filter((r) => r.status === 'Needs attention').length;
+    const visibleRows = showAll ? rows : rows.slice(0, 8);
 
     return (
         <Section
-            title="Comprehensiveness (Appendix B rubric)"
-            description={`${scoredTotal.toLocaleString()} scored entries across 21 fields · portfolio average ${overallAvg.toFixed(2)} / 5`}
+            title="Narrative field quality"
+            description={
+                <>
+                    <span className="font-semibold text-slate-800">{needsAttention}</span> of {rows.length}{' '}
+                    narrative fields need attention — either rarely filled in, or filled in but too thin to meet
+                    the field&apos;s requirements. Click a field to see which projects.
+                </>
+            }
+            collapsible
+            defaultOpen={false}
+            accent="indigo"
+            actions={
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleExport();
+                    }}
+                    disabled={isExporting || exportRows.length === 0}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <Download className="h-3 w-3" />
+                    {isExporting ? 'Exporting…' : 'Export Excel'}
+                </button>
+            }
         >
-            <div className="space-y-2.5">
-                {clusters.map((c) => (
-                    <ClusterBar key={c.cluster} cluster={c.cluster} avgScore={c.avgScore} scoredCount={c.scoredCount} lowPct={c.lowPct} highPct={c.highPct} />
-                ))}
-            </div>
-
-            <button
-                type="button"
-                onClick={() => setShowDistribution((v) => !v)}
-                className="mt-4 flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-800"
-            >
-                {showDistribution ? 'Hide' : 'Show'} score distribution &amp; lowest-scoring fields
-            </button>
-
-            {showDistribution && (
-                <div className="mt-4 grid grid-cols-1 gap-8 border-t border-slate-100 pt-4 lg:grid-cols-2">
-                    <div>
-                        <h5 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Portfolio-wide score distribution</h5>
-                        <DistributionHistogram buckets={distribution} />
-                    </div>
-
-                    {fieldRanking.length > 0 && (
-                        <div>
-                            <h5 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                Lowest-scoring fields (remediation priority)
-                            </h5>
-                            <ul className="space-y-2">
-                                {fieldRanking.map((f) => (
-                                    <li key={f.key} className="flex items-center gap-3 text-xs">
-                                        <span className="w-40 shrink-0 truncate text-slate-700">{f.label}</span>
-                                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                                            <div className={`h-full rounded-full ${scoreColorClass(f.avgScore)}`} style={{ width: `${(f.avgScore / 5) * 100}%` }} />
-                                        </div>
-                                        <span className="w-16 shrink-0 text-right font-mono tabular-nums text-slate-500">
-                                            {f.avgScore.toFixed(2)} / 5
+            <table className="w-full text-left text-xs">
+                <thead>
+                <tr className="border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <th className="py-2 pr-3">Field</th>
+                    <th className="py-2 px-3 text-right">Completeness</th>
+                    <th className="py-2 px-3 text-right">Writing quality</th>
+                    <th className="py-2 pl-3">Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                {visibleRows.map((r) => {
+                    const isOpen = expandedKey === r.key;
+                    return (
+                        <React.Fragment key={r.key}>
+                            <tr
+                                onClick={() => setExpandedKey(isOpen ? null : r.key)}
+                                className="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50"
+                            >
+                                <td className="py-2.5 pr-3 font-semibold text-slate-800">
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <ChevronDown
+                                                className={`h-3 w-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                                            />
+                                            {r.label}
                                         </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </div>
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono font-bold tabular-nums text-slate-700">
+                                    {r.completenessPct}%
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono font-bold tabular-nums text-slate-700">
+                                    {r.avgScore === null ? '—' : `${r.avgScore.toFixed(2)} / 5`}
+                                </td>
+                                <td className="py-2.5 pl-3">
+                                        <span
+                                            className={`inline-flex rounded px-2 py-1 text-[10px] font-bold ${STATUS_STYLE[r.status]}`}
+                                        >
+                                            {r.status}
+                                        </span>
+                                </td>
+                            </tr>
+                            {isOpen && drilldown && (
+                                <tr>
+                                    <td colSpan={4} className="border-l-2 border-l-indigo-300 bg-slate-50 px-3 py-2.5">
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <div>
+                                                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                                                    Missing ({drilldown.missing.length})
+                                                </p>
+                                                {drilldown.missing.length === 0 ? (
+                                                    <p className="text-[11px] text-slate-400">None</p>
+                                                ) : (
+                                                    <ul className="max-h-48 space-y-1 overflow-y-auto pr-1">
+                                                        {drilldown.missing.map((p) => (
+                                                            <li key={p.projectId} className="text-[11px]">
+                                                                <a
+                                                                    href={projectEditHref(p.projectId)}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="group inline-flex min-w-0 items-baseline gap-2 hover:text-indigo-700"
+                                                                >
+                                                                        <span className="shrink-0 font-mono text-slate-500 group-hover:text-indigo-600">
+                                                                            {p.projectNumber}
+                                                                        </span>
+                                                                    <span className="min-w-0 truncate text-slate-700 underline decoration-slate-300 underline-offset-2 group-hover:text-indigo-700 group-hover:decoration-indigo-400">
+                                                                            {p.projectName}
+                                                                        </span>
+                                                                    <SquareArrowOutUpRight className="h-2.5 w-2.5 shrink-0 text-slate-300 group-hover:text-indigo-500" />
+                                                                </a>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                                                    Weak, score 0–2 ({drilldown.weak.length})
+                                                </p>
+                                                {drilldown.weak.length === 0 ? (
+                                                    <p className="text-[11px] text-slate-400">None</p>
+                                                ) : (
+                                                    <ul className="max-h-48 space-y-1 overflow-y-auto pr-1">
+                                                        {drilldown.weak.map(({ project, score }) => (
+                                                            <li
+                                                                key={project.projectId}
+                                                                className="flex items-baseline gap-2 text-[11px]"
+                                                            >
+                                                                <a
+                                                                    href={projectEditHref(project.projectId)}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="group inline-flex min-w-0 flex-1 items-baseline gap-2 hover:text-indigo-700"
+                                                                >
+                                                                        <span className="shrink-0 font-mono text-slate-500 group-hover:text-indigo-600">
+                                                                            {project.projectNumber}
+                                                                        </span>
+                                                                    <span className="min-w-0 flex-1 truncate text-slate-700 underline decoration-slate-300 underline-offset-2 group-hover:text-indigo-700 group-hover:decoration-indigo-400">
+                                                                            {project.projectName}
+                                                                        </span>
+                                                                    <SquareArrowOutUpRight className="h-2.5 w-2.5 shrink-0 text-slate-300 group-hover:text-indigo-500" />
+                                                                </a>
+                                                                <span className="shrink-0 font-mono font-semibold text-orange-600">
+                                                                        {score}
+                                                                    </span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </React.Fragment>
+                    );
+                })}
+                </tbody>
+            </table>
+
+            {rows.length > 8 && (
+                <button
+                    type="button"
+                    onClick={() => setShowAll((v) => !v)}
+                    className="mt-3 text-[11px] font-bold text-indigo-600 hover:text-indigo-800"
+                >
+                    {showAll ? 'Show fewer fields' : `Show all ${rows.length} fields`}
+                </button>
             )}
         </Section>
     );

@@ -1,17 +1,8 @@
-// components/dashboard/compliance/Pagination.tsx
 'use client';
 
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-/**
- * Builds a windowed page-number array with ellipsis sentinels.
- * For 93 pages on page 10 you get something like:
- *   [1, '…', 8, 9, 10, 11, 12, '…', 93]
- *
- * `siblings` controls how many pages on each side of `current` to show.
- * Total visible buttons (excl. prev/next) is capped at ~7 by the window.
- */
 export function buildPageRange(
     current: number,
     total: number,

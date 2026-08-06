@@ -1,5 +1,3 @@
-// components/dashboard/compliance/index.ts
-
 export { ComplianceDashboard } from './ComplianceDashboard';
 export type { ComplianceDashboardProps } from './ComplianceDashboard';
 

@@ -1,4 +1,3 @@
-// components/dashboard/compliance/ProjectDrillDown.tsx
 'use client';
 
 import React from 'react';
@@ -15,11 +14,10 @@ import {
     stageCompliance,
 } from './helpers';
 import type { EnrichedProject } from './types';
-import { CadenceBadge, ComplianceBar, FlagPill } from './uiPrimitives';
+import { CadenceBadge, ComplianceBar, ConsistencyFlagPill, FlagPill } from './uiPrimitives';
 
 const CLUSTER_ORDER: ClusterName[] = ['Foundation / Status', 'Policy / Barriers', 'Innovation / Scaling', 'Impacts / Metrics'];
-// Short labels for the compact summary row — the full cluster names only
-// show up once you expand into the field-level detail.
+
 const CLUSTER_SHORT: Record<ClusterName, string> = {
     'Foundation / Status': 'Foundation',
     'Policy / Barriers': 'Policy',
@@ -28,21 +26,10 @@ const CLUSTER_SHORT: Record<ClusterName, string> = {
 };
 
 function scoreTextClass(score: number): string {
-    if (score >= 4) return 'text-teal-700';
+    if (score >= 4) return 'text-emerald-700';
     if (score >= 3) return 'text-amber-700';
     if (score >= 1) return 'text-orange-700';
     return 'text-rose-700';
-}
-
-// Chips for fields with no content at all (coverage=false) are intentionally
-// neutral/gray, not red — "not written yet" and "written but weak" are
-// different situations and shouldn't compete for the same alarm color.
-function chipClass(f: FieldScore): string {
-    if (!f.coverage) return 'bg-slate-100 text-slate-400 ring-slate-200';
-    if (f.score >= 4) return 'bg-teal-50 text-teal-700 ring-teal-200';
-    if (f.score >= 3) return 'bg-amber-50 text-amber-700 ring-amber-200';
-    if (f.score >= 1) return 'bg-orange-50 text-orange-700 ring-orange-200';
-    return 'bg-rose-50 text-rose-700 ring-rose-200';
 }
 
 function clusterAverage(scores: FieldScore[], cluster: ClusterName): number | null {
@@ -51,73 +38,125 @@ function clusterAverage(scores: FieldScore[], cluster: ClusterName): number | nu
     return scored.reduce((sum, s) => sum + s.score, 0) / scored.length;
 }
 
-/**
- * Comprehensiveness for a single project. Collapsed by default to a one-line
- * cluster summary — the full 21-field breakdown is opt-in via "Show detail"
- * so the drill-down isn't dominated by it on every row.
- */
+type GroupTone = 'missing' | 'weak' | 'good';
+
+const GROUP_STYLES: Record<GroupTone, { border: string; title: string; chip: string; badge: string }> = {
+    missing: {
+        border: 'border-slate-200',
+        title: 'text-slate-600',
+        chip: 'bg-white text-slate-600 ring-1 ring-inset ring-slate-200',
+        badge: 'bg-white text-slate-600 ring-1 ring-inset ring-slate-200',
+    },
+    weak: {
+        border: 'border-amber-200',
+        title: 'text-amber-700',
+        chip: 'bg-white text-amber-700 ring-1 ring-inset ring-amber-200',
+        badge: 'bg-white text-amber-700 ring-1 ring-inset ring-amber-200',
+    },
+    good: {
+        border: 'border-emerald-200',
+        title: 'text-emerald-700',
+        chip: 'bg-white text-emerald-700 ring-1 ring-inset ring-emerald-200',
+        badge: 'bg-white text-emerald-700 ring-1 ring-inset ring-emerald-200',
+    },
+};
+
+function FieldGroup({ tone, title, fields }: { tone: GroupTone; title: string; fields: FieldScore[] }) {
+    if (fields.length === 0) return null;
+    const style = GROUP_STYLES[tone];
+
+    return (
+        <div className={`rounded-lg border ${style.border} bg-white p-3`}>
+            <div className="mb-2 flex items-center gap-2">
+                <span className={`text-xs font-bold ${style.title}`}>{title}</span>
+                <span className={`inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full px-1 text-[10px] font-bold ${style.badge}`}>
+                    {fields.length}
+                </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+                {fields.map((f) => (
+                    <span
+                        key={f.key}
+                        title={`${f.label} (${f.cluster}) — ${f.rating}. ${f.notes}`}
+                        className={`inline-flex cursor-help items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${style.chip}`}
+                    >
+                        {f.label}
+                        {f.coverage && <span className="font-mono font-bold">{f.score}</span>}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 function ComprehensivenessSection({ scores }: { scores: FieldScore[] }) {
     const [expanded, setExpanded] = React.useState(false);
     if (scores.length === 0) return null;
 
+    const missing = scores.filter((f) => !f.coverage);
+    const weak = scores.filter((f) => f.coverage && f.score <= 2);
+    const good = scores.filter((f) => f.coverage && f.score >= 3);
+
     return (
-        <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-3">
+        <div className="rounded-lg border border-indigo-200 bg-white p-3">
             <button
                 type="button"
                 onClick={() => setExpanded((v) => !v)}
                 className="flex w-full items-center justify-between gap-3 text-left"
             >
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <span className="text-xs font-semibold text-slate-800">Comprehensiveness</span>
+                    <span className="text-xs font-bold text-slate-800">Comprehensiveness</span>
                     {CLUSTER_ORDER.map((cluster) => {
                         const avg = clusterAverage(scores, cluster);
                         return (
-                            <span key={cluster} className="text-[11px] text-slate-500">
+                            <span key={cluster} className="text-[11px] font-medium text-slate-600">
                                 {CLUSTER_SHORT[cluster]}{' '}
-                                <span className={`font-mono font-semibold ${avg === null ? 'text-slate-300' : scoreTextClass(avg)}`}>
+                                <span className={`font-mono font-bold ${avg === null ? 'text-slate-300' : scoreTextClass(avg)}`}>
                                     {avg === null ? '—' : avg.toFixed(1)}
                                 </span>
                             </span>
                         );
                     })}
                 </div>
-                <span className="flex shrink-0 items-center gap-1 text-[11px] font-medium text-slate-500">
+                <span className="flex shrink-0 items-center gap-1 text-[11px] font-bold text-indigo-600">
                     {expanded ? 'Hide' : 'Show'} field detail
                     <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
                 </span>
             </button>
 
             {expanded && (
-                <div className="mt-3 space-y-3 border-t border-slate-200 pt-3">
-                    {CLUSTER_ORDER.map((cluster) => {
-                        const fields = scores.filter((s) => s.cluster === cluster);
-                        if (fields.length === 0) return null;
-                        return (
-                            <div key={cluster}>
-                                <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">{cluster}</div>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {fields.map((f) => (
-                                        <span
-                                            key={f.key}
-                                            title={`${f.label} — ${f.rating}. ${f.notes}`}
-                                            className={`inline-flex cursor-help items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${chipClass(f)}`}
-                                        >
-                                            {f.label}
-                                            <span className="font-mono font-semibold">{f.coverage ? f.score : '—'}</span>
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
+                <div className="mt-3 space-y-2.5 border-t border-indigo-100 pt-3">
+                    <FieldGroup tone="missing" title="Missing — never written" fields={missing} />
+                    <FieldGroup tone="weak" title="Weak — written but thin (score 0–2)" fields={weak} />
+                    <FieldGroup tone="good" title="Good — adequate or strong (score 3–5)" fields={good} />
                 </div>
             )}
         </div>
     );
 }
 
+function DataConsistencySection({ project }: { project: EnrichedProject }) {
+    if (project.consistencyFlags.length === 0) return null;
+
+    return (
+        <div className="rounded-lg border border-rose-200 bg-white p-3">
+            <div className="mb-2 flex items-center gap-2">
+                <span className="text-xs font-bold text-rose-700">Data consistency</span>
+                <span className="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-rose-600 ring-1 ring-inset ring-rose-200">
+                    {project.consistencyFlags.length}
+                </span>
+            </div>
+            <div className="space-y-1.5">
+                {project.consistencyFlags.map((f) => (
+                    <ConsistencyFlagPill key={f.id} flag={f} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function ProjectDrillDown({ project, today }: { project: EnrichedProject; today: Date }) {
-    const stages = applicableStages(project.projectStatus);
+    const stages = applicableStages(project.projectStatus, project.projectStartDate, today);
 
     return (
         <div className="space-y-3 pt-1">
@@ -163,6 +202,8 @@ export function ProjectDrillDown({ project, today }: { project: EnrichedProject;
                 </div>
             )}
 
+            <DataConsistencySection project={project} />
+
             {stages.map((sName) => {
                 const stageDef = STAGE_REQUIREMENTS.find((s) => s.stage === sName)!;
                 const { filled, total, missing, complete } = stageCompliance(project, stageDef);
@@ -171,37 +212,33 @@ export function ProjectDrillDown({ project, today }: { project: EnrichedProject;
                     return (
                         <div
                             key={sName}
-                            className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2 text-[11px]"
+                            className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-[11px]"
                         >
-                            <CheckCircle2 className="h-4 w-4 text-teal-600" />
-                            <span className="font-semibold text-slate-700">{sName}</span>
-                            <span className="text-slate-500">— all {total} fields complete</span>
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            <span className="font-bold text-slate-800">{sName}</span>
+                            <span className="text-slate-600">— all {total} fields complete</span>
                         </div>
                     );
                 }
 
-                // Use 'red' for the bar since stage is incomplete
                 return (
                     <div
                         key={sName}
-                        className="rounded-lg border border-slate-100 bg-slate-50/60 p-3"
+                        className="rounded-lg border border-rose-200 bg-white p-3"
                     >
                         <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
                                 <XCircle className="h-4 w-4 text-rose-600" />
-                                <span className="text-xs font-semibold text-slate-800">{sName} stage</span>
-                                <span className="text-[11px] text-slate-500">— {missing.length} missing</span>
+                                <span className="text-xs font-bold text-slate-800">{sName} stage</span>
+                                <span className="text-[11px] font-medium text-slate-600">— {missing.length} missing</span>
                             </div>
-                            <span className="font-mono text-[11px] tabular-nums text-slate-500">
+                            <span className="font-mono text-[11px] font-bold tabular-nums text-slate-600">
                                 {filled}/{total}
                             </span>
                         </div>
 
                         <ComplianceBar filled={filled} total={total} level="red" showCount={false} />
 
-                        {/* Single column, badge immediately after its own label — a 2-col grid
-                            here made short labels look like they belonged to the field beside
-                            them, since the cadence badge got pushed to the far edge of a wide cell. */}
                         <ul className="mt-3 space-y-1.5">
                             {missing.map((field) => (
                                 <li

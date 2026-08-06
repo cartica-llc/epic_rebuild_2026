@@ -1,24 +1,26 @@
-// components/dashboard/compliance/ComplianceDashboard.tsx
 'use client';
 
 import React from 'react';
 import {
-    AlertTriangle,
     ChevronDown,
     ChevronRight,
     Download,
     Filter,
     Search,
+    SquareArrowOutUpRight,
     X,
 } from 'lucide-react';
 
+import { ActiveFilterSummary } from './ActiveFilterSummary';
+import { CompletenessFieldSummary } from './CompletenessFieldSummary';
 import { ComprehensivenessSummary } from './ComprehensivenessSummary';
 import { exportComplianceToExcel } from './exportExcel';
 import { PROJECTS_PER_PAGE } from './fieldRequirements';
+import { FlagFilterMenu, type FlagFilterValue } from './FlagFilterMenu';
 import { enrichProject, isOutOfCompliance } from './helpers';
 import { Pagination } from './Pagination';
 import { ProjectDrillDown } from './ProjectDrillDown';
-import type { ComplianceProject, EnrichedProject, FlagId } from './types';
+import type { ComplianceProject, EnrichedProject } from './types';
 import {
     ComplianceBar,
     FilterSelect,
@@ -34,32 +36,25 @@ export interface ComplianceDashboardProps {
     today?: Date;
 }
 
-type ViewFilter = 'out-of-compliance' | 'compliant' | 'flagged';
+function projectEditHref(projectId: number): string {
+    return `/projects/${projectId}/edit`;
+}
+
+type ViewFilter = 'out-of-compliance' | 'compliant';
 
 const VIEW_LABELS: Record<ViewFilter, string> = {
     'out-of-compliance': 'Out of compliance',
     compliant: 'Compliant',
-    flagged: 'Flagged',
-};
-
-// Display labels for the flag-filter dropdown. Slightly more verbose than
-// the chip's 'short' field since the dropdown has the room — "Closed but
-// Incomplete" reads more clearly than "Closed Incomplete" out of context.
-const FLAG_LABELS: Record<FlagId, string> = {
-    'past-end-date': 'Past End Date',
-    'no-recent-update': 'No Recent Update',
-    'closed-incomplete': 'Closed but Incomplete',
 };
 
 export function ComplianceDashboard({ projects, today }: ComplianceDashboardProps) {
     const [todayRef] = React.useState<Date>(() => today ?? new Date());
 
-    // ── Filters ──
     const [statusFilter, setStatusFilter] = React.useState('All');
     const [periodFilter, setPeriodFilter] = React.useState('All');
     const [adminFilter, setAdminFilter] = React.useState('All');
 
-    const [flagFilter, setFlagFilter] = React.useState<FlagId | 'All'>('All');
+    const [flagFilter, setFlagFilter] = React.useState<FlagFilterValue>('All');
 
     const [viewFilter, setViewFilter] = React.useState<ViewFilter>('out-of-compliance');
     const [searchTerm, setSearchTerm] = React.useState('');
@@ -67,6 +62,7 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
     const [expandedId, setExpandedId] = React.useState<number | null>(null);
     const [currentPage, setCurrentPage] = React.useState(1);
 
+    const [filtersOpen, setFiltersOpen] = React.useState(false);
 
     const resetPagingState = () => {
         setCurrentPage(1);
@@ -85,7 +81,7 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
         setAdminFilter(v);
         resetPagingState();
     };
-    const handleFlagFilter = (v: FlagId | 'All') => {
+    const handleFlagFilter = (v: FlagFilterValue) => {
         setFlagFilter(v);
         resetPagingState();
     };
@@ -108,7 +104,6 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
         resetPagingState();
     };
 
-    // ── Enrichment + portfolio totals (all projects) ──
     const enriched: EnrichedProject[] = React.useMemo(
         () => projects.map((p) => enrichProject(p, todayRef)),
         [projects, todayRef],
@@ -122,27 +117,16 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
         const closedComplete = enriched.filter(
             (p) =>
                 p.compliance.level === 'green' &&
-                p.compliance.stageResults.some((s) => s.stage === 'Closeout'),
+                p.compliance.stageResults.some((s) => s.stage === 'End'),
         ).length;
 
         return { compliant, flagged, outOfCompliance, closedComplete, total: enriched.length };
     }, [enriched]);
 
-    // Flat list of every scored narrative field across every project — feeds the
-    // portfolio-wide comprehensiveness summary (cluster averages, score
-    // distribution). Independent of the table filters below on purpose, same
-    // as `totals`, so it always reflects the full portfolio.
-    const allComprehensivenessScores = React.useMemo(
-        () => enriched.flatMap((p) => p.comprehensiveness ?? []),
-        [enriched],
-    );
-
     const baseSet = React.useMemo(() => {
         switch (viewFilter) {
             case 'compliant':
                 return enriched.filter((p) => p.compliance.level === 'green');
-            case 'flagged':
-                return enriched.filter((p) => p.flags.length > 0);
             case 'out-of-compliance':
             default:
                 return enriched.filter(isOutOfCompliance);
@@ -162,16 +146,11 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
         };
     }, [enriched]);
 
-
-    const filtered = React.useMemo(() => {
+    const preFlagFiltered = React.useMemo(() => {
         return baseSet.filter((p) => {
             if (statusFilter !== 'All' && p.projectStatus !== statusFilter) return false;
             if (periodFilter !== 'All' && p.epicPeriod !== periodFilter) return false;
             if (adminFilter !== 'All' && p.programAdmin !== adminFilter) return false;
-
-            if (flagFilter !== 'All' && !p.flags.some((f) => f.id === flagFilter)) {
-                return false;
-            }
 
             if (searchTerm.trim()) {
                 const q = searchTerm.trim().toLowerCase();
@@ -184,7 +163,14 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
             }
             return true;
         });
-    }, [baseSet, statusFilter, periodFilter, adminFilter, flagFilter, searchTerm]);
+    }, [baseSet, statusFilter, periodFilter, adminFilter, searchTerm]);
+
+    const filtered = React.useMemo(() => {
+        if (flagFilter === 'All') return preFlagFiltered;
+        return preFlagFiltered.filter(
+            (p) => p.flags.some((f) => f.id === flagFilter) || p.consistencyFlags.some((f) => f.id === flagFilter),
+        );
+    }, [preFlagFiltered, flagFilter]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PROJECTS_PER_PAGE));
     const paginated = filtered.slice(
@@ -200,7 +186,6 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
         viewFilter !== 'out-of-compliance' ||
         searchTerm.trim() !== '';
 
-    // ── Export ──
     const [isExporting, setIsExporting] = React.useState(false);
     const handleExport = async () => {
         if (isExporting) return;
@@ -218,33 +203,7 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
 
     return (
         <div className="space-y-5  py-12 px-6 max-w-7xl m-auto">
-            {/* ─── Header ─── */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-slate-500" />
-                        <h2 className="text-base font-semibold text-slate-900">
-                            Compliance &amp; Operational Tracking
-                        </h2>
-                    </div>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                        {VIEW_LABELS[viewFilter]} ·{' '}
-                        <span className="font-medium text-slate-700">{baseSet.length}</span>{' '}
-                        of {totals.total} projects
-                    </p>
-                </div>
-
-                <button
-                    onClick={handleExport}
-                    disabled={isExporting || enriched.length === 0}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    <Download className="h-3.5 w-3.5" />
-                    {isExporting ? 'Exporting…' : 'Export Excel'}
-                </button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <StatCard
                     label="Out of Compliance"
                     value={totals.outOfCompliance.toString()}
@@ -263,28 +222,14 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                             : `${totals.total > 0 ? Math.round((totals.compliant / totals.total) * 100) : 0}% of portfolio`
                     }
                     accent="green"
-                    help="Projects with every required field filled for their current status. Includes closed-out projects with all Entry, Active, and Closeout fields complete. Click to filter."
+                    help="Projects with every required field filled for their applicable timing tiers. Includes closed-out projects with all Initial, Annual, and End fields complete. Click to filter."
                     onClick={() => handleViewFilter('compliant')}
                     active={viewFilter === 'compliant'}
                 />
-                <StatCard
-                    label="Flagged"
-                    value={totals.flagged.toString()}
-                    sub="Operational alerts"
-                    accent="flag"
-                    help="Projects with one or more operational issues: a past end date, no modifications in 90+ days (Pending or Active, with end date past), or a Completed project still missing Active/Closeout fields. Click to filter."
-                    onClick={() => handleViewFilter('flagged')}
-                    active={viewFilter === 'flagged'}
-                />
             </div>
 
-            {/* ─── Comprehensiveness (Appendix B rubric) ─── */}
-            <ComprehensivenessSummary allScores={allComprehensivenessScores} />
-
-            {/* ─── Filter toolbar ─── */}
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* Search */}
                     <div className="relative min-w-[180px] flex-1">
                         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                         <input
@@ -292,68 +237,96 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                             placeholder="Search project name or number…"
                             value={searchTerm}
                             onChange={(e) => handleSearch(e.target.value)}
-                            className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                            className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pl-8 pr-3 text-xs font-medium text-slate-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-slate-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
                         />
                     </div>
 
-                    <FilterSelect
-                        aria-label="Status"
-                        value={statusFilter}
-                        onChange={handleStatusFilter}
-                        options={[
-                            { value: 'All', label: 'All Statuses' },
-                            ...filterOptions.statuses.map((s) => ({ value: s, label: s })),
-                        ]}
-                    />
-                    <FilterSelect
-                        aria-label="EPIC Period"
-                        value={periodFilter}
-                        onChange={handlePeriodFilter}
-                        options={[
-                            { value: 'All', label: 'All Periods' },
-                            ...filterOptions.periods.map((p) => ({ value: p, label: p })),
-                        ]}
-                    />
-                    <FilterSelect
-                        aria-label="Program Administrator"
-                        value={adminFilter}
-                        onChange={handleAdminFilter}
-                        options={[
-                            { value: 'All', label: 'All Admins' },
-                            ...filterOptions.admins.map((a) => ({ value: a, label: a })),
-                        ]}
-                    />
-                    <FilterSelect
-                        aria-label="Flag"
-                        value={flagFilter}
-                        onChange={(v) => handleFlagFilter(v as FlagId | 'All')}
-                        options={[
-                            { value: 'All', label: 'All Flags' },
-                            ...(Object.entries(FLAG_LABELS) as [FlagId, string][]).map(
-                                ([id, label]) => ({ value: id, label }),
-                            ),
-                        ]}
-                    />
+                    <button
+                        type="button"
+                        onClick={() => setFiltersOpen((v) => !v)}
+                        aria-expanded={filtersOpen}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                            hasActiveFilters
+                                ? 'border-indigo-200 bg-white text-indigo-600'
+                                : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                        }`}
+                    >
+                        <Filter className="h-3.5 w-3.5" />
+                        Filters
+                        {hasActiveFilters && <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />}
+                        <ChevronDown className={`h-3 w-3 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleExport}
+                        disabled={isExporting || enriched.length === 0}
+                        title={isExporting ? 'Exporting…' : 'Export Excel'}
+                        aria-label="Export Excel"
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white p-1.5 text-slate-600 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                    </button>
 
                     {hasActiveFilters && (
                         <button
                             type="button"
                             onClick={reset}
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-slate-500 transition hover:text-slate-900"
+                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold text-rose-600 transition hover:bg-rose-50"
                         >
                             <X className="h-3 w-3" />
                             Clear
                         </button>
                     )}
 
-                    <span className="ml-auto text-[11px] text-slate-500">
-                        <Filter className="-mt-0.5 mr-1 inline-block h-3 w-3" />
+                    <span className="ml-auto inline-flex items-center gap-1 rounded-md border border-slate-300 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                         {filtered.length} {filtered.length === 1 ? 'project' : 'projects'}
                     </span>
                 </div>
+
+                {filtersOpen && (
+                    <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+                        <FilterSelect
+                            aria-label="Status"
+                            value={statusFilter}
+                            onChange={handleStatusFilter}
+                            options={[
+                                { value: 'All', label: 'All Statuses' },
+                                ...filterOptions.statuses.map((s) => ({ value: s, label: s })),
+                            ]}
+                        />
+                        <FilterSelect
+                            aria-label="EPIC Period"
+                            value={periodFilter}
+                            onChange={handlePeriodFilter}
+                            options={[
+                                { value: 'All', label: 'All Periods' },
+                                ...filterOptions.periods.map((p) => ({ value: p, label: p })),
+                            ]}
+                        />
+                        <FilterSelect
+                            aria-label="Program Administrator"
+                            value={adminFilter}
+                            onChange={handleAdminFilter}
+                            options={[
+                                { value: 'All', label: 'All Admins' },
+                                ...filterOptions.admins.map((a) => ({ value: a, label: a })),
+                            ]}
+                        />
+                        <FlagFilterMenu value={flagFilter} onChange={handleFlagFilter} projects={preFlagFiltered} />
+                    </div>
+                )}
             </div>
 
-            {/* ─── Project list ─── */}
+            <ActiveFilterSummary
+                count={filtered.length}
+                statusFilter={statusFilter}
+                adminFilter={adminFilter}
+                periodFilter={periodFilter}
+                flagFilter={flagFilter}
+                searchTerm={searchTerm}
+            />
+
             <Section padded={false}>
                 {paginated.length === 0 ? (
                     <div className="px-6 py-16 text-center">
@@ -361,7 +334,7 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
 
                             viewFilter === 'out-of-compliance' ? (
                                 <>
-                                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-teal-50">
+                                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
                                         <span className="text-lg">✓</span>
                                     </div>
                                     <p className="text-sm font-medium text-slate-700">All projects compliant</p>
@@ -390,7 +363,6 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                     </div>
                 ) : (
                     <>
-                        {/* Desktop table */}
                         <div className="hidden lg:block">
 
                             <table className="w-full table-fixed text-left text-xs">
@@ -404,14 +376,14 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                                     <col className="w-8" />
                                 </colgroup>
                                 <thead>
-                                <tr className="border-b border-slate-100 text-[10px] uppercase tracking-wide text-slate-500">
-                                    <th className="py-2.5 pl-4" />
-                                    <th className="py-2.5 pr-3 font-medium">Project</th>
-                                    <th className="py-2.5 pr-3 font-medium">Status</th>
-                                    <th className="py-2.5 pr-3 font-medium">Period</th>
-                                    <th className="py-2.5 pr-3 font-medium">Fields</th>
-                                    <th className="py-2.5 pr-3 font-medium">Flags</th>
-                                    <th className="py-2.5 pr-4" />
+                                <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                    <th className="py-3 pl-4" />
+                                    <th className="py-3 pr-3">Project</th>
+                                    <th className="py-3 pr-3">Status</th>
+                                    <th className="py-3 pr-3">Period</th>
+                                    <th className="py-3 pr-3">Fields</th>
+                                    <th className="py-3 pr-3">Flags</th>
+                                    <th className="py-3 pr-4" />
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -423,9 +395,8 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                                                 onClick={() =>
                                                     setExpandedId(isExpanded ? null : p.projectId)
                                                 }
-                                                className="cursor-pointer border-b border-slate-50 transition-colors hover:bg-slate-50/60"
+                                                className="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50"
                                             >
-                                                {/* Severity dot */}
                                                 <td className="py-3 pl-4">
                                                         <span
                                                             className={`inline-block h-2 w-2 rounded-full ${LEVEL_DOT[p.compliance.level]}`}
@@ -433,19 +404,23 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                                                         />
                                                 </td>
 
-                                                {/* Project number + name */}
                                                 <td className="py-3 pr-3">
-                                                    <div className="flex min-w-0 items-center gap-3">
-                                                            <span className="shrink-0 font-mono text-[11px] tabular-nums text-slate-500">
-                                                                {p.projectNumber}
-                                                            </span>
-                                                        <span
-                                                            className="min-w-0 flex-1 truncate font-medium text-slate-800"
-                                                            title={p.projectName}
-                                                        >
-                                                                {p.projectName}
-                                                            </span>
-                                                    </div>
+                                                    <a
+                                                        href={projectEditHref(p.projectId)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        title={p.projectName}
+                                                        className="group flex min-w-0 items-center gap-3"
+                                                    >
+                                                        <span className="shrink-0 font-mono text-[11px] tabular-nums text-slate-500 group-hover:text-indigo-600">
+                                                            {p.projectNumber}
+                                                        </span>
+                                                        <span className="min-w-0 flex-1 truncate font-medium text-slate-800 underline decoration-transparent underline-offset-2 group-hover:text-indigo-700 group-hover:decoration-indigo-400">
+                                                            {p.projectName}
+                                                        </span>
+                                                        <SquareArrowOutUpRight className="h-3 w-3 shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-indigo-500" />
+                                                    </a>
                                                 </td>
 
                                                 <td className="py-3 pr-3">
@@ -456,7 +431,6 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                                                     {p.epicPeriod || '—'}
                                                 </td>
 
-                                                {/* Compliance bar */}
                                                 <td className="py-3 pr-3">
                                                     <div className="w-32">
                                                         <ComplianceBar
@@ -467,12 +441,10 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                                                     </div>
                                                 </td>
 
-                                                {/* Flags */}
                                                 <td className="py-3 pr-3">
-                                                    <FlagChips flags={p.flags} />
+                                                    <FlagChips flags={p.flags} consistencyFlags={p.consistencyFlags} />
                                                 </td>
 
-                                                {/* Chevron */}
                                                 <td className="py-3 pr-4 text-slate-400">
                                                     {isExpanded ? (
                                                         <ChevronDown className="h-3.5 w-3.5" />
@@ -483,7 +455,7 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                                             </tr>
                                             {isExpanded && (
                                                 <tr>
-                                                    <td colSpan={7} className="bg-slate-50/40 px-6 py-4">
+                                                    <td colSpan={7} className="border-l-2 border-l-indigo-300 bg-slate-50 px-6 py-4">
                                                         <ProjectDrillDown project={p} today={todayRef} />
                                                     </td>
                                                 </tr>
@@ -495,24 +467,38 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                             </table>
                         </div>
 
-                        {/* Mobile cards */}
                         <div className="divide-y divide-slate-100 lg:hidden">
                             {paginated.map((p) => {
                                 const isExpanded = expandedId === p.projectId;
                                 return (
                                     <div key={p.projectId}>
-                                        <button
+                                        <div
+                                            role="button"
+                                            tabIndex={0}
                                             onClick={() => setExpandedId(isExpanded ? null : p.projectId)}
-                                            className="flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-slate-50/60"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    setExpandedId(isExpanded ? null : p.projectId);
+                                                }
+                                            }}
+                                            className="flex w-full cursor-pointer items-start gap-3 p-4 text-left transition-colors hover:bg-slate-50"
                                         >
                                             <span
                                                 className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${LEVEL_DOT[p.compliance.level]}`}
                                             />
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <span className="font-mono text-[11px] tabular-nums text-slate-500">
+                                                    <a
+                                                        href={projectEditHref(p.projectId)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="group inline-flex items-center gap-1 font-mono text-[11px] tabular-nums text-slate-500 hover:text-indigo-600"
+                                                    >
                                                         {p.projectNumber}
-                                                    </span>
+                                                        <SquareArrowOutUpRight className="h-2.5 w-2.5 shrink-0 text-slate-300 opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-indigo-500" />
+                                                    </a>
                                                     <StatusPill status={p.projectStatus} />
                                                 </div>
                                                 <p className="mt-0.5 line-clamp-2 text-sm font-medium text-slate-800">
@@ -525,9 +511,9 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                                                         level={p.compliance.level}
                                                     />
                                                 </div>
-                                                {p.flags.length > 0 && (
+                                                {(p.flags.length > 0 || p.consistencyFlags.length > 0) && (
                                                     <div className="mt-2">
-                                                        <FlagChips flags={p.flags} />
+                                                        <FlagChips flags={p.flags} consistencyFlags={p.consistencyFlags} />
                                                     </div>
                                                 )}
                                             </div>
@@ -538,9 +524,9 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                                                     <ChevronRight className="h-3.5 w-3.5" />
                                                 )}
                                             </span>
-                                        </button>
+                                        </div>
                                         {isExpanded && (
-                                            <div className="bg-slate-50/40 px-4 pb-4">
+                                            <div className="border-l-2 border-l-indigo-300 bg-slate-50 px-4 pb-4">
                                                 <ProjectDrillDown project={p} today={todayRef} />
                                             </div>
                                         )}
@@ -549,7 +535,6 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                             })}
                         </div>
 
-                        {/* Pagination */}
                         {totalPages > 1 && (
                             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
                                 <p className="text-[11px] text-slate-500">
@@ -570,6 +555,9 @@ export function ComplianceDashboard({ projects, today }: ComplianceDashboardProp
                     </>
                 )}
             </Section>
+
+            <CompletenessFieldSummary projects={enriched} today={todayRef} />
+            <ComprehensivenessSummary projects={enriched} today={todayRef} />
         </div>
     );
 }

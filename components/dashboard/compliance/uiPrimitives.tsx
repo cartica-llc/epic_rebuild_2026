@@ -1,11 +1,18 @@
-// components/dashboard/compliance/uiPrimitives.tsx
 'use client';
 
 import React from 'react';
 import {
+    AlarmClock,
     AlertOctagon,
+    AlertTriangle,
+    Banknote,
+    CalendarClock,
+    CalendarX,
     CheckCircle2,
     ChevronDown,
+    CircleDollarSign,
+    FileWarning,
+    Hourglass,
     Info,
     PauseCircle,
     TimerOff,
@@ -17,73 +24,204 @@ import {
     CADENCE_STYLES,
 } from '@/components/project_forms/StageProgressBar';
 
-import type { Cadence, ComplianceLevel, Flag, FlagId } from './types';
-
+import type {
+    Cadence,
+    ComplianceLevel,
+    ConsistencyFlag,
+    ConsistencyFlagId,
+    Flag,
+    FlagId,
+    FlagSeverity,
+} from './types';
 
 export const LEVEL_STYLES: Record<ComplianceLevel, { bg: string; text: string; ring: string; label: string }> = {
-    green: { bg: 'bg-teal-50', text: 'text-teal-700', ring: 'ring-teal-200', label: 'Compliant' },
-    red: { bg: 'bg-rose-50', text: 'text-rose-700', ring: 'ring-rose-200', label: 'Incomplete' },
+    green: { bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-300', label: 'Compliant' },
+    red: { bg: 'bg-rose-50', text: 'text-rose-700', ring: 'ring-rose-300', label: 'Incomplete' },
 };
 
 export const LEVEL_DOT: Record<ComplianceLevel, string> = {
-    green: 'bg-teal-500',
+    green: 'bg-emerald-500',
     red: 'bg-rose-500',
 };
 
 export const LEVEL_BAR: Record<ComplianceLevel, string> = {
-    green: 'bg-teal-500',
-    red: 'bg-rose-400',
+    green: 'bg-emerald-500',
+    red: 'bg-rose-500',
 };
 
 export const LEVEL_ICON: Record<ComplianceLevel, React.ReactNode> = {
-    green: <CheckCircle2 className="h-4 w-4 text-teal-600" />,
+    green: <CheckCircle2 className="h-4 w-4 text-emerald-600" />,
     red: <XCircle className="h-4 w-4 text-rose-600" />,
 };
 
-// ── Flag styles ───────────────────────────────────────────────────────────
+export interface FlagMetaEntry {
+    icon: React.ComponentType<{ className?: string }>;
 
-export const FLAG_META: Record<
-    FlagId,
-    { icon: React.ComponentType<{ className?: string }>; color: string; bg: string; ring: string; short: string }
-> = {
+    color: string;
+    bg: string;
+    ring: string;
+
+    chipBg: string;
+    chipText: string;
+    short: string;
+    label: string;
+    description: string;
+}
+
+export const FLAG_META: Record<FlagId, FlagMetaEntry> = {
     'past-end-date': {
         icon: TimerOff,
         color: 'text-rose-600',
-        bg: 'bg-rose-50',
+        bg: 'bg-white',
         ring: 'ring-rose-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-rose-200',
+        chipText: 'text-rose-600',
         short: 'Past End',
+        label: 'Past End Date',
+        description: 'End date has passed, but the project status is not Completed.',
     },
     'no-recent-update': {
         icon: PauseCircle,
         color: 'text-amber-600',
-        bg: 'bg-amber-50',
+        bg: 'bg-white',
         ring: 'ring-amber-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-amber-200',
+        chipText: 'text-amber-600',
         short: 'Stale',
+        label: 'No Recent Update',
+        description: 'Pending or Active project with no modifications in 90+ days.',
     },
     'closed-incomplete': {
         icon: AlertOctagon,
-        color: 'text-red-700',
-        bg: 'bg-red-50',
-        ring: 'ring-red-300',
+        color: 'text-rose-700',
+        bg: 'bg-white',
+        ring: 'ring-rose-300',
+        chipBg: 'bg-white ring-1 ring-inset ring-rose-300',
+        chipText: 'text-rose-700',
         short: 'Closed Incomplete',
+        label: 'Closed but Incomplete',
+        description: 'Project is marked Completed, but required Annual or End tier fields are still missing.',
+    },
+    'missing-final-report': {
+        icon: FileWarning,
+        color: 'text-rose-700',
+        bg: 'bg-white',
+        ring: 'ring-rose-300',
+        chipBg: 'bg-white ring-1 ring-inset ring-rose-300',
+        chipText: 'text-rose-700',
+        short: 'Missing Final Report',
+        label: 'Missing Final Report',
+        description: 'Project is marked Completed but no final report has been uploaded.',
+    },
+    'stalled-pending': {
+        icon: Hourglass,
+        color: 'text-amber-600',
+        bg: 'bg-white',
+        ring: 'ring-amber-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-amber-200',
+        chipText: 'text-amber-600',
+        short: 'Stalled at Pending',
+        label: 'Stalled at Pending',
+        description: 'Awarded 180+ days ago, but still no start date recorded.',
+    },
+    'approaching-deadline-stale': {
+        icon: AlarmClock,
+        color: 'text-rose-600',
+        bg: 'bg-white',
+        ring: 'ring-rose-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-rose-200',
+        chipText: 'text-rose-600',
+        short: 'Approaching Deadline',
+        label: 'Approaching Deadline, Stale',
+        description: 'End date within 45 days and no update in 90+ days.',
     },
 };
 
-// ── Status pill ──────────────────────────────────────────────────────────
+export const CONSISTENCY_FLAG_META: Record<ConsistencyFlagId, FlagMetaEntry> = {
+    'end-before-start': {
+        icon: CalendarX,
+        color: 'text-rose-600',
+        bg: 'bg-white',
+        ring: 'ring-rose-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-rose-200',
+        chipText: 'text-rose-600',
+        short: 'End Before Start',
+        label: 'End Before Start',
+        description: 'End date recorded earlier than the start date.',
+    },
+    'completed-zero-spend': {
+        icon: AlertTriangle,
+        color: 'text-rose-600',
+        bg: 'bg-white',
+        ring: 'ring-rose-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-rose-200',
+        chipText: 'text-rose-600',
+        short: '$0 Expended',
+        label: 'Completed, $0 Expended',
+        description: 'Status is Completed, but Funds Expended to Date is $0 or missing.',
+    },
+    'overspend-budget': {
+        icon: CircleDollarSign,
+        color: 'text-amber-600',
+        bg: 'bg-white',
+        ring: 'ring-amber-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-amber-200',
+        chipText: 'text-amber-600',
+        short: 'Overspend',
+        label: 'Overspend vs. Budget',
+        description: 'Funds Expended to Date exceeds Committed Funding.',
+    },
+    'award-after-start': {
+        icon: CalendarClock,
+        color: 'text-amber-600',
+        bg: 'bg-white',
+        ring: 'ring-amber-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-amber-200',
+        chipText: 'text-amber-600',
+        short: 'Award After Start',
+        label: 'Award After Start',
+        description: 'Award date recorded later than the start date.',
+    },
+    'encumbered-exceeds-committed': {
+        icon: Banknote,
+        color: 'text-amber-600',
+        bg: 'bg-white',
+        ring: 'ring-amber-200',
+        chipBg: 'bg-white ring-1 ring-inset ring-amber-200',
+        chipText: 'text-amber-600',
+        short: 'Encumbered Exceeds',
+        label: 'Encumbered Exceeds Committed',
+        description: 'Encumbered Funding Amount exceeds Committed Funding.',
+    },
+};
 
+export function ConsistencyFlagPill({ flag }: { flag: ConsistencyFlag }) {
+    const meta = CONSISTENCY_FLAG_META[flag.id];
+    const Icon = meta.icon;
+    return (
+        <div
+            className={`flex items-start gap-2 rounded-md border border-slate-200 border-l-2 bg-white px-3 py-2 text-xs ${meta.ring.replace('ring-', 'border-l-')}`}
+        >
+            <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${meta.color}`} />
+            <div>
+                <span className={`font-semibold ${meta.color}`}>{flag.label}</span>
+                <span className="ml-1.5 text-slate-600">{flag.detail}</span>
+            </div>
+        </div>
+    );
+}
 
 function statusStyle(status: string): string {
     const k = status.trim().toLowerCase();
 
-    // "in progress", "active", "ongoing"
     if (k === 'active' || k === 'in progress' || k === 'in-progress' || k === 'ongoing') {
-        return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
+        return 'border border-emerald-200 bg-white text-emerald-700';
     }
-    // "pending", "awarded", "approved" — awaiting work to start
+
     if (k === 'pending' || k === 'awarded' || k === 'approved') {
-        return 'bg-amber-50 text-amber-700 ring-amber-200';
+        return 'border border-amber-200 bg-white text-amber-700';
     }
-    // "completed", "complete", "closed", "closed-out", "finished"
+
     if (
         k === 'completed' ||
         k === 'complete' ||
@@ -92,13 +230,13 @@ function statusStyle(status: string): string {
         k === 'closeout' ||
         k === 'finished'
     ) {
-        return 'bg-slate-100 text-slate-700 ring-slate-200';
+        return 'border border-slate-200 bg-white text-slate-600';
     }
-    // "draft", "new"
+
     if (k === 'draft' || k === 'new') {
-        return 'bg-slate-100 text-slate-600 ring-slate-200';
+        return 'border border-slate-200 bg-white text-slate-500';
     }
-    // "cancelled", "rejected", "withdrawn", "terminated"
+
     if (
         k === 'cancelled' ||
         k === 'canceled' ||
@@ -106,24 +244,20 @@ function statusStyle(status: string): string {
         k === 'withdrawn' ||
         k === 'terminated'
     ) {
-        return 'bg-rose-50 text-rose-700 ring-rose-200';
+        return 'border border-rose-200 bg-white text-rose-700';
     }
-    // Unknown — neutral
-    return 'bg-slate-100 text-slate-600 ring-slate-200';
+
+    return 'border border-slate-200 bg-white text-slate-500';
 }
 
 export function StatusPill({ status }: { status: string }) {
     const label = status?.trim() ? status : '—';
     return (
-        <span
-            className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${statusStyle(label)}`}
-        >
+        <span className={`inline-flex rounded-md px-2.5 py-1 text-[11px] font-semibold tracking-wide ${statusStyle(label)}`}>
             {label}
         </span>
     );
 }
-
-// ── Cadence badge — uses styles from project_forms ───────────────────────
 
 export function CadenceBadge({ cadence }: { cadence: Cadence }) {
     return (
@@ -136,8 +270,6 @@ export function CadenceBadge({ cadence }: { cadence: Cadence }) {
         </span>
     );
 }
-
-// ── Filter select ────────────────────────────────────────────────────────
 
 export function FilterSelect({
                                  value,
@@ -156,7 +288,7 @@ export function FilterSelect({
                 aria-label={ariaLabel}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-1.5 pl-3 pr-8 text-xs font-medium text-slate-700 outline-none transition hover:border-slate-300 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+                className="w-full appearance-none rounded-lg border border-slate-300 bg-white py-1.5 pl-3 pr-8 text-xs font-semibold text-slate-700 outline-none transition hover:border-slate-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
             >
                 {options.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -164,12 +296,10 @@ export function FilterSelect({
                     </option>
                 ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
         </div>
     );
 }
-
-// ── Section ──────────────────────────────────────────────────────────────
 
 export function Section({
                             title,
@@ -177,30 +307,96 @@ export function Section({
                             children,
                             actions,
                             padded = true,
+                            collapsible = false,
+                            defaultOpen = true,
+                            accent,
                         }: {
     title?: string;
-    description?: string;
+    description?: React.ReactNode;
     children: React.ReactNode;
     actions?: React.ReactNode;
     padded?: boolean;
+
+    collapsible?: boolean;
+    defaultOpen?: boolean;
+
+    accent?: 'indigo' | 'rose' | 'amber' | 'emerald';
 }) {
+    const [open, setOpen] = React.useState(defaultOpen);
+    const isOpen = collapsible ? open : true;
+
+    const accentBorder: Record<NonNullable<typeof accent>, string> = {
+        indigo: 'border-l-indigo-300',
+        rose: 'border-l-rose-300',
+        amber: 'border-l-amber-300',
+        emerald: 'border-l-emerald-300',
+    };
+
     return (
-        <section className="rounded-xl border border-slate-200 bg-white">
+        <section
+            className={`overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ${
+                accent ? `border-l-2 ${accentBorder[accent]}` : ''
+            }`}
+        >
             {(title || description || actions) && (
-                <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-3.5">
-                    <div>
-                        {title && <h4 className="text-sm font-semibold text-slate-900">{title}</h4>}
-                        {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+                <div
+                    role={collapsible ? 'button' : undefined}
+                    tabIndex={collapsible ? 0 : undefined}
+                    onClick={collapsible ? () => setOpen((v) => !v) : undefined}
+                    onKeyDown={
+                        collapsible
+                            ? (e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setOpen((v) => !v);
+                                }
+                            }
+                            : undefined
+                    }
+                    className={`flex items-start justify-between gap-3 px-5 py-4 ${
+                        isOpen ? 'border-b border-slate-100' : ''
+                    } ${collapsible ? 'cursor-pointer select-none transition-colors hover:bg-slate-50' : ''}`}
+                >
+                    <div className="flex items-start gap-2">
+                        {collapsible && (
+                            <ChevronDown
+                                className={`mt-1 h-4 w-4 shrink-0 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                            />
+                        )}
+                        <div>
+                            {title && <h4 className="text-base font-bold tracking-tight text-slate-900">{title}</h4>}
+                            {description && <p className="mt-1 text-xs text-slate-600">{description}</p>}
+                        </div>
                     </div>
                     {actions && <div className="shrink-0">{actions}</div>}
                 </div>
             )}
-            <div className={padded ? 'p-5' : ''}>{children}</div>
+            {isOpen && <div className={padded ? 'p-5' : ''}>{children}</div>}
         </section>
     );
 }
 
-// ── Summary stat card (compact, with optional help tooltip and click action) ─────────────
+const STAT_ACCENT_STYLES: Record<
+    'red' | 'green',
+    { accent: string; activeBg: string; label: string; value: string; sub: string; dot: string }
+> = {
+    red: {
+        accent: 'border-l-rose-300',
+        activeBg: 'bg-rose-50/60',
+        label: 'text-rose-600',
+        value: 'text-slate-900',
+        sub: 'text-slate-500',
+        dot: 'bg-rose-500',
+    },
+    green: {
+        accent: 'border-l-emerald-300',
+        activeBg: 'bg-emerald-50/60',
+        label: 'text-emerald-600',
+        value: 'text-slate-900',
+        sub: 'text-slate-500',
+        dot: 'bg-emerald-500',
+    },
+};
 
 export function StatCard({
                              label,
@@ -219,56 +415,36 @@ export function StatCard({
     onClick?: () => void;
     active?: boolean;
 }) {
-    const dotColor =
-        accent === 'flag'
-            ? 'bg-rose-500'
-            : accent
-                ? LEVEL_DOT[accent]
-                : 'bg-slate-300';
+    const stat = accent === 'green' ? STAT_ACCENT_STYLES.green : STAT_ACCENT_STYLES.red;
 
-
-    const activeRing =
-        accent === 'flag'
-            ? 'ring-rose-300'
-            : accent === 'green'
-                ? 'ring-teal-300'
-                : accent === 'red'
-                    ? 'ring-rose-300'
-                    : 'ring-slate-300';
-
-    const baseCls = 'rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition';
-    const interactiveCls = onClick
-        ? `cursor-pointer hover:border-slate-300 hover:shadow-sm ${active ? `ring-2 ring-inset ${activeRing}` : ''}`
-        : '';
+    const baseCls = `rounded-lg border border-slate-200 border-l-2 ${stat.accent} bg-white px-5 py-4 text-left shadow-sm transition ${
+        active ? stat.activeBg : ''
+    }`;
+    const interactiveCls = onClick ? `cursor-pointer hover:shadow-md ${active ? '' : 'hover:bg-slate-50'}` : '';
 
     const inner = (
         <>
             <div className="flex items-center gap-1.5">
-                <span className={`inline-block h-1.5 w-1.5 rounded-full ${dotColor}`} />
-                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
+                <span className={`inline-block h-2 w-2 rounded-full ${stat.dot}`} />
+                <p className={`text-[11px] font-bold uppercase tracking-wider ${stat.label}`}>{label}</p>
                 {help && (
                     <span
                         title={help}
                         aria-label={help}
-                        className="ml-0.5 inline-flex cursor-help text-slate-300 transition hover:text-slate-500"
+                        className={`ml-0.5 inline-flex cursor-help transition ${stat.label} hover:text-white`}
                     >
                         <Info className="h-3 w-3" />
                     </span>
                 )}
             </div>
-            <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
-            {sub && <p className="mt-0.5 text-[11px] text-slate-400">{sub}</p>}
+            <p className={`mt-1.5 text-3xl font-extrabold tracking-tight ${stat.value}`}>{value}</p>
+            {sub && <p className={`mt-0.5 text-[11px] font-medium ${stat.sub}`}>{sub}</p>}
         </>
     );
 
     if (onClick) {
         return (
-            <button
-                type="button"
-                onClick={onClick}
-                aria-pressed={active}
-                className={`${baseCls} ${interactiveCls}`}
-            >
+            <button type="button" onClick={onClick} aria-pressed={active} className={`${baseCls} ${interactiveCls}`}>
                 {inner}
             </button>
         );
@@ -276,8 +452,6 @@ export function StatCard({
 
     return <div className={baseCls}>{inner}</div>;
 }
-
-// ── Compliance bar ───────────────────────────────────────────────────────
 
 export function ComplianceBar({
                                   filled,
@@ -293,14 +467,14 @@ export function ComplianceBar({
     const pct = total > 0 ? (filled / total) * 100 : 100;
     return (
         <div className="flex items-center gap-2">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200">
                 <div
                     className={`h-full rounded-full transition-all ${LEVEL_BAR[level]}`}
                     style={{ width: `${pct}%` }}
                 />
             </div>
             {showCount && (
-                <span className="shrink-0 font-mono text-[11px] tabular-nums text-slate-500">
+                <span className="shrink-0 font-mono text-[11px] font-bold tabular-nums text-slate-600">
                     {filled}/{total}
                 </span>
             )}
@@ -308,27 +482,42 @@ export function ComplianceBar({
     );
 }
 
-// ── Flag chip (compact, with overflow) ───────────────────────────────────
+type CombinedFlagItem =
+    | { kind: 'operational'; id: FlagId; label: string; severity: FlagSeverity; detail: string }
+    | { kind: 'consistency'; id: ConsistencyFlagId; label: string; severity: FlagSeverity; detail: string };
 
-export function FlagChips({ flags }: { flags: Flag[] }) {
-    if (flags.length === 0) {
+export function FlagChips({
+                              flags,
+                              consistencyFlags = [],
+                          }: {
+    flags: Flag[];
+    consistencyFlags?: ConsistencyFlag[];
+}) {
+    const combined: CombinedFlagItem[] = [
+        ...flags.map((f): CombinedFlagItem => ({ kind: 'operational', ...f })),
+        ...consistencyFlags.map((f): CombinedFlagItem => ({ kind: 'consistency', ...f })),
+    ];
+
+    if (combined.length === 0) {
         return <span className="text-xs text-slate-300">—</span>;
     }
 
-    // Critical flags first
-    const sorted = [...flags].sort((a, b) =>
-        a.severity === b.severity ? 0 : a.severity === 'critical' ? -1 : 1,
-    );
+    const sorted = [...combined].sort((a, b) => {
+        if (a.severity !== b.severity) return a.severity === 'critical' ? -1 : 1;
+        if (a.kind !== b.kind) return a.kind === 'operational' ? -1 : 1;
+        return 0;
+    });
+
     const primary = sorted[0];
-    const meta = FLAG_META[primary.id];
+    const meta = primary.kind === 'operational' ? FLAG_META[primary.id] : CONSISTENCY_FLAG_META[primary.id];
     const Icon = meta.icon;
     const overflow = sorted.length - 1;
 
     return (
         <div className="flex items-center gap-1">
             <span
-                title={primary.detail}
-                className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${meta.bg} ${meta.color} ${meta.ring}`}
+                title={`${primary.label} — ${primary.detail}`}
+                className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold ${meta.chipBg} ${meta.chipText}`}
             >
                 <Icon className="h-2.5 w-2.5" />
                 {meta.short}
@@ -337,9 +526,9 @@ export function FlagChips({ flags }: { flags: Flag[] }) {
                 <span
                     title={sorted
                         .slice(1)
-                        .map((f) => `${f.label} — ${f.detail}`)
+                        .map((f) => `${f.label}${f.kind === 'consistency' ? ' (Data Consistency)' : ''} — ${f.detail}`)
                         .join('\n')}
-                    className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-inset ring-slate-200"
+                    className="inline-flex items-center rounded-md bg-white px-1.5 py-1 text-[10px] font-semibold text-slate-500 ring-1 ring-inset ring-slate-200"
                 >
                     +{overflow}
                 </span>
@@ -348,13 +537,14 @@ export function FlagChips({ flags }: { flags: Flag[] }) {
     );
 }
 
-// Full flag pill — used inside the drill-down where space allows
 export function FlagPill({ flag }: { flag: Flag }) {
     const meta = FLAG_META[flag.id];
     const Icon = meta.icon;
     return (
-        <div className={`flex items-start gap-2 rounded-md px-2.5 py-1.5 text-xs ring-1 ring-inset ${meta.bg} ${meta.ring}`}>
-            <Icon className={`mt-0.5 h-3 w-3 shrink-0 ${meta.color}`} />
+        <div
+            className={`flex items-start gap-2 rounded-md border border-slate-200 border-l-2 bg-white px-3 py-2 text-xs ${meta.ring.replace('ring-', 'border-l-')}`}
+        >
+            <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${meta.color}`} />
             <div>
                 <span className={`font-semibold ${meta.color}`}>{flag.label}</span>
                 <span className="ml-1.5 text-slate-600">{flag.detail}</span>

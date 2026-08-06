@@ -1,6 +1,4 @@
-// components/dashboard/compliance/ComplianceDashboardSkeleton.tsx
-
-import { AlertTriangle, Download, Filter, Search } from 'lucide-react';
+import { ChevronDown, Download, Filter, Search } from 'lucide-react';
 
 const ROW_COUNT = 8;
 
@@ -21,7 +19,6 @@ function KpiCardSkeleton() {
     );
 }
 
-/** Single project-row placeholder for the desktop table. */
 function ProjectRowSkeleton() {
     return (
         <tr className="border-b border-slate-50">
@@ -55,56 +52,43 @@ function ProjectRowSkeleton() {
 
 export function ComplianceDashboardSkeleton() {
     return (
-        <div className="mt-38 max-w-7xl m-auto px-6 space-y-5" aria-busy="true" aria-live="polite">
-            {/* Header — keep the title fixed and only skeletonize the count */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-slate-500" />
-                        <h2 className="text-base font-semibold text-slate-900">
-                            Compliance &amp; Operational Tracking
-                        </h2>
-                    </div>
-                    <Bar className="mt-1 h-3 w-56" />
-                </div>
-
-                <button
-                    type="button"
-                    disabled
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400"
-                >
-                    <Download className="h-3.5 w-3.5" />
-                    Export Excel
-                </button>
-            </div>
-
-            {/* KPI cards — three placeholders, same grid as live */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <KpiCardSkeleton />
+        <div className="space-y-5 py-12 px-6 max-w-7xl m-auto" aria-busy="true" aria-live="polite">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <KpiCardSkeleton />
                 <KpiCardSkeleton />
             </div>
 
-            {/* Filter toolbar — show the inputs disabled rather than blank,
-                so users know what controls will be available. */}
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                     <div className="relative min-w-[180px] flex-1">
                         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-300" />
                         <div className="h-7 rounded-lg border border-slate-200 bg-slate-50" />
                     </div>
-                    <Bar className="h-7 w-32 rounded-lg" />
-                    <Bar className="h-7 w-32 rounded-lg" />
-                    <Bar className="h-7 w-40 rounded-lg" />
-                    <Bar className="h-7 w-32 rounded-lg" />
-                    <span className="ml-auto inline-flex items-center text-[11px] text-slate-400">
-                        <Filter className="-mt-0.5 mr-1 inline-block h-3 w-3" />
-                        Loading…
+
+                    <button
+                        type="button"
+                        disabled
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-400"
+                    >
+                        <Filter className="h-3.5 w-3.5" />
+                        Filters
+                        <ChevronDown className="h-3 w-3" />
+                    </button>
+
+                    <button
+                        type="button"
+                        disabled
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-1.5 text-slate-300"
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                    </button>
+
+                    <span className="ml-auto inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1">
+                        <Bar className="h-3 w-16" />
                     </span>
                 </div>
             </div>
 
-            {/* Project list — table on desktop, cards on mobile */}
             <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 <div className="hidden lg:block">
                     <table className="w-full table-fixed text-left text-xs">
@@ -136,7 +120,6 @@ export function ComplianceDashboardSkeleton() {
                     </table>
                 </div>
 
-                {/* Mobile card list */}
                 <div className="divide-y divide-slate-100 lg:hidden">
                     {Array.from({ length: ROW_COUNT }).map((_, i) => (
                         <div key={i} className="flex items-start gap-3 p-4">

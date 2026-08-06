@@ -1,4 +1,4 @@
-//app/api/(snowflakeUser)/projectImages/awardbands.ts
+//app/api/(snowflakeUser)/projectImages/route.ts
 // GET    — list existing images for a project from S3
 // POST   — upload image(s) to S3 (base64), convert to WebP + thumbnail
 // DELETE — remove an image + its thumbnail from S3
