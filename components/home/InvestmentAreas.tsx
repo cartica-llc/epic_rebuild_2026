@@ -20,8 +20,7 @@ import {
 import Link from 'next/link';
 import { useInvestmentAreas, type InvestmentArea } from '@/hooks/useInvestmentAreas';
 
-interface AreaWithPercent extends InvestmentArea {
-    percent: number;
+interface AreaWithIcon extends InvestmentArea {
     Icon: LucideIcon;
 }
 
@@ -78,30 +77,6 @@ function AreaIcon({ icon: Icon }: { icon: LucideIcon }) {
     );
 }
 
-function FundingStat({
-                         funding,
-                         percent,
-                         size = 'text-2xl',
-                     }: {
-    funding: number;
-    percent?: number;
-    size?: string;
-}) {
-    return (
-        <div className="flex items-baseline gap-2">
-            <span className={`text-white font-semibold tracking-tight tabular-nums ${size}`}>
-                {formatFunding(funding)}
-            </span>
-
-            {percent !== undefined && (
-                <span className="text-white/70 text-xs">
-                    {percent.toFixed(1)}%
-                </span>
-            )}
-        </div>
-    );
-}
-
 function sumFunding(arr: { funding: number }[]): number {
     return arr.reduce((s, a) => s + a.funding, 0);
 }
@@ -110,7 +85,8 @@ export function InvestmentAreas() {
     const { data, loading } = useInvestmentAreas();
 
     const areas = data?.areas ?? [];
-    const totalCount = data?.total ?? 0;
+    // NOTE: data.total is not a reliable "true total" of investment areas —
+    // see comment near `showMoreTile` below. Not used for display.
 
     const [selectedArea, setSelectedArea] = useState<InvestmentArea | null>(null);
     const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
@@ -139,20 +115,30 @@ export function InvestmentAreas() {
         setSelectedArea(area);
     };
 
-    const topAreas = areas.slice(0, 8);
-    const totalTopFunding = sumFunding(topAreas);
+    // Reserve the last grid slot for a "see more" tile whenever there are
+    // more investment areas than we can show, instead of showing 8 real areas.
+    // NOTE: we deliberately don't use `totalCount` (data.total) here — the API
+    // sets total = areas.length from a LIMIT-capped query, so it reflects how
+    // many rows were requested, not how many investment areas actually exist.
+    // Using areas.length (the raw fetched list, pre-slice) at least tells us
+    // whether more rows came back than we're showing, without asserting a
+    // specific count we can't verify.
+    const MORE_TILE_WIDTH_PCT = 22;
+    const showMoreTile = areas.length > 7;
+    const realAreaCount = showMoreTile ? 7 : 8;
 
-    const areasWithPercent: AreaWithPercent[] = topAreas.map(area => ({
+    const topAreas = areas.slice(0, realAreaCount);
+
+    const areasWithIcon: AreaWithIcon[] = topAreas.map(area => ({
         ...area,
-        percent: totalTopFunding > 0 ? (area.funding / totalTopFunding) * 100 : 0,
         Icon: getAreaIcon(area.name),
     }));
 
-    const hasFullDesktopLayout = areasWithPercent.length >= 8;
+    const hasFullDesktopLayout = areasWithIcon.length >= realAreaCount;
 
-    const row1 = areasWithPercent.slice(0, 2);
-    const row2 = areasWithPercent.slice(2, 4);
-    const row3 = areasWithPercent.slice(4, 8);
+    const row1 = areasWithIcon.slice(0, 2);
+    const row2 = areasWithIcon.slice(2, 4);
+    const row3 = areasWithIcon.slice(4, realAreaCount);
 
     const rowTotals = {
         r1: sumFunding(row1),
@@ -171,13 +157,19 @@ export function InvestmentAreas() {
             }
             : { r1: 33, r2: 33, r3: 34 };
 
+    const row3AvailablePct = showMoreTile ? 100 - MORE_TILE_WIDTH_PCT : 100;
+
     const rowWidths = {
         r1: row1.map(a => (rowTotals.r1 > 0 ? (a.funding / rowTotals.r1) * 100 : 50)),
         r2: row2.map(a => (rowTotals.r2 > 0 ? (a.funding / rowTotals.r2) * 100 : 50)),
-        r3: row3.map(a => (rowTotals.r3 > 0 ? (a.funding / rowTotals.r3) * 100 : 25)),
+        r3: row3.map(a =>
+            rowTotals.r3 > 0
+                ? (a.funding / rowTotals.r3) * row3AvailablePct
+                : row3AvailablePct / (row3.length || 1),
+        ),
     };
 
-    const mobileAreas = areasWithPercent.slice(0, 3);
+    const mobileAreas = areasWithIcon.slice(0, 3);
     const mRowA = mobileAreas.slice(0, 2);
     const mRowB = mobileAreas.slice(2, 3);
 
@@ -204,7 +196,7 @@ export function InvestmentAreas() {
         return (
             <section className="py-2 bg-white relative">
                 <div className="">
-                    <div className="header mb-12">
+                    <div className="header ">
                         <div className="h-9 w-64 bg-slate-200 rounded animate-pulse mb-4" />
                         <div className="h-4 w-full max-w-2xl bg-slate-200 rounded animate-pulse" />
                     </div>
@@ -216,7 +208,7 @@ export function InvestmentAreas() {
         );
     }
 
-    if (areasWithPercent.length === 0) {
+    if (areasWithIcon.length === 0) {
         return null;
     }
 
@@ -228,27 +220,14 @@ export function InvestmentAreas() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="header mb-12"
+                    className="header "
                 >
                     <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight text-slate-900 my-4">
                         Investment Areas
                     </h2>
 
                     <p className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-slate-500 pb-4">
-                        Our portfolio covers a wide range of investment areas. This snapshot
-                        highlights the largest slices by committed funding so you can see
-                        where effort is concentrating at a glance.
-                    </p>
-
-                    <div className="mt-4">
-                        <Link
-                            href="/projects?view=spending"
-                            className="inline-flex items-center gap-2 text-slate-700 hover:text-slate-900 font-semibold transition-colors group"
-                        >
-                            View all investment areas
-                            <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                        </Link>
-                    </div>
+                        Explore the investment areas that organize our portfolio. From grid modernization and resilient infrastructure to transportation, buildings, and industry. Each area brings together the projects and funding driving that work.                    </p>
                 </motion.div>
 
                 <motion.div
@@ -295,6 +274,10 @@ export function InvestmentAreas() {
                                         Top {selectedArea.projects.length} of{' '}
                                         {selectedArea.projectCount.toLocaleString()} projects
                                     </p>
+
+                                    <p className="text-[11px] text-slate-400 mt-1">
+                                        Some of these projects may also fall under other investment areas.
+                                    </p>
                                 </div>
 
                                 <div className="p-3">
@@ -323,13 +306,22 @@ export function InvestmentAreas() {
                                         </div>
                                     )}
 
-                                    <div className="mt-3 pt-3 border-t border-slate-200">
+                                    <div className="mt-3 pt-3 border-t border-slate-200 flex flex-col gap-1.5">
                                         <Link
                                             href={`/projects?investmentAreaId=${selectedArea.id}`}
                                             className="text-xs font-medium text-slate-900 hover:text-slate-700 inline-flex items-center gap-1 group"
                                             onClick={() => setSelectedArea(null)}
                                         >
                                             View all {selectedArea.name.toLowerCase()} projects
+                                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                        </Link>
+
+                                        <Link
+                                            href={`/projects?view=spending&investmentAreaId=${selectedArea.id}`}
+                                            className="text-xs font-medium text-slate-600 hover:text-slate-800 inline-flex items-center gap-1 group"
+                                            onClick={() => setSelectedArea(null)}
+                                        >
+                                            Compare in Spending Insights
                                             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                                         </Link>
                                     </div>
@@ -355,16 +347,8 @@ export function InvestmentAreas() {
                                         >
                                             <AreaIcon icon={area.Icon} />
 
-                                            <div>
-                                                <div className="text-white font-medium text-sm mb-1.5">
-                                                    {shortenAreaName(area.name)}
-                                                </div>
-
-                                                <FundingStat
-                                                    funding={area.funding}
-                                                    percent={area.percent}
-                                                    size="text-3xl"
-                                                />
+                                            <div className="text-white font-medium text-sm">
+                                                {shortenAreaName(area.name)}
                                             </div>
 
                                             <div className="text-white/60 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
@@ -387,16 +371,8 @@ export function InvestmentAreas() {
                                         >
                                             <AreaIcon icon={area.Icon} />
 
-                                            <div>
-                                                <div className="text-white font-medium text-sm mb-1.5">
-                                                    {shortenAreaName(area.name)}
-                                                </div>
-
-                                                <FundingStat
-                                                    funding={area.funding}
-                                                    percent={area.percent}
-                                                    size="text-2xl"
-                                                />
+                                            <div className="text-white font-medium text-sm">
+                                                {shortenAreaName(area.name)}
                                             </div>
 
                                             <div className="text-white/60 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
@@ -419,19 +395,27 @@ export function InvestmentAreas() {
                                         >
                                             <AreaIcon icon={area.Icon} />
 
-                                            <div>
-                                                <div className="text-white font-medium text-xs mb-1">
-                                                    {shortenAreaName(area.name)}
-                                                </div>
-
-                                                <FundingStat
-                                                    funding={area.funding}
-                                                    percent={area.percent}
-                                                    size="text-lg"
-                                                />
+                                            <div className="text-white font-medium text-xs">
+                                                {shortenAreaName(area.name)}
                                             </div>
                                         </motion.div>
                                     ))}
+
+                                    {showMoreTile && (
+                                        <Link
+                                            href="/projects?view=spending"
+                                            className="relative overflow-hidden rounded border-2 border-dashed border-slate-300 bg-white p-2.5 flex flex-col items-center justify-center gap-1 text-center hover:border-slate-400 hover:bg-slate-50 transition-colors group"
+                                            style={{ width: `${MORE_TILE_WIDTH_PCT}%` }}
+                                        >
+                                            <span className="text-slate-500 font-semibold text-xs">
+                                                More areas
+                                            </span>
+                                            <span className="text-slate-400 text-[10px] inline-flex items-center gap-0.5">
+                                                See all
+                                                <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                                            </span>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -464,11 +448,6 @@ export function InvestmentAreas() {
                                             <div className="text-white font-medium text-sm leading-tight">
                                                 {shortenAreaName(area.name)}
                                             </div>
-
-                                            <FundingStat
-                                                funding={area.funding}
-                                                size="text-2xl"
-                                            />
                                         </motion.div>
                                     ))}
                                 </div>
@@ -488,11 +467,6 @@ export function InvestmentAreas() {
                                         <div className="text-white font-medium text-sm leading-tight">
                                             {shortenAreaName(mRowB[0].name)}
                                         </div>
-
-                                        <FundingStat
-                                            funding={mRowB[0].funding}
-                                            size="text-2xl"
-                                        />
                                     </motion.div>
                                 </div>
                             </div>
@@ -508,7 +482,7 @@ export function InvestmentAreas() {
                         </span>
 
                         <span className="text-white/80 text-xs mt-1">
-                            {Math.max(0, totalCount - 3)} more categories
+                            See more categories
                         </span>
                     </Link>
                 </motion.div>

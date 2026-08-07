@@ -60,6 +60,9 @@ const REGION_META: Record<number, { label: string; short: string; fill: string; 
 
 const REGION_ORDER = [3, 0, 1, 2];
 
+const DAC_LI_DISCLOSURE =
+    'Based on projects designated DAC/LI by program staff. This designation is self-reported and not independently verified.';
+
 // ─── Popup ────────────────────────────────────────────────────────────────────
 
 function RegionPopup({ region, onClose }: { region: Region; onClose: () => void }) {
@@ -85,7 +88,10 @@ function RegionPopup({ region, onClose }: { region: Region; onClose: () => void 
                         {region.label}
                     </h3>
                     <p className="text-xs text-slate-600 mt-0.5">
-                        Top {region.projects.length} of {region.projectCount.toLocaleString()} DAC/LI projects
+                        Top {region.projects.length} of {region.projectCount.toLocaleString()} DAC/LI-designated projects
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-1 max-w-[260px]">
+                        {DAC_LI_DISCLOSURE}
                     </p>
                 </div>
                 <button
@@ -126,7 +132,7 @@ function RegionPopup({ region, onClose }: { region: Region; onClose: () => void 
                         href={`/projects?dacli=1&programAdminId=${region.adminId}&disadvantaged=1&lowIncome=1`}
                         className="text-xs font-medium text-slate-900 hover:text-slate-700 inline-flex items-center gap-1 group"
                     >
-                        View all {region.short} DAC/LI projects
+                        View all {region.short} DAC/LI-designated projects
                         <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                 </div>
@@ -256,24 +262,28 @@ export function ProjectsMap() {
                         className="w-full order-1 px-6"
                     >
                         <p className="text-slate-500 text-xs sm:text-sm mb-4 uppercase tracking-[0.2em] font-medium">
-                            Community impact
+                            Community-designated projects
                         </p>
 
                         <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight text-slate-900 my-4">
-                            Powering the places that need it most.
+                            Investing across California&rsquo;s communities.
                         </h2>
 
                         <p className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-slate-500 pb-4">
-                            A meaningful share of EPIC&rsquo;s funding goes directly to lower-income
-                            and underserved communities across California. Click a region to explore
-                            what&rsquo;s being built there.
+                            EPIC designates a portion of its projects as serving disadvantaged
+                            and low-income (DAC/LI) communities across California. Click a
+                            region to explore what&rsquo;s being built there.
+                        </p>
+
+                        <p className="max-w-2xl text-xs text-slate-400 pb-4">
+                            {DAC_LI_DISCLOSURE}
                         </p>
 
                         <Link
                             href="/projects?dacli=1"
                             className="inline-flex items-center gap-2 text-slate-700 hover:text-slate-900 font-semibold text-lg transition-colors group"
                         >
-                            See all community projects
+                            See all DAC/LI-designated projects
                             <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                         </Link>
                     </motion.div>
@@ -298,7 +308,7 @@ export function ProjectsMap() {
                                         className="w-full h-auto drop-shadow-2xl"
                                         xmlns="http://www.w3.org/2000/svg"
                                         role="img"
-                                        aria-label="California map divided into EPIC program regions — click a region to see top DAC/LI projects"
+                                        aria-label="California map divided into EPIC program regions — click a region to see top DAC/LI-designated projects. DAC/LI percentages reflect self-reported designations, not independently verified figures."
                                     >
                                         {REGION_ORDER.map(adminId => {
                                             const meta     = REGION_META[adminId];
@@ -328,7 +338,9 @@ export function ProjectsMap() {
                                                                 prev === adminId ? null : adminId
                                                             );
                                                         }}
-                                                    />
+                                                    >
+                                                        <title>{DAC_LI_DISCLOSURE}</title>
+                                                    </path>
 
                                                     {centroid && !isDimmed && region && (
                                                         <g className="pointer-events-none" opacity={fillOpacity}>
@@ -374,7 +386,7 @@ export function ProjectsMap() {
                                                                 opacity="0.55"
                                                                 letterSpacing="0.08em"
                                                             >
-                                                                DAC/LI
+                                                                DAC/LI*
                                                             </text>
                                                         </g>
                                                     )}
@@ -382,6 +394,10 @@ export function ProjectsMap() {
                                             );
                                         })}
                                     </svg>
+
+                                    <p className="mt-2 text-center text-[10px] text-slate-400">
+                                        *Self-reported DAC/LI designation, not independently verified.
+                                    </p>
 
                                     <AnimatePresence>
                                         {activeRegion && (

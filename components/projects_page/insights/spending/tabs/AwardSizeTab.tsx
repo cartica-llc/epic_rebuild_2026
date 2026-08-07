@@ -34,32 +34,43 @@ export default function AwardSizeTab({ queryString }: Props) {
 
     return (
         <div className="space-y-5">
+            <p className="text-xs text-slate-500">
+                An <span className="font-medium text-slate-700">award</span> is the committed
+                funding amount for a single project. This tab shows how award sizes are
+                distributed across the projects matching your filters — from the smallest awards
+                to the largest.
+            </p>
+
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <Card
                     label="Projects"
                     value={formatCount(data?.summary.projectCount ?? 0)}
                     loading={loading}
+                    hint="Number of projects with committed funding that match the current filters."
                 />
                 <Card
                     label="Average Award"
                     value={formatMoneyShort(data?.summary.average ?? 0)}
                     loading={loading}
+                    hint="Total committed funding divided by the number of projects. A few very large awards can pull this up."
                 />
                 <Card
                     label="Median Award"
                     value={formatMoneyShort(data?.summary.median ?? 0)}
                     loading={loading}
+                    hint="The middle award amount when all projects are ranked by committed funding — less affected by unusually large or small awards than the average."
                 />
                 <Card
                     label="Largest Award"
                     value={formatMoneyShort(data?.summary.max ?? 0)}
                     loading={loading}
+                    hint="The single largest committed-funding amount among the filtered projects."
                 />
             </div>
 
             <SectionCard
                 title="Distribution by award size"
-                description="Number of projects in each committed-funding band. Click a count to view the projects."
+                description="Number of projects in each committed-funding band, from smallest to largest. Click a count to view the projects in that band."
             >
                 {loading ? (
                     <ChartSkeleton />
@@ -115,10 +126,31 @@ export default function AwardSizeTab({ queryString }: Props) {
     );
 }
 
-function Card({ label, value, loading }: { label: string; value: string; loading: boolean }) {
+function Card({
+                  label,
+                  value,
+                  loading,
+                  hint,
+              }: {
+    label: string;
+    value: string;
+    loading: boolean;
+    hint?: string;
+}) {
     return (
         <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
+            <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
+                {label}
+                {hint ? (
+                    <span
+                        className="inline-flex h-3.5 w-3.5 flex-shrink-0 cursor-help items-center justify-center rounded-full border border-slate-300 text-[9px] normal-case not-italic text-slate-400"
+                        title={hint}
+                        aria-label={hint}
+                    >
+                        i
+                    </span>
+                ) : null}
+            </p>
             {loading ? (
                 <div className="mt-2 h-7 w-24 animate-pulse rounded bg-slate-100" />
             ) : (

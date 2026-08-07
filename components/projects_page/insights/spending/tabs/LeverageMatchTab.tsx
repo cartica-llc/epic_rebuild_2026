@@ -40,21 +40,33 @@ export default function LeverageMatchTab({ queryString }: Props) {
 
     return (
         <div className="space-y-5">
+            <p className="text-xs text-slate-500">
+                <span className="font-medium text-slate-700">Match funding</span> is the amount
+                a recipient or partner organization contributes to unlock program dollars.{' '}
+                <span className="font-medium text-slate-700">Leveraged funds</span> are additional
+                outside funding brought in alongside the award, beyond what was required as
+                match. Together, they show how much non-program money each award attracts on top
+                of the contract amount.
+            </p>
+
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <Card
                     label="Match Funding"
                     value={formatMoneyShort(data?.totals.matchFunding ?? 0)}
                     loading={loading}
+                    hint="Funding contributed by the recipient or partner organization to match program dollars."
                 />
                 <Card
                     label="Leveraged Funds"
                     value={formatMoneyShort(data?.totals.leveragedFunds ?? 0)}
                     loading={loading}
+                    hint="Additional outside funding brought in alongside the award, beyond the required match."
                 />
                 <Card
                     label="Contract Amount"
                     value={formatMoneyShort(data?.totals.contractAmount ?? 0)}
                     loading={loading}
+                    hint="Total contracted award amount for the filtered projects."
                 />
                 <Card
                     label="Leverage Ratio"
@@ -64,12 +76,13 @@ export default function LeverageMatchTab({ queryString }: Props) {
                             : '0%'
                     }
                     loading={loading}
+                    hint="Combined match and leveraged funds as a share of the contract amount — shows how much additional funding each program dollar attracted."
                 />
             </div>
 
             <SectionCard
                 title="Match & leveraged funds by period"
-                description="Stacked totals against contract amount."
+                description="For each period, the bar splits contract amount into match funding, leveraged funds, and remaining contract dollars. Hover a segment for its amount."
             >
                 {loading ? (
                     <ChartSkeleton />
@@ -127,7 +140,7 @@ export default function LeverageMatchTab({ queryString }: Props) {
                 title="Match & leveraged by investment area"
                 description={
                     data
-                        ? `Average match split: ${formatPct(data.totals.averageMatchSplit)}`
+                        ? `Combined match and leveraged funds per investment area. Average match split across filtered projects: ${formatPct(data.totals.averageMatchSplit)}.`
                         : ''
                 }
             >
@@ -160,10 +173,31 @@ export default function LeverageMatchTab({ queryString }: Props) {
     );
 }
 
-function Card({ label, value, loading }: { label: string; value: string; loading: boolean }) {
+function Card({
+                  label,
+                  value,
+                  loading,
+                  hint,
+              }: {
+    label: string;
+    value: string;
+    loading: boolean;
+    hint?: string;
+}) {
     return (
         <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
+            <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
+                {label}
+                {hint ? (
+                    <span
+                        className="inline-flex h-3.5 w-3.5 flex-shrink-0 cursor-help items-center justify-center rounded-full border border-slate-300 text-[9px] normal-case not-italic text-slate-400"
+                        title={hint}
+                        aria-label={hint}
+                    >
+                        i
+                    </span>
+                ) : null}
+            </p>
             {loading ? (
                 <div className="mt-2 h-7 w-24 animate-pulse rounded bg-slate-100" />
             ) : (

@@ -37,6 +37,9 @@ interface Props {
     queryString: string;
 }
 
+const DAC_LI_HINT =
+    'Based on the DAC/LI designation entered on each project. Self-reported by program staff, not independently verified.';
+
 export default function CommunityRequirementsTab({ queryString }: Props) {
     const { data, loading, error } = useInsightFetch<CommunityResponse>(
         `/api/spending/community?${queryString}`,
@@ -57,11 +60,13 @@ export default function CommunityRequirementsTab({ queryString }: Props) {
                     label="DAC / LI Expended"
                     value={formatMoneyShort(overall?.dacLiSpent ?? 0)}
                     loading={loading}
+                    hint={DAC_LI_HINT}
                 />
                 <Card
                     label="DAC / LI Share"
                     value={overall ? formatPct(overall.dacLiPct, 1) : '0%'}
                     loading={loading}
+                    hint={DAC_LI_HINT}
                 />
                 <Card
                     label="Requirement"
@@ -72,12 +77,16 @@ export default function CommunityRequirementsTab({ queryString }: Props) {
                     }
                     loading={loading}
                     accent={meets ? 'good' : 'warn'}
+                    hint="Reflects self-reported DAC/LI project designations against the minimum target, not an independently verified compliance determination."
                 />
             </div>
+            <p className="text-[11px] italic text-slate-400">
+                DAC/LI figures reflect project-level designations entered by program staff and are not independently verified.
+            </p>
 
             <SectionCard
                 title="DAC / LI share by period"
-                description={`Minimum required: ${overall?.minRequiredPct ?? 25}%`}
+                description={`Minimum required: ${overall?.minRequiredPct ?? 25}% · reflects self-reported DAC/LI designations, not third-party verification.`}
             >
                 {loading ? (
                     <ChartSkeleton />
@@ -122,7 +131,7 @@ export default function CommunityRequirementsTab({ queryString }: Props) {
 
             <SectionCard
                 title="DAC / LI share by investment area"
-                description="Top 12 areas by DAC/LI expenditure."
+                description="Top 12 areas by DAC/LI expenditure. Reflects self-reported project designations, not third-party verification."
             >
                 {loading ? (
                     <ChartSkeleton />
@@ -154,26 +163,39 @@ export default function CommunityRequirementsTab({ queryString }: Props) {
 }
 
 function Card({
-    label,
-    value,
-    loading,
-    accent,
-}: {
+                  label,
+                  value,
+                  loading,
+                  accent,
+                  hint,
+              }: {
     label: string;
     value: string;
     loading: boolean;
     accent?: 'good' | 'warn';
+    hint?: string;
 }) {
     const accentClass =
         accent === 'good'
             ? 'text-emerald-700'
             : accent === 'warn'
-              ? 'text-amber-700'
-              : 'text-slate-900';
+                ? 'text-amber-700'
+                : 'text-slate-900';
 
     return (
         <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
+            <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
+                {label}
+                {hint ? (
+                    <span
+                        className="inline-flex h-3.5 w-3.5 flex-shrink-0 cursor-help items-center justify-center rounded-full border border-slate-300 text-[9px] normal-case not-italic text-slate-400"
+                        title={hint}
+                        aria-label={hint}
+                    >
+                        i
+                    </span>
+                ) : null}
+            </p>
             {loading ? (
                 <div className="mt-2 h-7 w-24 animate-pulse rounded bg-slate-100" />
             ) : (
