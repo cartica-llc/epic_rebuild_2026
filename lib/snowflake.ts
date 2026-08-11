@@ -1,9 +1,31 @@
 //@/lib/snowflake.ts
 
-
 import snowflake from 'snowflake-sdk';
 
 let connectionPromise: Promise<snowflake.Connection> | null = null;
+
+// Private key can be stored in the env var either with real newlines
+// or with literal "\n" (common when pasting into a single-line env value).
+function loadPrivateKey(): string {
+    const raw = process.env.DEV_SNOWFLAKE_PRIVATE_KEY!;
+    const pem = raw.includes('\\n') ? raw.replace(/\\n/g, '\n') : raw;
+    const passphrase = process.env.DEV_SNOWFLAKE_PRIVATE_KEY_PASSPHRASE;
+
+    if (!passphrase) {
+        // Unencrypted key, use as-is.
+        return pem;
+    }
+
+    // Encrypted key: decrypt once at load time and re-export as plain PKCS8 PEM,
+    // since snowflake-sdk's `privateKey` option expects an unencrypted key.
+    const crypto = require('crypto');
+    const keyObject = crypto.createPrivateKey({
+        key: pem,
+        format: 'pem',
+        passphrase,
+    });
+    return keyObject.export({ format: 'pem', type: 'pkcs8' }) as string;
+}
 
 function getConnection(): Promise<snowflake.Connection> {
     if (!connectionPromise) {
@@ -11,7 +33,8 @@ function getConnection(): Promise<snowflake.Connection> {
             const conn = snowflake.createConnection({
                 account: process.env.DEV_SNOWFLAKE_ACCOUNT!,
                 username: process.env.DEV_SNOWFLAKE_USER!,
-                password: process.env.DEV_SNOWFLAKE_PASSWORD!,
+                authenticator: 'SNOWFLAKE_JWT',
+                privateKey: loadPrivateKey(),
                 database: process.env.DEV_SNOWFLAKE_DATABASE!,
                 schema: process.env.DEV_SNOWFLAKE_SCHEMA!,
                 warehouse: process.env.DEV_SNOWFLAKE_WAREHOUSE!,
