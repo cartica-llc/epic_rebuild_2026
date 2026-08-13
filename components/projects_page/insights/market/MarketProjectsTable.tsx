@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useInsightFetch } from '../spending/shared/useInsightFetch';
 import { ProxyTooltip, SIGNAL_PROXY_EXPLANATION } from './ProxyTooltip';
-import { scorePillClass } from './shared/colors';
+import { MATURITY_STAGE_LABEL, scorePillClass, SIGNAL_BAND_LABEL } from './shared/colors';
 import type { MarketProject } from './shared/types';
 
 const PAGE_SIZE = 15;
@@ -67,7 +67,7 @@ export function MarketProjectsTable({
             <header className="mb-5">
                 <div className="flex items-center gap-1.5">
                     <h4 className="text-sm font-semibold text-slate-900">
-                        High-potential projects
+                        Likely high-potential projects
                     </h4>
                     <ProxyTooltip {...SIGNAL_PROXY_EXPLANATION} />
                 </div>
@@ -126,12 +126,12 @@ export function MarketProjectsTable({
                                         )}
                                     </td>
                                     <td className="px-3 py-3 text-xs text-slate-600">
-                                        {p.maturity}
+                                        {MATURITY_STAGE_LABEL[p.maturity]}
                                     </td>
                                     <td className="px-3 py-3 text-right">
                                             <span
                                                 className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${scorePillClass(p.signalScore)}`}
-                                                title={`${p.signalBand} signal — proxy indicator`}
+                                                title={`${SIGNAL_BAND_LABEL[p.signalBand]} signal — proxy indicator`}
                                             >
                                                 {p.signalScore}/5
                                             </span>

@@ -18,9 +18,14 @@ interface CompletedProject {
     imageUrl: string | null;
 }
 
+function getDisplayOrgShort(organizationShort?: string) {
+    return organizationShort === 'EPC' ? 'CEC' : organizationShort;
+}
+
 function ProjectCard({ project, index }: { project: CompletedProject; index: number }) {
     const [imgError, setImgError] = useState(false);
     const showFallback = !project.imageUrl || imgError;
+    const displayOrgShort = getDisplayOrgShort(project.organizationShort);
 
     return (
         <motion.div
@@ -38,7 +43,7 @@ function ProjectCard({ project, index }: { project: CompletedProject; index: num
                 <article className="flex flex-col">
                     <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-slate-200/60 bg-slate-100 shadow-sm">
                         {showFallback ? (
-                            <ProjectFallbackArt organizationShort={project.organizationShort} />
+                            <ProjectFallbackArt organizationShort={displayOrgShort} />
                         ) : (
                             <Image
                                 src={project.imageUrl as string}
@@ -66,7 +71,7 @@ function ProjectCard({ project, index }: { project: CompletedProject; index: num
                     <div className="mt-5 space-y-3">
                         <div className="flex items-center justify-between">
                             <span className="mr-4 truncate text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
-                                {project.organizationShort || 'Infrastructure'}
+                                {displayOrgShort || 'Infrastructure'}
                             </span>
 
                             <span className="shrink-0 text-[10px] font-medium uppercase tabular-nums text-slate-400">

@@ -2,10 +2,6 @@
 
 import type { MaturityStage, SignalBand } from './types';
 
-/**
- * Maturity gradient: deepest tone at the most-advanced stage, lighter as we
- * move back toward early R&D. Mirrors the funnel-shaped pipeline visual.
- */
 export const MATURITY_FILL: Record<MaturityStage, string> = {
     'Near-market': '#0f172a', // slate-900
     Validation: '#334155', // slate-700
@@ -15,10 +11,7 @@ export const MATURITY_FILL: Record<MaturityStage, string> = {
     Unstaged: '#e2e8f0', // slate-200
 };
 
-/**
- * Signal band palette — emerald for strong (positive momentum), amber for
- * emerging (in-flight), slate for early (no clear signal yet).
- */
+
 export const SIGNAL_BAND_FILL: Record<SignalBand, string> = {
     Strong: '#047857', // emerald-700
     Emerging: '#d97706', // amber-600
@@ -31,9 +24,24 @@ export const SIGNAL_BAND_TAILWIND: Record<SignalBand, string> = {
     Early: 'bg-slate-200 text-slate-700',
 };
 
-/**
- * Score-based color (0–5) — used for the inline pill in the projects table.
- */
+
+export const SIGNAL_BAND_LABEL: Record<SignalBand, string> = {
+    Strong: 'Likely high potential',
+    Emerging: 'Emerging',
+    Early: 'Early',
+};
+
+
+export const MATURITY_STAGE_LABEL: Record<MaturityStage, string> = {
+    'Near-market': 'Likely near-market',
+    Validation: 'Likely validation stage',
+    Development: 'Development',
+    'Demonstration / Build': 'Demonstration / Build',
+    'Early R&D': 'Early R&D',
+    Unstaged: 'Unstaged',
+};
+
+
 export function scorePillClass(score: number): string {
     if (score >= 4) return 'bg-emerald-700 text-white';
     if (score >= 2) return 'bg-amber-600 text-white';

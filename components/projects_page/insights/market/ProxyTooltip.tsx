@@ -6,17 +6,10 @@ import { useState } from 'react';
 import { Info } from 'lucide-react';
 
 interface ProxyTooltipProps {
-    /** Plain-language explanation of how the value is derived. */
     explanation: string;
-    /** Optional list of inputs/factors. */
     factors?: string[];
 }
 
-/**
- * Inline "ⓘ" affordance used to flag derived or proxy fields.
- * Hover/focus to see the explanation. Communicates that the value isn't
- * an authoritative database field but a calculation from observable evidence.
- */
 export function ProxyTooltip({ explanation, factors }: ProxyTooltipProps) {
     const [open, setOpen] = useState(false);
 
@@ -58,7 +51,7 @@ export function ProxyTooltip({ explanation, factors }: ProxyTooltipProps) {
 
 export const SIGNAL_PROXY_EXPLANATION = {
     explanation:
-        'A 0-5 readiness score derived from observable project evidence — not an official commercialization field.',
+        'A 0-5 score derived from project evidence as self-reported by the grantee — not an official commercialization field, and not independently verified or validated by CPUC.',
     factors: [
         'Final report present',
         'Project status indicates completion',
@@ -70,12 +63,12 @@ export const SIGNAL_PROXY_EXPLANATION = {
 
 export const MATURITY_PROXY_EXPLANATION = {
     explanation:
-        'Derived from the project\u2019s assigned development stages (TRL levels and stage names). The most advanced stage wins when multiple are assigned.',
+        'Derived from development stages (TRL levels and stage names) self-reported by the grantee — not independently verified or validated by CPUC. The most advanced stage wins when multiple are assigned.',
     factors: [
-        'TRL 9 \u2192 Near-market',
-        'TRL 7-8 + Precommercial \u2192 Validation',
-        'TRL 6 + Build/Test + Demonstration \u2192 Demonstration / Build',
-        'TRL 4-5 + Design/Engineer \u2192 Development',
-        'TRL 1-3 \u2192 Early R&D',
+        'TRL 9 → Likely near-market',
+        'TRL 7-8 + Precommercial → Likely validation stage',
+        'TRL 6 + Build/Test + Demonstration → Demonstration / Build',
+        'TRL 4-5 + Design/Engineer → Development',
+        'TRL 1-3 → Early R&D',
     ],
 };

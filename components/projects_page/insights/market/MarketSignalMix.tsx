@@ -8,7 +8,7 @@ import {
     SIGNAL_PROXY_EXPLANATION,
     MATURITY_PROXY_EXPLANATION,
 } from './ProxyTooltip';
-import { SIGNAL_BAND_FILL } from './shared/colors';
+import { MATURITY_STAGE_LABEL, SIGNAL_BAND_FILL, SIGNAL_BAND_LABEL } from './shared/colors';
 import type { MaturityStage, SignalMixStage, SignalOverall } from './shared/types';
 
 interface SignalsResponse {
@@ -82,9 +82,9 @@ export function MarketSignalMix({
                     {/* Legend + signal proxy info */}
                     <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-500">
-                            <LegendDot color={SIGNAL_BAND_FILL.Strong} label="Strong (4-5)" />
-                            <LegendDot color={SIGNAL_BAND_FILL.Emerging} label="Emerging (2-3)" />
-                            <LegendDot color={SIGNAL_BAND_FILL.Early} label="Early (0-1)" />
+                            <LegendDot color={SIGNAL_BAND_FILL.Strong} label={`${SIGNAL_BAND_LABEL.Strong} (4-5)`} />
+                            <LegendDot color={SIGNAL_BAND_FILL.Emerging} label={`${SIGNAL_BAND_LABEL.Emerging} (2-3)`} />
+                            <LegendDot color={SIGNAL_BAND_FILL.Early} label={`${SIGNAL_BAND_LABEL.Early} (0-1)`} />
                             <span className="ml-1 inline-flex items-center gap-1 text-[10px] text-slate-400">
                                 Signal score
                                 <ProxyTooltip {...SIGNAL_PROXY_EXPLANATION} />
@@ -141,7 +141,7 @@ function StageRow({
                 onClick={isEmpty ? undefined : onSelect}
                 disabled={isEmpty}
                 aria-pressed={isActive}
-                aria-label={`${isActive ? 'Clear filter' : `Filter by ${stage.maturity}`}: ${stage.total} projects`}
+                aria-label={`${isActive ? 'Clear filter' : `Filter by ${MATURITY_STAGE_LABEL[stage.maturity]}`}: ${stage.total} projects`}
                 className={`group block w-full rounded-md px-2 py-1.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                     isEmpty
                         ? 'cursor-default'
@@ -154,7 +154,7 @@ function StageRow({
                     <span
                         className={`text-xs ${isActive ? 'font-semibold text-slate-900' : 'font-medium text-slate-700'}`}
                     >
-                        {stage.maturity}
+                        {MATURITY_STAGE_LABEL[stage.maturity]}
                     </span>
                     <span className="flex items-baseline gap-2">
                         <span className="text-sm font-semibold text-slate-900">
@@ -180,7 +180,7 @@ function StageRow({
                         <div className="flex h-full">
                             {stage.strong > 0 && (
                                 <div
-                                    title={`Strong: ${stage.strong}`}
+                                    title={`${SIGNAL_BAND_LABEL.Strong}: ${stage.strong}`}
                                     style={{
                                         width: `${strongPct}%`,
                                         backgroundColor: SIGNAL_BAND_FILL.Strong,
@@ -189,7 +189,7 @@ function StageRow({
                             )}
                             {stage.emerging > 0 && (
                                 <div
-                                    title={`Emerging: ${stage.emerging}`}
+                                    title={`${SIGNAL_BAND_LABEL.Emerging}: ${stage.emerging}`}
                                     style={{
                                         width: `${emergingPct}%`,
                                         backgroundColor: SIGNAL_BAND_FILL.Emerging,
@@ -198,7 +198,7 @@ function StageRow({
                             )}
                             {stage.early > 0 && (
                                 <div
-                                    title={`Early: ${stage.early}`}
+                                    title={`${SIGNAL_BAND_LABEL.Early}: ${stage.early}`}
                                     style={{
                                         width: `${earlyPct}%`,
                                         backgroundColor: SIGNAL_BAND_FILL.Early,

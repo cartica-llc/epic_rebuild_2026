@@ -37,8 +37,8 @@ interface Props {
     queryString: string;
 }
 
-const DAC_LI_HINT =
-    'Based on the DAC/LI designation entered on each project. Self-reported by program staff, not independently verified.';
+// One short tag, reused as-is everywhere DAC/LI data needs the caveat.
+const UNVERIFIED_NOTE = 'Self-reported · unverified';
 
 export default function CommunityRequirementsTab({ queryString }: Props) {
     const { data, loading, error } = useInsightFetch<CommunityResponse>(
@@ -46,7 +46,6 @@ export default function CommunityRequirementsTab({ queryString }: Props) {
     );
 
     const overall = data?.overall;
-    const meets = overall?.meetsRequirement ?? false;
 
     return (
         <div className="space-y-5">
@@ -60,33 +59,29 @@ export default function CommunityRequirementsTab({ queryString }: Props) {
                     label="DAC / LI Expended"
                     value={formatMoneyShort(overall?.dacLiSpent ?? 0)}
                     loading={loading}
-                    hint={DAC_LI_HINT}
+                    note={UNVERIFIED_NOTE}
                 />
                 <Card
                     label="DAC / LI Share"
                     value={overall ? formatPct(overall.dacLiPct, 1) : '0%'}
                     loading={loading}
-                    hint={DAC_LI_HINT}
+                    note={UNVERIFIED_NOTE}
                 />
                 <Card
                     label="Requirement"
                     value={
                         overall
-                            ? `${meets ? '✓' : '✗'} ${overall.minRequiredPct}% min`
+                            ? `${overall.minRequiredPct}% min`
                             : '—'
                     }
                     loading={loading}
-                    accent={meets ? 'good' : 'warn'}
-                    hint="Reflects self-reported DAC/LI project designations against the minimum target, not an independently verified compliance determination."
+                    note={UNVERIFIED_NOTE}
                 />
             </div>
-            <p className="text-[11px] italic text-slate-400">
-                DAC/LI figures reflect project-level designations entered by program staff and are not independently verified.
-            </p>
 
             <SectionCard
                 title="DAC / LI share by period"
-                description={`Minimum required: ${overall?.minRequiredPct ?? 25}% · reflects self-reported DAC/LI designations, not third-party verification.`}
+                description={`Minimum required: ${overall?.minRequiredPct ?? 25}% · ${UNVERIFIED_NOTE}`}
             >
                 {loading ? (
                     <ChartSkeleton />
@@ -96,42 +91,38 @@ export default function CommunityRequirementsTab({ queryString }: Props) {
                     <EmptyState message="No data for the current filters." />
                 ) : (
                     <ul className="space-y-3">
-                        {data.byPeriod.map((p) => {
-                            const meetsBar = p.dacLiPct >= (overall?.minRequiredPct ?? 25);
-                            return (
-                                <li key={p.period}>
-                                    <div className="mb-1 flex items-baseline justify-between text-xs">
-                                        <span className="font-medium text-slate-700">
-                                            {p.period}
-                                        </span>
-                                        <span className="text-slate-500">
-                                            {formatPct(p.dacLiPct)} ·{' '}
-                                            {formatMoneyShort(p.dacLiSpent)} of{' '}
-                                            {formatMoneyShort(p.totalSpent)}
-                                        </span>
-                                    </div>
-                                    <div className="relative h-2.5 overflow-hidden rounded-sm bg-slate-100">
-                                        <div
-                                            className={`h-full ${meetsBar ? 'bg-emerald-400' : 'bg-slate-400'}`}
-
-                                            style={{ width: `${Math.min(100, p.dacLiPct)}%` }}
-                                        />
-                                        <div
-                                            className="absolute top-0 h-full border-l border-dashed border-slate-400"
-                                            style={{ left: `${overall?.minRequiredPct ?? 25}%` }}
-                                            aria-hidden="true"
-                                        />
-                                    </div>
-                                </li>
-                            );
-                        })}
+                        {data.byPeriod.map((p) => (
+                            <li key={p.period}>
+                                <div className="mb-1 flex items-baseline justify-between text-xs">
+                                    <span className="font-medium text-slate-700">
+                                        {p.period}
+                                    </span>
+                                    <span className="text-slate-500">
+                                        {formatPct(p.dacLiPct)} ·{' '}
+                                        {formatMoneyShort(p.dacLiSpent)} of{' '}
+                                        {formatMoneyShort(p.totalSpent)}
+                                    </span>
+                                </div>
+                                <div className="relative h-2.5 overflow-hidden rounded-sm bg-slate-100">
+                                    <div
+                                        className="h-full bg-slate-500"
+                                        style={{ width: `${Math.min(100, p.dacLiPct)}%` }}
+                                    />
+                                    <div
+                                        className="absolute top-0 h-full border-l border-dashed border-slate-400"
+                                        style={{ left: `${overall?.minRequiredPct ?? 25}%` }}
+                                        aria-hidden="true"
+                                    />
+                                </div>
+                            </li>
+                        ))}
                     </ul>
                 )}
             </SectionCard>
 
             <SectionCard
                 title="DAC / LI share by investment area"
-                description="Top 12 areas by DAC/LI expenditure. Reflects self-reported project designations, not third-party verification."
+                description={`Top 12 areas by DAC/LI expenditure · ${UNVERIFIED_NOTE}`}
             >
                 {loading ? (
                     <ChartSkeleton />
@@ -166,40 +157,25 @@ function Card({
                   label,
                   value,
                   loading,
-                  accent,
-                  hint,
+                  note,
               }: {
     label: string;
     value: string;
     loading: boolean;
-    accent?: 'good' | 'warn';
-    hint?: string;
+    note?: string;
 }) {
-    const accentClass =
-        accent === 'good'
-            ? 'text-emerald-700'
-            : accent === 'warn'
-                ? 'text-amber-700'
-                : 'text-slate-900';
-
     return (
         <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
-                {label}
-                {hint ? (
-                    <span
-                        className="inline-flex h-3.5 w-3.5 flex-shrink-0 cursor-help items-center justify-center rounded-full border border-slate-300 text-[9px] normal-case not-italic text-slate-400"
-                        title={hint}
-                        aria-label={hint}
-                    >
-                        i
-                    </span>
-                ) : null}
-            </p>
+            <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
             {loading ? (
                 <div className="mt-2 h-7 w-24 animate-pulse rounded bg-slate-100" />
             ) : (
-                <p className={`mt-2 text-xl font-semibold ${accentClass}`}>{value}</p>
+                <>
+                    <p className="mt-2 text-xl font-semibold text-slate-900">{value}</p>
+                    {note ? (
+                        <p className="mt-1 text-[10px] text-slate-400">{note}</p>
+                    ) : null}
+                </>
             )}
         </div>
     );

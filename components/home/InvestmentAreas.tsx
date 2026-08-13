@@ -35,6 +35,14 @@ const COLOR_CLASSES = [
     'bg-slate-300',
 ];
 
+// Grid slot configuration — how many real investment areas to display before
+// falling back to a "More areas" tile / "View all" link. Tune these to
+// change how many tiles show per breakpoint without touching layout logic.
+const DESKTOP_ROW_SIZE = 4;   // tiles per desktop row (3 rows × 4 = 12 real tiles)
+const DESKTOP_TILE_COUNT = 12; // real area tiles shown when there's overflow (13th slot becomes the "More areas" tile)
+const DESKTOP_FULL_COUNT = DESKTOP_TILE_COUNT + 1; // 13 — real area tiles shown when there's no overflow (fills the last row's final slot, no "more" tile)
+const MOBILE_TILE_COUNT = 3;  // real area tiles shown on mobile before the "View All Investment Areas" link
+
 function formatFunding(amount: number): string {
     if (!amount) return '$0';
     if (amount >= 1_000_000_000) return `$${(amount / 1_000_000_000).toFixed(1)}B`;
@@ -85,8 +93,13 @@ export function InvestmentAreas() {
     const { data, loading } = useInvestmentAreas();
 
     const areas = data?.areas ?? [];
-    // NOTE: data.total is not a reliable "true total" of investment areas —
-    // see comment near `showMoreTile` below. Not used for display.
+    // NOTE: data.total is still not a reliable "true total" of investment
+    // areas — it's derived as areas.length from the API's own query, so if
+    // that query is ever limited again below the real count, `total` would
+    // understate it the same way it did before. We don't use it for display;
+    // `areas.length` (the raw fetched list, pre-slice) is what drives
+    // `showMoreTile` below, since that only needs to know whether more rows
+    // came back than we're showing — not the exact real-world total.
 
     const [selectedArea, setSelectedArea] = useState<InvestmentArea | null>(null);
     const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
@@ -116,16 +129,10 @@ export function InvestmentAreas() {
     };
 
     // Reserve the last grid slot for a "see more" tile whenever there are
-    // more investment areas than we can show, instead of showing 8 real areas.
-    // NOTE: we deliberately don't use `totalCount` (data.total) here — the API
-    // sets total = areas.length from a LIMIT-capped query, so it reflects how
-    // many rows were requested, not how many investment areas actually exist.
-    // Using areas.length (the raw fetched list, pre-slice) at least tells us
-    // whether more rows came back than we're showing, without asserting a
-    // specific count we can't verify.
+    // more investment areas than DESKTOP_TILE_COUNT can show.
     const MORE_TILE_WIDTH_PCT = 22;
-    const showMoreTile = areas.length > 7;
-    const realAreaCount = showMoreTile ? 7 : 8;
+    const showMoreTile = areas.length > DESKTOP_TILE_COUNT;
+    const realAreaCount = showMoreTile ? DESKTOP_TILE_COUNT : DESKTOP_FULL_COUNT;
 
     const topAreas = areas.slice(0, realAreaCount);
 
@@ -136,9 +143,9 @@ export function InvestmentAreas() {
 
     const hasFullDesktopLayout = areasWithIcon.length >= realAreaCount;
 
-    const row1 = areasWithIcon.slice(0, 2);
-    const row2 = areasWithIcon.slice(2, 4);
-    const row3 = areasWithIcon.slice(4, realAreaCount);
+    const row1 = areasWithIcon.slice(0, DESKTOP_ROW_SIZE);
+    const row2 = areasWithIcon.slice(DESKTOP_ROW_SIZE, DESKTOP_ROW_SIZE * 2);
+    const row3 = areasWithIcon.slice(DESKTOP_ROW_SIZE * 2, realAreaCount);
 
     const rowTotals = {
         r1: sumFunding(row1),
@@ -169,7 +176,7 @@ export function InvestmentAreas() {
         ),
     };
 
-    const mobileAreas = areasWithIcon.slice(0, 3);
+    const mobileAreas = areasWithIcon.slice(0, MOBILE_TILE_COUNT);
     const mRowA = mobileAreas.slice(0, 2);
     const mRowB = mobileAreas.slice(2, 3);
 
@@ -332,7 +339,7 @@ export function InvestmentAreas() {
 
                     {/* Desktop treemap */}
                     {hasFullDesktopLayout && (
-                        <div className="hidden md:block bg-slate-100 p-1.5 rounded-lg aspect-[16/5]">
+                        <div className="hidden md:block bg-slate-100 p-1.5 rounded-lg aspect-[16/7]">
                             <div className="flex flex-col h-full gap-1.5">
                                 <div
                                     className="flex gap-1.5"
@@ -342,7 +349,7 @@ export function InvestmentAreas() {
                                         <motion.div
                                             key={area.id}
                                             onClick={e => handleAreaClick(area, e)}
-                                            className={`${COLOR_CLASSES[i]} relative overflow-hidden rounded p-3 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
+                                            className={`${COLOR_CLASSES[i % COLOR_CLASSES.length]} relative overflow-hidden rounded p-3 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
                                             style={{ width: `${rowWidths.r1[i]}%` }}
                                         >
                                             <AreaIcon icon={area.Icon} />
@@ -366,7 +373,7 @@ export function InvestmentAreas() {
                                         <motion.div
                                             key={area.id}
                                             onClick={e => handleAreaClick(area, e)}
-                                            className={`${COLOR_CLASSES[2 + i]} relative overflow-hidden rounded p-3 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
+                                            className={`${COLOR_CLASSES[(DESKTOP_ROW_SIZE + i) % COLOR_CLASSES.length]} relative overflow-hidden rounded p-3 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
                                             style={{ width: `${rowWidths.r2[i]}%` }}
                                         >
                                             <AreaIcon icon={area.Icon} />
@@ -390,7 +397,7 @@ export function InvestmentAreas() {
                                         <motion.div
                                             key={area.id}
                                             onClick={e => handleAreaClick(area, e)}
-                                            className={`${COLOR_CLASSES[4 + i]} relative overflow-hidden rounded p-2.5 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
+                                            className={`${COLOR_CLASSES[(DESKTOP_ROW_SIZE * 2 + i) % COLOR_CLASSES.length]} relative overflow-hidden rounded p-2.5 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
                                             style={{ width: `${rowWidths.r3[i]}%` }}
                                         >
                                             <AreaIcon icon={area.Icon} />

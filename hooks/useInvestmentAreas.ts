@@ -25,7 +25,12 @@ export interface InvestmentAreasResponse {
     total:        number;
 }
 
-const ENDPOINT = '/api/home/investmentAreasTreeMap?limit=8&projectsPerArea=3';
+// `limit` bounds how many investment areas the API returns. There are 23
+// active investment areas as of writing (see INVESTMENT_AREA table) — 50
+// gives headroom for that to grow without silently dropping rows again.
+// If the true count ever exceeds this, bump it further, or better: have the
+// API endpoint support omitting `limit` entirely to mean "all".
+const ENDPOINT = '/api/home/investmentAreasTreeMap?limit=50&projectsPerArea=3';
 
 let inflight: Promise<InvestmentAreasResponse> | null = null;
 let cached: InvestmentAreasResponse | null = null;

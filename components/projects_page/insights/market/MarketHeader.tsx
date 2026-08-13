@@ -15,12 +15,14 @@ export function MarketHeader({ showReset, onReset }: MarketHeaderProps) {
                     Market Maturity Analysis
                 </h2>
                 <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-slate-500">
-                    See where projects sit in the development funnel and which ones show
-                    the strongest signs of being close to market.{' '}
+                    See where projects sit in the development funnel and which projects
+                    show signals associated with likely near-market readiness.{' '}
                     <span className="font-medium text-amber-700">
-                        Maturity and signal score are proxy indicators
+                        Maturity and signal score are proxy indicators derived from
+                        self-reported project evidence
                     </span>{' '}
-                    derived from project evidence, not authoritative fields.
+                    — not authoritative fields, and not independently verified or
+                    validated by CPUC.
                 </p>
             </div>
 

@@ -22,8 +22,10 @@ export function MarketMethodologyPanel() {
                         How maturity and signal score are calculated
                     </p>
                     <p className="hidden mt-0.5 text-[11px] text-amber-800/80">
-                        These are derived indicators built from project evidence — not
-                        official commercialization fields. Click to review the full breakdown.
+                        These are derived indicators built from self-reported project
+                        evidence — not official commercialization fields, and not
+                        independently verified or validated by CPUC. Click to review the
+                        full breakdown.
                     </p>
                 </div>
                 <ChevronDown
@@ -40,9 +42,10 @@ export function MarketMethodologyPanel() {
 
                     <p className="hidden mt-4 border-t border-slate-100 pt-3 text-[11px] leading-relaxed text-slate-500">
                         These calculations were chosen to surface meaningful patterns
-                        from the existing data in the absence of dedicated commercialization
-                        tracking fields. If your team prefers different rules, the logic
-                        lives in one place on the server and can be adjusted.
+                        from existing self-reported data in the absence of dedicated
+                        commercialization tracking fields. CPUC has not independently
+                        verified these values. If your team prefers different rules, the
+                        logic lives in one place on the server and can be adjusted.
                     </p>
                 </div>
             )}
@@ -59,19 +62,20 @@ function MaturityMethodology() {
                     Maturity stage
                 </h5>
                 <p className="mt-1 text-[11px] text-slate-500">
-                    Derived from the project&rsquo;s assigned development stages. When a
-                    project has multiple stages, the most advanced one wins.
+                    Derived from development stages self-reported by the grantee, not
+                    independently verified by CPUC. When a project has multiple stages,
+                    the most advanced one wins.
                 </p>
             </header>
 
             <ul className="space-y-1.5 text-[11px]">
                 <RuleRow
-                    label="Near-market"
+                    label="Likely near-market"
                     swatch="#0f172a"
                     rule="TRL 9"
                 />
                 <RuleRow
-                    label="Validation"
+                    label="Likely validation stage"
                     swatch="#334155"
                     rule="TRL 7–8 · Precommercial technology demonstration"
                 />
@@ -109,8 +113,9 @@ function SignalMethodology() {
                     Signal score (0–5)
                 </h5>
                 <p className="mt-1 text-[11px] text-slate-500">
-                    A point is added for each piece of evidence below. The total is then
-                    grouped into a readiness band.
+                    A point is added for each piece of self-reported evidence below. The
+                    total is then grouped into a band — not a CPUC-verified readiness
+                    determination.
                 </p>
             </header>
 
@@ -134,7 +139,7 @@ function SignalMethodology() {
                 </p>
                 <ul className="space-y-1.5 text-[11px]">
                     <BandRow
-                        band="Strong"
+                        band="Likely high potential"
                         range="4–5 points"
                         color="bg-emerald-700"
                     />
@@ -229,17 +234,31 @@ function BandRow({
  * - LEVERAGED_FUNDS > 0 = +1
  * - GETTING_TO_SCALE or KEY_LEARNINGS populated = +1
  *
- * Derived signal band:
- * - 4–5 = Strong
- * - 2–3 = Emerging
- * - 0–1 = Early
+ * Derived signal band (internal value → displayed copy):
+ * - 4–5 = Strong        → "Likely high potential"
+ * - 2–3 = Emerging       → "Emerging"
+ * - 0–1 = Early          → "Early"
  *
- * Derived maturity mapping:
- * - TRL 1–3 = Early R&D
- * - TRL 4–5 and Design/Engineer = Development
- * - TRL 6, Build/Test, Technology Demonstration = Demonstration / Build
- * - TRL 7–8 and Precommercial technology demonstration = Validation
- * - TRL 9 = Near-Market
- * - No stage = Unstaged
+ * The internal band values ('Strong' | 'Emerging' | 'Early') are unchanged —
+ * they still drive filter query params and the SQL derivation. Only the
+ * label shown to users is hedged (see shared/colors.ts SIGNAL_BAND_LABEL),
+ * so this never reads as CPUC certifying a project as market-ready.
+ *
+ * Derived maturity mapping (internal value → displayed copy):
+ * - TRL 1–3 = Early R&D                                        → "Early R&D"
+ * - TRL 4–5 and Design/Engineer = Development                  → "Development"
+ * - TRL 6, Build/Test, Technology Demonstration
+ *     = Demonstration / Build                                  → "Demonstration / Build"
+ * - TRL 7–8 and Precommercial technology demonstration
+ *     = Validation                                              → "Likely validation stage"
+ * - TRL 9 = Near-Market                                        → "Likely near-market"
+ * - No stage = Unstaged                                        → "Unstaged"
+ *
+ * As with signal band, the internal MaturityStage values are unchanged and
+ * still drive the maturity query param + SQL derivation (see
+ * shared/colors.ts MATURITY_STAGE_LABEL). "Near-market" and "Validation" are
+ * hedged with "Likely" in the display copy because these stages are derived
+ * from TRL levels the grantee self-reports — CPUC has not independently
+ * verified or validated them, and the copy should not read that way.
  *
  */

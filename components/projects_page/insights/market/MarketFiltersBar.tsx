@@ -9,6 +9,7 @@ import {
     type MaturityStage,
     type SignalBand,
 } from './shared/types';
+import { MATURITY_STAGE_LABEL, SIGNAL_BAND_LABEL } from './shared/colors';
 import type { MarketFilters } from './useMarketFilters';
 
 interface MarketFiltersBarProps {
@@ -59,7 +60,7 @@ export function MarketFiltersBar({
                     onChange={(v) => onMaturityChange((v as MaturityStage) || null)}
                     options={[
                         { value: '', label: 'All Stages' },
-                        ...MATURITY_ORDER.map((m) => ({ value: m, label: m })),
+                        ...MATURITY_ORDER.map((m) => ({ value: m, label: MATURITY_STAGE_LABEL[m] })),
                     ]}
                 />
 
@@ -69,7 +70,7 @@ export function MarketFiltersBar({
                     onChange={(v) => onBandChange((v as SignalBand) || null)}
                     options={[
                         { value: '', label: 'All Bands' },
-                        ...SIGNAL_BANDS.map((b) => ({ value: b, label: b })),
+                        ...SIGNAL_BANDS.map((b) => ({ value: b, label: SIGNAL_BAND_LABEL[b] })),
                     ]}
                 />
 
