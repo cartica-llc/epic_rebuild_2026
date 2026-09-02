@@ -11,15 +11,41 @@ interface AreaGroup {
 
 const groups: AreaGroup[] = [
     {
-        theme: "Grid & Infrastructure",
-        color: "#0284c7",
+        theme: "Climate Adaptation & Grid Resilience",
+        color: "#e11d48",
         areas: [
             "Grid modernization",
-            "Grid optimization",
-            "Grid decentralization",
             "Grid resiliency and safety",
-            "Smart grid technology",
             "Cybersecurity",
+            "Wildfire mitigation",
+        ],
+    },
+    {
+        theme: "Distributed Energy Resources",
+        color: "#0284c7",
+        areas: [
+            "Grid decentralization",
+            "Grid optimization",
+            "Smart grid technology",
+            "Distributed energy resource integration",
+            "Demand reduction",
+            "Entrepreneurial ecosystems",
+        ],
+    },
+    {
+        theme: "Transportation Electrification & Energy Storage",
+        color: "#7c3aed",
+        areas: [
+            "Transportation electrification",
+            "Energy storage",
+        ],
+    },
+    {
+        theme: "Buildings",
+        color: "#d97706",
+        areas: [
+            "Building decarbonization",
+            "Industrial and agricultural innovation",
         ],
     },
     {
@@ -27,21 +53,7 @@ const groups: AreaGroup[] = [
         color: "#059669",
         areas: [
             "Grid decarbonization",
-            "Building decarbonization",
             "High penetration renewable energy integration",
-            "Transportation electrification",
-        ],
-    },
-    {
-        theme: "Innovation & Resilience",
-        color: "#e11d48",
-        areas: [
-            "Energy storage",
-            "Distributed energy resource integration",
-            "Demand reduction",
-            "Industrial and agricultural innovation",
-            "Entrepreneurial ecosystems",
-            "Wildfire mitigation",
         ],
     },
 ];
@@ -77,13 +89,12 @@ export default function InvestmentAreas({ delay = 0 }: InvestmentAreasProps) {
                     16 areas of critical clean energy innovation.
                 </h2>
                 <p className="text-[15px] leading-[1.75] text-gray-500">
-                    EPIC supports a wide range of clean energy research, development,
-                    and demonstration — organized across three strategic themes.
+                    EPIC supports a wide range of clean energy research, development, and demonstration.  Investment plans from EPIC 1-4 have invested in the following key Investment Areas.
                 </p>
             </div>
 
             {/* Themed groups */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
                 {groups.map((group) => (
                     <div key={group.theme}>
                         {/* Group header with colored accent */}

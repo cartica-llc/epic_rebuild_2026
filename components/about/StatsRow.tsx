@@ -25,7 +25,7 @@ const defaultStats: Stat[] = [
     {
         value: "16",
         label: "Investment areas",
-        sublabel: "Across 3 strategic themes",
+        sublabel: "Across 5 categories",
         accentColor: "#059669",
     },
     {

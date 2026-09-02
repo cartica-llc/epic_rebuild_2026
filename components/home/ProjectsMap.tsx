@@ -270,9 +270,7 @@ export function ProjectsMap() {
                         </h2>
 
                         <p className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-slate-500 pb-4">
-                            EPIC designates a portion of its projects as serving disadvantaged
-                            and low-income (DAC/LI) communities across California. Click a
-                            region to explore what&rsquo;s being built there.
+                            EPIC administrator identify which of their projects they believe are located in and intended to benefit disadvantaged and low-income (DAC/LI) communities across California. Click a region to explore what’s be supported.
                         </p>
 
                         <p className="max-w-2xl text-xs text-slate-400 pb-4">

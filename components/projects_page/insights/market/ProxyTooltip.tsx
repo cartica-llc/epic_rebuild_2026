@@ -65,10 +65,10 @@ export const MATURITY_PROXY_EXPLANATION = {
     explanation:
         'Derived from development stages (TRL levels and stage names) self-reported by the grantee — not independently verified or validated by CPUC. The most advanced stage wins when multiple are assigned.',
     factors: [
-        'TRL 9 → Likely near-market',
-        'TRL 7-8 + Precommercial → Likely validation stage',
-        'TRL 6 + Build/Test + Demonstration → Demonstration / Build',
-        'TRL 4-5 + Design/Engineer → Development',
-        'TRL 1-3 → Early R&D',
+        'TRL 9 → Possible near-market',
+        'TRL 7-8 + Precommercial → Possible validation stage',
+        'TRL 6 + Build/Test + Demonstration → Likely at Demonstration/Build stage',
+        'TRL 4-5 + Design/Engineer → Likely at development stage',
+        'TRL 1-3 → Likely at Early R&D stage',
     ],
 };

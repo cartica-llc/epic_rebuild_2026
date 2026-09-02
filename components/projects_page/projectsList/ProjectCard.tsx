@@ -40,24 +40,14 @@ const PERIOD_LABELS: Record<number, string> = {
     4: 'EPIC 4',
 };
 
+// Gradient backdrop — only used behind an actual photo (it's what the mask
+// below blends into). Rows with no image skip this and fall back to the
+// plain `bg-slate-100` on the container instead.
 const CARD_BG_STYLE = {
     background:
         'linear-gradient(99deg, #f8fafc, rgb(214, 222, 233) 59.24%, #d5dee9)',
 };
 
-const BLUR_MASK_STYLE = {
-    backdropFilter: 'blur(6px)',
-    WebkitBackdropFilter: 'blur(6px)',
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-
-    maskImage:
-        'linear-gradient(to right, transparent 0%, transparent 20%, black 42%, black 82%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 18%, black 100%)',
-    WebkitMaskImage:
-        'linear-gradient(to right, transparent 0%, transparent 20%, black 42%, black 82%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 18%, black 100%)',
-
-    maskComposite: 'intersect',
-    WebkitMaskComposite: 'source-in',
-};
 
 function formatAmount(amount?: string) {
     if (!amount) return '—';
@@ -95,6 +85,10 @@ interface ProjectCardProps {
 export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
     const router = useRouter();
     const [isAmountHovered, setIsAmountHovered] = useState(false);
+
+    // Start plain/minimal — no gradient guess-and-correct flash. Only flips
+    // true once ProjectThumbnail confirms a real image actually resolved.
+    const [hasImage, setHasImage] = useState(false);
 
     const canEdit = canEditProject(userOrganization, project.programAdminId);
     const statusStyles = STATUS_CONFIG[project.status] ?? DEFAULT_STATUS_STYLES;
@@ -179,14 +173,17 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                     )}
 
                     <div
-                        className="relative h-full min-h-[80px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 md:min-h-[120px]"
-                        style={CARD_BG_STYLE}
+                        className={`relative h-full min-h-[80px] w-full overflow-hidden rounded-2xl border md:min-h-[120px] ${
+                            hasImage ? 'border-slate-200 bg-slate-100' : 'border-slate-100'
+                        }`}
+                        style={hasImage ? CARD_BG_STYLE : undefined}
                     >
                         <ProjectThumbnail
                             imageKey={project.imageKey}
                             alt={projectName}
                             className="absolute inset-0"
                             imageClassName=""
+                            onImageAvailabilityChange={setHasImage}
                         />
 
                         <div
@@ -195,15 +192,14 @@ export function ProjectCard({ project, userOrganization }: ProjectCardProps) {
                             onMouseLeave={() => setIsAmountHovered(false)}
                         >
                             <div
-                                className="absolute inset-0"
-                                style={BLUR_MASK_STYLE}
-                            />
-
-                            <div className="relative z-10 text-right">
+                                className={`relative z-10 rounded-lg px-2.5 py-1 text-right md:px-3.5 md:py-1.5 ${
+                                    hasImage ? 'bg-white/85 shadow-sm backdrop-blur-sm' : ''
+                                }`}
+                            >
                                 <div className="hidden text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-700/80">
                                     Committed
                                 </div>
-                                <div className="mt-1 text-[18px] leading-none font-semibold text-slate-950 drop-shadow-sm md:text-[36px]">
+                                <div className="mt-1 text-[18px] leading-none font-semibold text-slate-950 md:text-[36px]">
                                     {committedDisplay}
                                 </div>
                             </div>

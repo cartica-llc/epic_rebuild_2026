@@ -1,0 +1,63 @@
+[
+  {
+    "id": "sign-in",
+    "title": "How to Sign In",
+    "tag": "Auth",
+    "description": "Access the EPIC Database as a user.",
+    "steps": [
+      "Navigate to the EPIC Database login modal.",
+      "Enter your organization email address.",
+      "Enter your password and click Sign In.",
+      "You will be redirected to the dashboard based on your organization."
+    ],
+    "videoSrc": "/video/docs/how_to/howto_login.mp4",
+    "videoAlt": "Walkthrough of the sign-in flow"
+  },
+  {
+    "id": "create-project",
+    "title": "How to Create a Project",
+    "tag": "Projects",
+    "description": "Add a new EPIC-funded project and complete the required fields before saving.",
+    "steps": [
+      "After logging in, click \"Create Project\" in the navigation menu.",
+      "Complete the required project details, including the name, number, status, program administrator, EPIC period, project lead, contact information, investment area, and districts.",
+      "Review the project number. The system adds the prefix and checks that the number is unique.",
+      "Upload a main project image and optional gallery images.",
+      "Click \"Create Project\" when you are ready to save.",
+      "If anything required is missing, the system will show what needs to be completed.",
+      "After saving, you will be taken to the new project page."
+    ],
+    "videoSrc": "/video/docs/how_to/EPIC_HowTo_CreateProject_GIF.mp4",
+    "videoAlt": "Walkthrough of creating a new project"
+  },
+  {
+    "id": "edit-project",
+    "title": "How to Edit a Project",
+    "tag": "Projects",
+    "description": "Update an existing project's fields, status, or attachments at any time.",
+    "steps": [
+      "Search for the project on the Projects list page using filters or the search bar.",
+      "Click the project row to open the detail view.",
+      "Click the Edit button (visible if you have edit permissions for this org).",
+      "Make your changes across the tabs. The progress bar updates in real time.",
+      "Click Save to persist changes. A success overlay will confirm the save."
+    ],
+    "videoSrc": "/video/docs/how_to/edit-project.mp4",
+    "videoAlt": "Walkthrough of editing a project"
+  },
+  {
+    "id": "export-data",
+    "title": "How to Export Projects",
+    "tag": "Data",
+    "description": "Download a filtered or full project list as a multi-sheet Excel workbook.",
+    "steps": [
+      "Go to the Projects list page.",
+      "Apply any filters you want (investment area, utility, status, etc.).",
+      "Click the Export button in the top toolbar.",
+      "Choose \"Current view\" to export filtered results or \"Full export\" for all records.",
+      "The .xlsx file will download automatically with data, lookups, and a summary sheet."
+    ],
+    "videoSrc": "/video/docs/how_to/export-data.mp4",
+    "videoAlt": "Walkthrough of exporting projects to Excel"
+  }
+]

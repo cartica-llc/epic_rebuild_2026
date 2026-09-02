@@ -13,7 +13,7 @@ export const AWARD_BANDS: AwardBand[] = [
     { label: '$500K – $1M',     order: 3, min: 500_000,  max: 1_000_000 },
     { label: '$1M – $5M',       order: 4, min: 1_000_000,max: 5_000_000 },
     { label: '$5M – $10M',      order: 5, min: 5_000_000,max: 10_000_000 },
-    { label: 'Over $10M',       order: 6, min: 10_000_000, max: null },
+    { label: '$10M+',           order: 6, min: 10_000_000, max: null },
 ];
 
 

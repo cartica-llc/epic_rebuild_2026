@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { Zap } from 'lucide-react';
+import { List, Zap } from 'lucide-react';
 
 interface ProjectFiltersProps {
     activePrefilter: string;
@@ -9,12 +9,25 @@ interface ProjectFiltersProps {
     initialPrefilter?: string;
 }
 
-const prefilterQueries = [
+interface PrefilterQuery {
+    id: string;
+    label: string;
+    description: string;
+}
+
+// Box #1 — "Project Listing": ways to browse the raw project list itself.
+const projectListingQueries: PrefilterQuery[] = [
+    { id: 'all-projects', label: 'Browse all projects', description: 'Full project database' },
+    { id: 'recently-added', label: 'Recently added', description: 'Newest projects in the database' },
+    { id: 'recently-completed', label: 'Recently completed', description: 'Projects that have recently wrapped up' },
+];
+
+// Box #2 — "Quick Insights": analysis/insight views layered on top of the data.
+const quickInsightQueries: PrefilterQuery[] = [
     { id: 'spending', label: 'Spending', description: 'Track spending & compliance' },
     { id: 'technology', label: 'Key Learnings', description: 'Browse by topic & expertise' },
     { id: 'map', label: 'Project Map', description: 'Map / district view' },
     { id: 'market', label: 'Market Maturity', description: "Where projects are and who's close to market" },
-    { id: 'all-projects', label: 'Browse all projects', description: 'Full project database' },
 ];
 
 export function ProjectFilters({
@@ -101,8 +114,100 @@ export function ProjectFilters({
         };
     }, [initialPrefilter, activePrefilter, handlePrefilter]);
 
-    const filterContent = (
-        <div className=" select-none space-y-3 pr-2">
+    const renderQueryButtons = (
+        queries: PrefilterQuery[],
+        gradientId: string,
+        showDescription: boolean = true,
+    ) => (
+        <div className="grid grid-cols-1 gap-3">
+            {queries.map((query) => (
+                <button
+                    key={query.id}
+                    type="button"
+                    onClick={() => handlePrefilter(query.id)}
+                    onDoubleClick={clearPrefilter}
+                    className="group relative w-full rounded-lg px-4 py-3 text-left transition-all"
+                >
+                    {activePrefilter === query.id && (
+                        <span className="absolute left-0 top-1/2 h-12 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-sky-600 via-emerald-600 to-rose-600" />
+                    )}
+
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1">
+                            <div
+                                className={`mb-1 text-sm font-bold ${
+                                    activePrefilter === query.id
+                                        ? 'text-slate-900'
+                                        : 'text-slate-700 group-hover:text-slate-900'
+                                }`}
+                            >
+                                {query.label}
+                            </div>
+
+                            {showDescription && (
+                                <div
+                                    className={`text-xs ${
+                                        activePrefilter === query.id
+                                            ? 'text-slate-600'
+                                            : 'text-slate-500 group-hover:text-slate-600'
+                                    }`}
+                                >
+                                    {query.description}
+                                </div>
+                            )}
+                        </div>
+
+                        {activePrefilter === query.id && (
+                            <div className="flex-shrink-0">
+                                <Zap
+                                    className="h-5 w-5"
+                                    style={{
+                                        stroke: `url(#${gradientId})`,
+                                        fill: `url(#${gradientId})`,
+                                    }}
+                                />
+
+                                <svg width="0" height="0" className="absolute">
+                                    <defs>
+                                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stopColor="#0284c7" />
+                                            <stop offset="100%" stopColor="#059669" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                        )}
+                    </div>
+                </button>
+            ))}
+        </div>
+    );
+
+    const projectListingContent = (
+        <div className="select-none space-y-3 pr-2">
+            <div>
+                <div className="mb-3 hidden lg:block">
+                    <div className="flex items-start gap-2">
+                        <List className="mt-0.5 h-6 w-6 flex-shrink-0 text-slate-700" />
+
+                        <div className="flex-1">
+                            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-900">
+                                Project Listing
+                            </h3>
+                            <p className="mt-0.5 text-[0.625rem] text-slate-600">
+                                Select a view
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {renderQueryButtons(projectListingQueries, 'zapGradientActiveListing', false)}
+            </div>
+        </div>
+    );
+
+    const quickInsightsContent = (
+        <div className="select-none space-y-3 pr-2">
             <div>
                 <div className="mb-3 hidden lg:block">
                     <div className="flex items-start gap-2">
@@ -118,9 +223,6 @@ export function ProjectFilters({
                             <h3 className="text-xs font-bold uppercase tracking-wide text-slate-900">
                                 Quick Insights
                             </h3>
-                            <p className="mt-0.5 text-[0.625rem] text-slate-600">
-                                Select a view
-                            </p>
                         </div>
 
                         <svg width="0" height="0" className="absolute">
@@ -134,77 +236,21 @@ export function ProjectFilters({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
-                    {prefilterQueries.map((query) => (
-                        <button
-                            key={query.id}
-                            type="button"
-                            onClick={() => handlePrefilter(query.id)}
-                            onDoubleClick={clearPrefilter}
-                            className="group relative w-full rounded-lg px-4 py-3 text-left transition-all"
-                        >
-                            {activePrefilter === query.id && (
-                                <span className="absolute left-0 top-1/2 h-12 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-sky-600 via-emerald-600 to-rose-600" />
-                            )}
-
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="flex-1">
-                                    <div
-                                        className={`mb-1 text-sm font-bold ${
-                                            activePrefilter === query.id
-                                                ? 'text-slate-900'
-                                                : 'text-slate-700 group-hover:text-slate-900'
-                                        }`}
-                                    >
-                                        {query.label}
-                                    </div>
-
-                                    <div
-                                        className={`text-xs ${
-                                            activePrefilter === query.id
-                                                ? 'text-slate-600'
-                                                : 'text-slate-500 group-hover:text-slate-600'
-                                        }`}
-                                    >
-                                        {query.description}
-                                    </div>
-                                </div>
-
-                                {activePrefilter === query.id && (
-                                    <div className="flex-shrink-0">
-                                        <Zap
-                                            className="h-5 w-5"
-                                            style={{
-                                                stroke: 'url(#zapGradientActive)',
-                                                fill: 'url(#zapGradientActive)',
-                                            }}
-                                        />
-
-                                        <svg width="0" height="0" className="absolute">
-                                            <defs>
-                                                <linearGradient id="zapGradientActive" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                    <stop offset="0%" stopColor="#0284c7" />
-                                                    <stop offset="100%" stopColor="#059669" />
-                                                </linearGradient>
-                                            </defs>
-                                        </svg>
-                                    </div>
-                                )}
-                            </div>
-                        </button>
-                    ))}
-                </div>
+                {renderQueryButtons(quickInsightQueries, 'zapGradientActiveInsights')}
             </div>
         </div>
     );
 
     return (
         <div ref={wrapperRef} className="hidden h-full lg:block">
-            <div
-                ref={sidebarRef}
-                className="will-change-transform flex flex-col rounded-2xl border-2 border-slate-200 bg-white/50 p-6 backdrop-blur-sm"
-            >
-                <div className="flex-1">{filterContent}</div>
+            <div ref={sidebarRef} className="will-change-transform flex flex-col gap-4">
+                <div className="flex flex-col rounded-2xl border-2 border-slate-200 bg-white/50 p-6 backdrop-blur-sm">
+                    {projectListingContent}
+                </div>
+
+                <div className="flex flex-col rounded-2xl border-2 border-slate-200 bg-white/50 p-6 backdrop-blur-sm">
+                    {quickInsightsContent}
+                </div>
             </div>
         </div>
     );

@@ -22,6 +22,8 @@ interface ProjectRow {
     PERSON_CONTACT_FIRST_NAME: string | null;
     PERSON_CONTACT_LAST_NAME: string | null;
     INVESTMENT_PROGRAM_PERIOD_PERIOD_ID: number | null;
+    CREATE_DATE: string | null;
+    PROJECT_END_DATE: string | null;
 }
 
 interface CountRow {
@@ -34,6 +36,10 @@ const ADMIN_MAP: Record<number, string> = {
     2: 'SDGE',
     3: 'PGE',
 };
+
+// Sidebar "Project Listing" sort views. Anything else (including
+// 'all-projects', or no sort param at all) keeps the original default order.
+const SORT_OPTIONS = new Set(['recently-added', 'recently-completed']);
 
 function safeStr(v: string) {
     return v.replace(/'/g, "''");
@@ -49,7 +55,7 @@ function safeFloat(v: string) {
 
 // ─── Dynamic query builder ────────────────────────────────────────────
 
-function buildQuery(sp: URLSearchParams) {
+function buildQuery(sp: URLSearchParams, sort: string) {
     const t      = `${DB}.${SCHEMA}`;
     const joins: string[]  = [];
     const wheres: string[] = [];
@@ -83,6 +89,16 @@ function buildQuery(sp: URLSearchParams) {
     } else {
         // Default: published only
         wheres.push('COALESCE(p.IS_ACTIVE, 1) = 1');
+    }
+
+    // ── "Recently completed" scope ──
+    // Only count a project as "completed" once it actually has a formal end
+    // date that has passed. (If there turns out to be a definitive
+    // PROJECT_STATUS value for "completed", AND it in here too — for now the
+    // date is the only unambiguous signal we have.)
+    if (sort === 'recently-completed') {
+        wheres.push('p.PROJECT_END_DATE IS NOT NULL');
+        wheres.push('p.PROJECT_END_DATE <= CURRENT_TIMESTAMP()');
     }
 
     // Always needed for display columns
@@ -217,12 +233,27 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
 
-        const page   = Math.max(1, parseInt(searchParams.get('page')  ?? '1',   10));
-        const limit  = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '100', 10)));
-        const offset = (page - 1) * limit;
+        // ── Sidebar sort view ──
+        // 'sort' comes from the Project Listing sidebar box ('recently-added' /
+        // 'recently-completed'). Anything not in SORT_OPTIONS (including
+        // 'all-projects' or no param) falls through to the original default.
+        const rawSort = searchParams.get('sort')?.trim() ?? '';
+        const sort = SORT_OPTIONS.has(rawSort) ? rawSort : '';
+
+        // "Recently added"/"Recently completed" are quick-glance lists, not
+        // something you page through — always cap to the first 25 server-side,
+        // regardless of what limit/page the client asks for.
+        const page   = sort ? 1 : Math.max(1, parseInt(searchParams.get('page')  ?? '1',   10));
+        const limit  = sort ? 25 : Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '100', 10)));
+        const offset = sort ? 0 : (page - 1) * limit;
+
+        const orderByClause =
+            sort === 'recently-added'     ? 'p.CREATE_DATE DESC' :
+                sort === 'recently-completed' ? 'p.PROJECT_END_DATE DESC' :
+                    'p.PROJECT_ID DESC';
 
         const t = `${DB}.${SCHEMA}`;
-        const { joinClause, whereClause } = buildQuery(searchParams);
+        const { joinClause, whereClause } = buildQuery(searchParams, sort);
 
         const [rows, countRows] = (await Promise.all([
             query(`
@@ -235,6 +266,8 @@ export async function GET(request: Request) {
                     p.PERSON_CONTACT_FIRST_NAME,
                     p.PERSON_CONTACT_LAST_NAME,
                     p.INVESTMENT_PROGRAM_PERIOD_PERIOD_ID,
+                    p.CREATE_DATE,
+                    p.PROJECT_END_DATE,
                     c.COMPANY_NAME,
                     fd.COMMITED_FUNDING_AMT,
                     LISTAGG(DISTINCT ia.INVESTMENT_AREA_NAME, ', ')
@@ -251,9 +284,11 @@ export async function GET(request: Request) {
                     p.PERSON_CONTACT_FIRST_NAME,
                     p.PERSON_CONTACT_LAST_NAME,
                     p.INVESTMENT_PROGRAM_PERIOD_PERIOD_ID,
+                    p.CREATE_DATE,
+                    p.PROJECT_END_DATE,
                     c.COMPANY_NAME,
                     fd.COMMITED_FUNDING_AMT
-                ORDER BY p.PROJECT_ID DESC
+                ORDER BY ${orderByClause}
                 LIMIT ${limit} OFFSET ${offset}
             `),
             query(`

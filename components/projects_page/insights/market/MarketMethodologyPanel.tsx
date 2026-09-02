@@ -70,27 +70,27 @@ function MaturityMethodology() {
 
             <ul className="space-y-1.5 text-[11px]">
                 <RuleRow
-                    label="Likely near-market"
+                    label="Possible near-market"
                     swatch="#0f172a"
                     rule="TRL 9"
                 />
                 <RuleRow
-                    label="Likely validation stage"
+                    label="Possible validation stage"
                     swatch="#334155"
                     rule="TRL 7–8 · Precommercial technology demonstration"
                 />
                 <RuleRow
-                    label="Demonstration / Build"
+                    label="Likely at Demonstration/Build stage"
                     swatch="#94a3b8"
                     rule="TRL 6 · Build/Test · Technology Demonstration"
                 />
                 <RuleRow
-                    label="Development"
+                    label="Likely at development stage"
                     swatch="#64748b"
                     rule="TRL 4–5 · Design/Engineer"
                 />
                 <RuleRow
-                    label="Early R&D"
+                    label="Likely at Early R&D stage"
                     swatch="#cbd5e1"
                     rule="TRL 1–3"
                 />
@@ -139,7 +139,7 @@ function SignalMethodology() {
                 </p>
                 <ul className="space-y-1.5 text-[11px]">
                     <BandRow
-                        band="Likely high potential"
+                        band="Possible high potential"
                         range="4–5 points"
                         color="bg-emerald-700"
                     />
@@ -235,7 +235,7 @@ function BandRow({
  * - GETTING_TO_SCALE or KEY_LEARNINGS populated = +1
  *
  * Derived signal band (internal value → displayed copy):
- * - 4–5 = Strong        → "Likely high potential"
+ * - 4–5 = Strong        → "Possible high potential"
  * - 2–3 = Emerging       → "Emerging"
  * - 0–1 = Early          → "Early"
  *
@@ -245,20 +245,23 @@ function BandRow({
  * so this never reads as CPUC certifying a project as market-ready.
  *
  * Derived maturity mapping (internal value → displayed copy):
- * - TRL 1–3 = Early R&D                                        → "Early R&D"
- * - TRL 4–5 and Design/Engineer = Development                  → "Development"
+ * - TRL 1–3 = Early R&D                                        → "Likely at Early R&D stage"
+ * - TRL 4–5 and Design/Engineer = Development                  → "Likely at development stage"
  * - TRL 6, Build/Test, Technology Demonstration
- *     = Demonstration / Build                                  → "Demonstration / Build"
+ *     = Demonstration / Build                                  → "Likely at Demonstration/Build stage"
  * - TRL 7–8 and Precommercial technology demonstration
- *     = Validation                                              → "Likely validation stage"
- * - TRL 9 = Near-Market                                        → "Likely near-market"
+ *     = Validation                                              → "Possible validation stage"
+ * - TRL 9 = Near-Market                                        → "Possible near-market"
  * - No stage = Unstaged                                        → "Unstaged"
  *
  * As with signal band, the internal MaturityStage values are unchanged and
  * still drive the maturity query param + SQL derivation (see
  * shared/colors.ts MATURITY_STAGE_LABEL). "Near-market" and "Validation" are
- * hedged with "Likely" in the display copy because these stages are derived
- * from TRL levels the grantee self-reports — CPUC has not independently
- * verified or validated them, and the copy should not read that way.
+ * hedged with "Possible" in the display copy because these stages are the
+ * least certain — TRL 7-9 self-reported by the grantee with no independent
+ * CPUC verification — while "Development", "Demonstration / Build", and
+ * "Early R&D" are hedged with "Likely at ___ stage" instead, since those
+ * earlier stages are more reliably inferred from the reported TRL band. In
+ * all cases the copy should not read as CPUC certifying the stage.
  *
  */

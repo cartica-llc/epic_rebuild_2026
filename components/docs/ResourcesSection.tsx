@@ -16,18 +16,18 @@ interface Resource {
 
 const RESOURCES: Resource[] = [
     {
-        id: 'cec-epic',
-        category: 'program',
-        title: 'CEC EPIC Program Home',
-        description: 'Official California Energy Commission page for the Electric Program Investment Charge program, including solicitations and research priorities.',
-        href: 'https://www.energy.ca.gov/programs-and-topics/programs/electric-program-investment-charge-epic-program',
-    },
-    {
         id: 'cpuc',
         category: 'policy',
         title: 'CPUC Energy R&D / EPIC Rulemaking',
         description: 'California Public Utilities Commission page covering EPIC oversight, proceedings, and strategic objectives for the current investment period.',
         href: 'https://www.cpuc.ca.gov/energyrdd/',
+    },
+    {
+        id: 'cec-epic',
+        category: 'program',
+        title: 'CEC EPIC Program Home',
+        description: 'Official California Energy Commission page for the Electric Program Investment Charge program, including solicitations and research priorities.',
+        href: 'https://www.energy.ca.gov/programs-and-topics/programs/electric-program-investment-charge-epic-program',
     },
     {
         id: 'sce',
@@ -48,7 +48,7 @@ const RESOURCES: Resource[] = [
         category: 'utility',
         title: 'PG&E — Research & Development',
         description: "Pacific Gas & Electric's R&D page covering EPIC-funded projects, innovation initiatives, and completed project final reports.",
-        href: 'https://www.pge.com/en/about/pge-systems/research-and-development.html',
+        href: 'https://www.pge.com/en/about/corporate-responsibility-and-sustainability/taking-responsibility/emerging-electric-technology-programs.html',
     },
 ];
 

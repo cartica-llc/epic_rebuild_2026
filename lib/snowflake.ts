@@ -1,6 +1,7 @@
 //@/lib/snowflake.ts
 
 import snowflake from 'snowflake-sdk';
+import { createPrivateKey } from 'crypto';
 
 let connectionPromise: Promise<snowflake.Connection> | null = null;
 
@@ -16,10 +17,7 @@ function loadPrivateKey(): string {
         return pem;
     }
 
-    // Encrypted key: decrypt once at load time and re-export as plain PKCS8 PEM,
-    // since snowflake-sdk's `privateKey` option expects an unencrypted key.
-    const crypto = require('crypto');
-    const keyObject = crypto.createPrivateKey({
+    const keyObject = createPrivateKey({
         key: pem,
         format: 'pem',
         passphrase,

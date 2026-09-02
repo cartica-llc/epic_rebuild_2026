@@ -19,6 +19,14 @@ import type { Project } from './ProjectsList';
 
 const ITEMS_PER_PAGE = 100;
 
+// "Recently added" / "Recently completed" are quick-glance lists, not
+// something you page through — cap them to the first 25 and skip pagination.
+const SORT_VIEW_LIMIT = 25;
+
+// Prefilters that change the *sort/scope* of the list rather than being a
+// user-picked filter. 'all-projects' means "no special sort" (default).
+const SORTABLE_PREFILTERS = new Set(['recently-added', 'recently-completed']);
+
 // ── Filter keys for URL sync ─────────────────────────────────────────
 const FILTER_PARAM_KEYS: (keyof FilterValues)[] = [
     'investmentAreaId',
@@ -62,14 +70,17 @@ function buildApiParams(
     page: number,
     search: string,
     filters: FilterValues,
+    sort: string | undefined,
+    limit: number,
     inactiveScopeAdminId?: string | null,
 ): URLSearchParams {
     const params = new URLSearchParams({
         page:  String(page),
-        limit: String(ITEMS_PER_PAGE),
+        limit: String(limit),
     });
 
     if (search.trim()) params.set('search', search.trim());
+    if (sort) params.set('sort', sort);
 
     const fp = filtersToParams(filters);
     for (const [key, value] of Object.entries(fp)) params.set(key, value);
@@ -83,6 +94,9 @@ function buildApiParams(
 
 // ─── Props ───────────────────────────────────────────────────────────
 interface ProjectsListContainerProps {
+    /** Sidebar prefilter id ('all-projects' | 'recently-added' | 'recently-completed').
+     *  Anything not in SORTABLE_PREFILTERS is treated as the default (no sort param). */
+    activePrefilter?: string;
     categoryFilter?: string | null;
     onClearFilter?: () => void;
     searchTerm?: string;
@@ -90,6 +104,7 @@ interface ProjectsListContainerProps {
 }
 
 export function ProjectsListContainer({
+                                          activePrefilter = 'all-projects',
                                           categoryFilter,
                                           onClearFilter,
                                           searchTerm = '',
@@ -109,6 +124,10 @@ export function ProjectsListContainer({
 
     const inactiveScopeAdminId: string | null =
         isProgramAdmin && !isMasterAdmin ? userOrg ?? null : null;
+
+    // Sort key derived from the sidebar prefilter — undefined means "default order".
+    const sortParam = SORTABLE_PREFILTERS.has(activePrefilter) ? activePrefilter : undefined;
+    const activeLimit = sortParam ? SORT_VIEW_LIMIT : ITEMS_PER_PAGE;
 
     // ── Local state ──────────────────────────────────────────────────
     const [filters,        setFilters]       = useState<FilterValues>(() => filtersFromUrl(searchParams));
@@ -193,11 +212,11 @@ export function ProjectsListContainer({
     const fetchProjects = useCallback(
         async (page: number, search: string, f: FilterValues) => {
             const res = await fetch(
-                `/api/projectsList?${buildApiParams(page, search, f, inactiveScopeAdminId)}`,
+                `/api/projectsList?${buildApiParams(page, search, f, sortParam, activeLimit, inactiveScopeAdminId)}`,
             );
             return res.json();
         },
-        [inactiveScopeAdminId],
+        [inactiveScopeAdminId, sortParam, activeLimit],
     );
 
     // ── Fetch projects ───────────────────────────────────────────────
@@ -213,8 +232,16 @@ export function ProjectsListContainer({
 
                     if (data.projects && Array.isArray(data.projects)) {
                         setProjects(data.projects);
-                        setTotalPages(data.totalPages ?? 1);
-                        setTotalCount(data.total ?? 0);
+
+                        if (sortParam) {
+                            // Quick-glance views: show exactly what came back
+                            // (≤ 25), no further pagination.
+                            setTotalPages(1);
+                            setTotalCount(data.projects.length);
+                        } else {
+                            setTotalPages(data.totalPages ?? 1);
+                            setTotalCount(data.total ?? 0);
+                        }
                     }
                 })
                 .catch(console.error)
@@ -229,15 +256,15 @@ export function ProjectsListContainer({
         };
     }, [currentPage, searchKeyword, filters, fetchProjects]);
 
-    // ── Reset to page 1 on filter/search/category change ────────────
+    // ── Reset to page 1 on filter/search/category/view change ───────
     useEffect(() => {
         const frame = window.requestAnimationFrame(() => setCurrentPage(1));
         return () => window.cancelAnimationFrame(frame);
-    }, [searchKeyword, categoryFilter, filters]);
+    }, [searchKeyword, categoryFilter, filters, sortParam]);
 
     const buildFilterParams = useCallback(
-        () => buildApiParams(1, searchKeyword, filters, inactiveScopeAdminId),
-        [searchKeyword, filters, inactiveScopeAdminId],
+        () => buildApiParams(1, searchKeyword, filters, sortParam, activeLimit, inactiveScopeAdminId),
+        [searchKeyword, filters, sortParam, activeLimit, inactiveScopeAdminId],
     );
 
     const handleRemoveFilter = (key: keyof FilterValues) => {
@@ -311,7 +338,7 @@ export function ProjectsListContainer({
                 totalCount={totalCount}
                 currentPage={currentPage}
                 totalPages={totalPages}
-                itemsPerPage={ITEMS_PER_PAGE}
+                itemsPerPage={activeLimit}
                 onPageChange={setCurrentPage}
                 categoryFilter={categoryFilter}
                 onClearFilter={onClearFilter}

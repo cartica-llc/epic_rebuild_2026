@@ -14,9 +14,9 @@ export function BrandLogo() {
             />
             <div className=" ">
                 <h1 className="text-lg font-semibold text-slate-900 whitespace-nowrap">
-                    California Public Utilities Commission
+                    EPIC Database
                 </h1>
-                <p className="text-xs text-slate-500">EPIC Database</p>
+                <p className="text-xs text-slate-500">California Public Utilities Commission</p>
             </div>
         </Link>
     );

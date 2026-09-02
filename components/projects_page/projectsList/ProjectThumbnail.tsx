@@ -3,7 +3,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 function buildThumbnailKey(imageKey: string): string {
     if (!imageKey) return '';
@@ -15,11 +15,16 @@ export function ProjectThumbnail({
                                      alt,
                                      className = '',
                                      imageClassName = '',
+                                     onImageAvailabilityChange,
                                  }: {
     imageKey?: string;
     alt: string;
     className?: string;
     imageClassName?: string;
+    /** Fires once we know whether a real image will actually render (no
+     *  imageKey, a failed lookup, or a broken image all report `false`). Lets
+     *  the parent card drop its gradient/mask styling when there's nothing to show. */
+    onImageAvailabilityChange?: (available: boolean) => void;
 }) {
     const [src, setSrc] = useState<string | null>(null);
 
@@ -29,28 +34,45 @@ export function ProjectThumbnail({
 
     const displaySrc = thumbnailKey ? src : null;
 
+    // Ref so the fetch effect below doesn't need the callback in its deps
+    // (callers often pass an inline function).
+    const onAvailabilityRef = useRef(onImageAvailabilityChange);
     useEffect(() => {
-        if (!thumbnailKey) return;
+        onAvailabilityRef.current = onImageAvailabilityChange;
+    }, [onImageAvailabilityChange]);
+
+    useEffect(() => {
+        if (!thumbnailKey) {
+            setSrc(null);
+            onAvailabilityRef.current?.(false);
+            return;
+        }
 
         let cancelled = false;
 
         fetch(`/api/projectImages/projectImagethumbnails?key=${encodeURIComponent(thumbnailKey)}`)
             .then((r) => r.json())
             .then((data) => {
-                if (!cancelled) {
-                    setSrc(data?.url ?? null);
-                }
+                if (cancelled) return;
+                const url = data?.url ?? null;
+                setSrc(url);
+                onAvailabilityRef.current?.(Boolean(url));
             })
             .catch(() => {
-                if (!cancelled) {
-                    setSrc(null);
-                }
+                if (cancelled) return;
+                setSrc(null);
+                onAvailabilityRef.current?.(false);
             });
 
         return () => {
             cancelled = true;
         };
     }, [thumbnailKey]);
+
+    const handleImageError = () => {
+        setSrc(null);
+        onAvailabilityRef.current?.(false);
+    };
 
     return (
         <div className={`relative h-full w-full overflow-hidden ${className}`}>
@@ -62,16 +84,11 @@ export function ProjectThumbnail({
                         fill
                         sizes="(max-width: 768px) 100vw, 33vw"
                         className={`object-cover rounded-xl overflow-hidden ${imageClassName}`}
-                        onError={() => setSrc(null)}
+                        onError={handleImageError}
                     />
-
-                    <div
-                        className="pointer-events-none absolute inset-0"
-                        style={{
-                            background:
-                                'linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.28) 42%, rgba(255,255,255,0.52) 56%, rgba(255,255,255,0.78) 70%, rgba(255,255,255,0.96) 84%, rgba(255,255,255,1) 100%)',
-                        }}
-                    />
+                    {/* No full-image whiteout here anymore — ProjectCard's
+                        BLUR_MASK_STYLE handles legibility, contained to just
+                        behind the amount text instead of washing out the photo. */}
                 </>
             ) : (
                 <div className="absolute inset-0" />

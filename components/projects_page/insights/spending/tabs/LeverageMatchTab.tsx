@@ -82,7 +82,7 @@ export default function LeverageMatchTab({ queryString }: Props) {
 
             <SectionCard
                 title="Match & leveraged funds by period"
-                description="For each period, the bar splits contract amount into match funding, leveraged funds, and remaining contract dollars. Hover a segment for its amount."
+                description="For each period, the bar splits contract amount into match funding, leveraged funds, and remaining contract dollars."
             >
                 {loading ? (
                     <ChartSkeleton />

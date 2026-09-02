@@ -8,6 +8,9 @@ import { ProjectsListContainer } from './projectsList/ProjectsListContainer';
 import { QuickQueryVisualization } from './QuickQueryVisualization';
 import { ProjectsPageHeader } from './ProjectsPageHeader';
 
+
+const LIST_PREFILTERS = ['all-projects', 'recently-added', 'recently-completed'];
+
 export function ProjectsPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -46,6 +49,8 @@ export function ProjectsPage() {
         router.replace(nextUrl, { scroll: false });
     }, [activePrefilter, pathname, router]);
 
+    const showsProjectList = LIST_PREFILTERS.includes(activePrefilter);
+
     return (
         <div className="min-h-screen bg-white py-4">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -66,20 +71,20 @@ export function ProjectsPage() {
 
                     <div className="flex min-w-0 flex-1 flex-col">
                         <AnimatePresence mode="wait">
-                            {activePrefilter &&
-                                activePrefilter !== 'all-projects' && (
-                                    <div className="mb-6">
-                                        <QuickQueryVisualization
-                                            activeQuery={activePrefilter}
-                                            onClose={() =>
-                                                setActivePrefilter('all-projects')
-                                            }
-                                        />
-                                    </div>
-                                )}
+                            {activePrefilter && !showsProjectList && (
+                                <div className="mb-6">
+                                    <QuickQueryVisualization
+                                        activeQuery={activePrefilter}
+                                        onClose={() =>
+                                            setActivePrefilter('all-projects')
+                                        }
+                                    />
+                                </div>
+                            )}
 
-                            {activePrefilter === 'all-projects' && (
+                            {showsProjectList && (
                                 <ProjectsListContainer
+                                    activePrefilter={activePrefilter}
                                     categoryFilter={categoryFilter}
                                     onClearFilter={() => setCategoryFilter(null)}
                                     searchTerm={searchTerm}

@@ -26,18 +26,18 @@ export const SIGNAL_BAND_TAILWIND: Record<SignalBand, string> = {
 
 
 export const SIGNAL_BAND_LABEL: Record<SignalBand, string> = {
-    Strong: 'Likely high potential',
+    Strong: 'Possible high potential',
     Emerging: 'Emerging',
     Early: 'Early',
 };
 
 
 export const MATURITY_STAGE_LABEL: Record<MaturityStage, string> = {
-    'Near-market': 'Likely near-market',
-    Validation: 'Likely validation stage',
-    Development: 'Development',
-    'Demonstration / Build': 'Demonstration / Build',
-    'Early R&D': 'Early R&D',
+    'Near-market': 'Possible near-market',
+    Validation: 'Possible validation stage',
+    Development: 'Likely at development stage',
+    'Demonstration / Build': 'Likely at Demonstration/Build stage',
+    'Early R&D': 'Likely at Early R&D stage',
     Unstaged: 'Unstaged',
 };
 

@@ -67,7 +67,7 @@ export function MarketProjectsTable({
             <header className="mb-5">
                 <div className="flex items-center gap-1.5">
                     <h4 className="text-sm font-semibold text-slate-900">
-                        Likely high-potential projects
+                        Possible high-potential projects
                     </h4>
                     <ProxyTooltip {...SIGNAL_PROXY_EXPLANATION} />
                 </div>
