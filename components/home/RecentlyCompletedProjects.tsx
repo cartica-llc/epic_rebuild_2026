@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { motion, useMotionValue, useMotionValueEvent, animate } from 'motion/react';
 import { ProjectFallbackArt } from './ProjectFallbackArt';
 
 interface CompletedProject {
@@ -37,9 +37,9 @@ function ProjectCard({ project, index }: { project: CompletedProject; index: num
                 delay: index * 0.1,
                 ease: [0.21, 0.47, 0.32, 0.98],
             }}
-            className="select-none snap-start shrink-0 w-[15rem] sm:w-[17rem] lg:w-[20rem]"
+            className="select-none shrink-0 w-[15rem] sm:w-[17rem] lg:w-[20rem]"
         >
-            <Link href={`/projects/${project.id}`} className="group block">
+            <Link href={`/projects/${project.id}`} className="group block" draggable={false}>
                 <article className="flex flex-col">
                     <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-slate-200/60 bg-slate-100 shadow-sm">
                         {showFallback ? (
@@ -52,6 +52,7 @@ function ProjectCard({ project, index }: { project: CompletedProject; index: num
                                 sizes="(max-width: 640px) 75vw, (max-width: 1024px) 280px, 320px"
                                 className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
                                 onError={() => setImgError(true)}
+                                draggable={false}
                             />
                         )}
 
@@ -106,9 +107,21 @@ function ProjectCard({ project, index }: { project: CompletedProject; index: num
     );
 }
 
+const SPRING = { type: 'spring', stiffness: 300, damping: 34 } as const;
+
 export function RecentlyCompletedProjects() {
     const [projects, setProjects] = useState<CompletedProject[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const viewportRef = useRef<HTMLDivElement>(null);
+    const trackRef = useRef<HTMLDivElement>(null);
+    const x = useMotionValue(0);
+    const [maxDrag, setMaxDrag] = useState(0);
+    const [xValue, setXValue] = useState(0);
+    useMotionValueEvent(x, 'change', setXValue);
+    const canScrollLeft = xValue < -4;
+    const canScrollRight = xValue > -(maxDrag - 4);
+    const suppressClickRef = useRef(false);
 
     useEffect(() => {
         (async () => {
@@ -123,6 +136,41 @@ export function RecentlyCompletedProjects() {
             }
         })();
     }, []);
+
+
+    useLayoutEffect(() => {
+        const viewportEl = viewportRef.current;
+        const trackEl = trackRef.current;
+        if (!viewportEl || !trackEl) return;
+
+        const recompute = () => {
+            const next = Math.max(0, trackEl.scrollWidth - viewportEl.clientWidth);
+            setMaxDrag(next);
+            if (x.get() < -next) animate(x, -next, SPRING);
+        };
+
+        recompute();
+        const observer = new ResizeObserver(recompute);
+        observer.observe(viewportEl);
+        observer.observe(trackEl);
+        return () => observer.disconnect();
+    }, [projects, x]);
+
+    const scrollByAmount = (direction: 1 | -1) => {
+        const viewportEl = viewportRef.current;
+        if (!viewportEl) return;
+        const target = Math.min(0, Math.max(-maxDrag, x.get() - direction * viewportEl.clientWidth * 0.85));
+        animate(x, target, SPRING);
+    };
+
+
+    const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+        const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        if (delta === 0) return;
+        e.preventDefault();
+        const next = Math.min(0, Math.max(-maxDrag, x.get() - delta));
+        x.set(next);
+    };
 
     return (
         <section className="select-none overflow-hidden bg-white">
@@ -158,22 +206,46 @@ export function RecentlyCompletedProjects() {
                                 A look at the latest initiatives that have moved from planning to completion.
                             </motion.p>
 
-                            <Link
-                                href="/projects?status=Closed"
-                                className=" group mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-slate-400 transition-colors hover:text-slate-700 md:hidden"
-                            >
-                                View All
-                                <ChevronRight className=" h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
-                            </Link>
+                            {/*<Link*/}
+                            {/*    href="/projects?status=Closed"*/}
+                            {/*    className=" group mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-slate-400 transition-colors hover:text-slate-700 md:hidden"*/}
+                            {/*>*/}
+                            {/*    View All*/}
+                            {/*    <ChevronRight className=" h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />*/}
+                            {/*</Link>*/}
                         </div>
 
-                        <Link
-                            href="/projects?status=Closed"
-                            className="pr-6 group mt-4 hidden items-center gap-2 whitespace-nowrap pr-1 text-xs font-bold uppercase tracking-[0.22em] text-slate-400 transition-colors hover:text-slate-700 md:inline-flex"
-                        >
-                            View All
-                            <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
-                        </Link>
+                        <div className="mt-4 hidden items-center gap-3 md:flex">
+
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => scrollByAmount(-1)}
+                                    disabled={!canScrollLeft}
+                                    aria-label="Scroll to previous projects"
+                                    className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-200 disabled:hover:text-slate-500"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => scrollByAmount(1)}
+                                    disabled={!canScrollRight}
+                                    aria-label="Scroll to next projects"
+                                    className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-200 disabled:hover:text-slate-500"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            {/*<Link*/}
+                            {/*    href="/projects?status=Closed"*/}
+                            {/*    className="pr-6 group inline-flex items-center gap-2 whitespace-nowrap pr-1 text-xs font-bold uppercase tracking-[0.22em] text-slate-400 transition-colors hover:text-slate-700"*/}
+                            {/*>*/}
+                            {/*    View All*/}
+                            {/*    <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" />*/}
+                            {/*</Link>*/}
+                        </div>
                     </div>
                 </header>
 
@@ -191,16 +263,36 @@ export function RecentlyCompletedProjects() {
                         ))}
                     </div>
                 ) : (
-                    <motion.div
-                        className="flex cursor-grab snap-x snap-mandatory gap-6 overflow-x-auto pb-12 pr-10 active:cursor-grabbing md:gap-8 md:pr-16 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                        whileTap={{ cursor: 'grabbing' }}
-                    >
-                        {projects.map((project, index) => (
-                            <ProjectCard key={project.id} project={project} index={index} />
-                        ))}
-
-                        <div className="w-10 shrink-0 md:w-16" aria-hidden="true" />
-                    </motion.div>
+                    <div ref={viewportRef} className="pb-12" onWheel={handleWheel}>
+                        <motion.div
+                            ref={trackRef}
+                            className="flex w-max cursor-grab gap-6 pr-10 active:cursor-grabbing md:gap-8 md:pr-16"
+                            style={{ x, touchAction: 'pan-y' }}
+                            drag="x"
+                            dragConstraints={{ left: -maxDrag, right: 0 }}
+                            dragElastic={0.12}
+                            dragTransition={{ bounceStiffness: 300, bounceDamping: 30 }}
+                            whileTap={{ cursor: 'grabbing' }}
+                            onDragEnd={(_, info) => {
+                                if (Math.abs(info.offset.x) > 5) {
+                                    suppressClickRef.current = true;
+                                    setTimeout(() => {
+                                        suppressClickRef.current = false;
+                                    }, 0);
+                                }
+                            }}
+                            onClickCapture={(e) => {
+                                if (suppressClickRef.current) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }
+                            }}
+                        >
+                            {projects.map((project, index) => (
+                                <ProjectCard key={project.id} project={project} index={index} />
+                            ))}
+                        </motion.div>
+                    </div>
                 )}
             </div>
         </section>
