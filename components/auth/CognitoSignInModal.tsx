@@ -2,7 +2,6 @@
 
 import { signIn } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { X, ArrowLeft, Eye, EyeOff } from 'lucide-react';
@@ -60,7 +59,6 @@ function PasswordInput({
 }
 
 export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInModalProps) {
-    const router = useRouter();
     const [view, setView] = useState<View>('sign-in');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -134,7 +132,7 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                 return;
             }
         } catch {
-            // initiate-auth unavailable — continue with normal sign-in
+
         }
 
         const result = await signIn('cognito-credentials', {
@@ -152,7 +150,7 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
             const session = await fetch('/api/auth/session').then(r => r.json());
             const name = session?.user?.name ?? email;
             setOverlay({ phase: 'success', detail: name });
-            setTimeout(() => { router.push('/dashboard'); }, 1800);
+            setTimeout(() => { window.location.assign('/dashboard'); }, 1800);
         }
     }
 
@@ -213,7 +211,7 @@ export default function CognitoSignInModal({ isOpen, onClose }: CognitoSignInMod
                 const session = await fetch('/api/auth/session').then(r => r.json());
                 const name = session?.user?.name ?? email;
                 setOverlay({ phase: 'success', detail: name });
-                setTimeout(() => { router.push('/dashboard'); }, 1800);
+                setTimeout(() => { window.location.assign('/dashboard'); }, 1800);
             }
         } catch {
             setLoading(false);
