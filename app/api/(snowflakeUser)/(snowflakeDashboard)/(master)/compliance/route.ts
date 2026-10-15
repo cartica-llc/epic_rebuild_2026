@@ -1,4 +1,4 @@
-// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/compliance/awardbands.ts
+// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/program-program-compliance/route.ts
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
@@ -256,8 +256,6 @@ export async function GET() {
             fs.PROJECT_TYPE = hasNumber(pick(r, 'PROJECT_TYPE_ID'));
 
             // ADMIN_PROJECT_MANAGER — form maps to ANY of (contactFirstName, contactLastName,
-            // contactEmail, cecMgrFirstName, cecMgrLastName, cecMgrEmail). The "either/or"
-            // requirement: either the project contact OR the CEC manager has been recorded.
             fs.ADMIN_PROJECT_MANAGER =
                 hasText(pick(r, 'PERSON_CONTACT_FIRST_NAME')) ||
                 hasText(pick(r, 'PERSON_CONTACT_LAST_NAME')) ||
@@ -437,6 +435,6 @@ export async function GET() {
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('Compliance route error:', message);
-        return NextResponse.json({ error: 'Failed to load compliance data' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to load program-program-compliance data' }, { status: 500 });
     }
 }

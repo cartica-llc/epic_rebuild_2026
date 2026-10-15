@@ -34,6 +34,7 @@ import {
 export interface ComplianceDashboardProps {
     projects: ComplianceProject[];
     today?: Date;
+    hideAdminFilter?: boolean;
 }
 
 function projectEditHref(projectId: number): string {
@@ -43,11 +44,12 @@ function projectEditHref(projectId: number): string {
 type ViewFilter = 'out-of-compliance' | 'compliant';
 
 const VIEW_LABELS: Record<ViewFilter, string> = {
-    'out-of-compliance': 'Out of compliance',
+    'out-of-compliance': 'Out of program-program-compliance',
     compliant: 'Compliant',
 };
 
-export function ComplianceDashboard({ projects, today }: ComplianceDashboardProps) {
+export function ComplianceDashboard({ projects, today, hideAdminFilter = false }: ComplianceDashboardProps) {
+
     const [todayRef] = React.useState<Date>(() => today ?? new Date());
 
     const [statusFilter, setStatusFilter] = React.useState('All');

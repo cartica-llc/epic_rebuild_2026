@@ -17,7 +17,7 @@ interface MobileMenuProps {
 }
 
 const quickInsights = [
-    { view: 'spending', label: 'Spending', sub: 'Track spending & compliance' },
+    { view: 'spending', label: 'Spending', sub: 'Track spending & program-program-compliance' },
     { view: 'technology', label: 'Key Learnings', sub: 'Browse by topic & expertise' },
     { view: 'map', label: 'Project Map', sub: 'Map / district view' },
     { view: 'market', label: 'Market Maturity', sub: "Where projects are and who's close to market" },

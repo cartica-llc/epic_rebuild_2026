@@ -3,7 +3,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutGrid, PlusCircle, EyeOff, BookOpen } from 'lucide-react';
+import { LayoutGrid, PlusCircle, EyeOff, BookOpen, ClipboardCheck } from 'lucide-react';
 
 interface QuickActionProps {
     href: string;
@@ -32,9 +32,11 @@ interface Props {
 }
 
 export function DashboardQuickActions({ programAdminId }: Props) {
-    // Build scoped query param — MasterAdmin (null) sees all, ProgramAdmin scoped to their org
-    const scopeParam = programAdminId !== null ? `?programAdminId=${programAdminId}` : '';
-    const inactiveScopeParam = programAdminId !== null
+
+    const isMaster = programAdminId === null;
+
+    const scopeParam = !isMaster ? `?programAdminId=${programAdminId}` : '';
+    const inactiveScopeParam = !isMaster
         ? `?programAdminId=${programAdminId}&inactiveFilter=inactive_only`
         : '?inactiveFilter=inactive_only';
 
@@ -58,6 +60,15 @@ export function DashboardQuickActions({ programAdminId }: Props) {
             description: 'Review projects hidden from the public site',
         },
         {
+
+            href: isMaster ? '/dashboard/master/compliance' : '/dashboard/program/program-compliance',
+            icon: <ClipboardCheck className="h-4 w-4" />,
+            label: 'Compliance',
+            description: isMaster
+                ? 'Audit completeness across all organizations'
+                : 'Audit completeness for your projects',
+        },
+        {
             href: `/dashboard/program/docs`,
             icon: <BookOpen className="h-4 w-4" />,
             label: 'EPIC Database Guides',
@@ -72,7 +83,7 @@ export function DashboardQuickActions({ programAdminId }: Props) {
                 <p className="mt-0.5 text-sm text-slate-500">Shortcuts to common tasks.</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                 {actions.map((action) => (
                     <QuickAction key={action.href} {...action} />
                 ))}

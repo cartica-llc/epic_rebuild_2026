@@ -1,4 +1,4 @@
-// app/(dashboard)/dashboard/master/compliance/page.tsx
+// app/(dashboard)/dashboard/master/program-program-compliance/page.tsx
 
 import { redirect } from 'next/navigation';
 

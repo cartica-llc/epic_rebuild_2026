@@ -6,30 +6,42 @@ import { ComplianceDashboard } from './ComplianceDashboard';
 import { ComplianceDashboardSkeleton } from './Compliancedashboardskeleton';
 import type { ComplianceApiResponse } from './types';
 
-const API_PATH = '/api/compliance';
+/**
+ * Which surface this client is rendering. Decides the endpoint and whether
+ * the Program Admin filter is shown (it's meaningless when every row is the
+ * same org).
+ *
+ * The scope is NOT a security control — the API enforces that from the
+ * session regardless of what the client asks for. It only picks which URL
+ * to call and how the UI is trimmed.
+ */
+export type ComplianceViewScope = 'master' | 'program';
+
+const API_PATH: Record<ComplianceViewScope, string> = {
+    master: '/api/compliance',
+    program: '/api/program-compliance',
+};
 
 type LoadState =
     | { kind: 'loading' }
     | { kind: 'ready'; data: ComplianceApiResponse }
     | { kind: 'error'; message: string };
 
-export function ComplianceDashboardClient() {
+export function ComplianceDashboardClient({ scope = 'master' }: { scope?: ComplianceViewScope }) {
     const [state, setState] = React.useState<LoadState>({ kind: 'loading' });
 
     React.useEffect(() => {
-
         const controller = new AbortController();
 
         (async () => {
             try {
-                const res = await fetch(API_PATH, {
+                const res = await fetch(API_PATH[scope], {
                     method: 'GET',
                     cache: 'no-store',
                     signal: controller.signal,
                 });
 
                 if (!res.ok) {
-
                     const message =
                         res.status === 401
                             ? 'You are not signed in. Please refresh.'
@@ -53,14 +65,13 @@ export function ComplianceDashboardClient() {
         })();
 
         return () => controller.abort();
-    }, []);
+    }, [scope]);
 
     if (state.kind === 'loading') {
         return <ComplianceDashboardSkeleton />;
     }
 
     if (state.kind === 'error') {
-
         return (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
                 <p className="font-semibold">Something went wrong</p>
@@ -76,5 +87,5 @@ export function ComplianceDashboardClient() {
         );
     }
 
-    return <ComplianceDashboard projects={state.data.projects} />;
+    return <ComplianceDashboard projects={state.data.projects} hideAdminFilter={scope === 'program'} />;
 }

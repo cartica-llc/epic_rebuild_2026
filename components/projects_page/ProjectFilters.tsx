@@ -38,7 +38,7 @@ const quickInsightQueries: PrefilterQuery[] = [
     {
         id: 'spending',
         label: 'Spending',
-        description: 'Track spending & compliance',
+        description: 'Track spending & program-program-compliance',
     },
     {
         id: 'technology',
