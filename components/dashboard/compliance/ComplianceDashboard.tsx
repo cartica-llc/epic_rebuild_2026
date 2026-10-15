@@ -44,7 +44,7 @@ function projectEditHref(projectId: number): string {
 type ViewFilter = 'out-of-compliance' | 'compliant';
 
 const VIEW_LABELS: Record<ViewFilter, string> = {
-    'out-of-compliance': 'Out of program-program-compliance',
+    'out-of-compliance': 'Out of program-compliance',
     compliant: 'Compliant',
 };
 

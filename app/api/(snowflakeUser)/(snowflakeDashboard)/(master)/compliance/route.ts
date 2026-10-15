@@ -435,6 +435,6 @@ export async function GET() {
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('Compliance route error:', message);
-        return NextResponse.json({ error: 'Failed to load program-program-compliance data' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to load program-compliance data' }, { status: 500 });
     }
 }

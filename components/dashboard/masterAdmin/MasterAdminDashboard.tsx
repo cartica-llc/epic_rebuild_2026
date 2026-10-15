@@ -11,7 +11,7 @@ import type { MasterDashboardData } from './types';
 const quickActions: QuickAction[] = [
     { label: "Manage Users", href: "/dashboard/master/users", icon: "users" },
     { label: "Add User", href: "/dashboard/master/users/create", icon: "user-plus" },
-    { label: "Compliance", href: "/dashboard/master/program-program-compliance", icon: "shield-check" },
+    { label: "Compliance", href: "/dashboard/master/compliance", icon: "shield-check" },
     {
         label: "EPIC Database Guides",
         href: "/dashboard/master/docs",
