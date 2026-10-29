@@ -1,11 +1,19 @@
-// components/home/InvestmentAreas.tsx
 'use client';
 
-import { motion, AnimatePresence } from 'motion/react';
-import { useState, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import {
+    createElement,
+    useState,
+    useEffect,
+    useRef,
+    useMemo,
+    useCallback,
+} from 'react';
 import {
     ArrowRight,
+    ArrowUpRight,
     ChevronRight,
+    X,
     Network,
     UtilityPole,
     ShieldCheck,
@@ -15,50 +23,46 @@ import {
     Factory,
     Gauge,
     Zap,
+    Layers3,
     type LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useInvestmentAreas, type InvestmentArea } from '@/hooks/useInvestmentAreas';
+import {
+    useInvestmentAreas,
+    type InvestmentArea,
+} from '@/hooks/useInvestmentAreas';
 
 interface AreaWithIcon extends InvestmentArea {
     Icon: LucideIcon;
 }
 
-const COLOR_CLASSES = [
-    'bg-slate-700',
-    'bg-slate-600',
-    'bg-slate-500',
-    'bg-slate-400',
-    'bg-slate-600',
-    'bg-slate-500',
-    'bg-slate-400',
-    'bg-slate-300',
-];
-
-// Grid slot configuration — how many real investment areas to display before
-// falling back to a "More areas" tile / "View all" link. Tune these to
-// change how many tiles show per breakpoint without touching layout logic.
-const DESKTOP_ROW_SIZE = 4;   // tiles per desktop row (3 rows × 4 = 12 real tiles)
-const DESKTOP_TILE_COUNT = 12; // real area tiles shown when there's overflow (13th slot becomes the "More areas" tile)
-const DESKTOP_FULL_COUNT = DESKTOP_TILE_COUNT + 1; // 13 — real area tiles shown when there's no overflow (fills the last row's final slot, no "more" tile)
-const MOBILE_TILE_COUNT = 3;  // real area tiles shown on mobile before the "View All Investment Areas" link
-
-function formatFunding(amount: number): string {
-    if (!amount) return '$0';
-    if (amount >= 1_000_000_000) return `$${(amount / 1_000_000_000).toFixed(1)}B`;
-    if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
-    if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
-    return `$${amount.toLocaleString()}`;
+interface TreemapRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
-function truncateName(name: string, maxLength = 40): string {
-    if (!name || name.length <= maxLength) return name;
-    return name.slice(0, maxLength).trimEnd() + '…';
+interface TreemapItem {
+    area: AreaWithIcon;
+    rect: TreemapRect;
+    index: number;
 }
 
-function shortenAreaName(name: string): string {
-    return name.replace(/\band\b/gi, '&');
+interface LayoutNode {
+    area: AreaWithIcon;
+    value: number;
+    index: number;
 }
+
+interface DetailPanelProps {
+    area: InvestmentArea;
+    onClose: () => void;
+}
+
+const DESKTOP_TILE_COUNT = 12;
+const MOBILE_TILE_COUNT = 5;
+const DESKTOP_MIN_HEIGHT = 510;
 
 const ICON_RULES: [RegExp, LucideIcon][] = [
     [/grid.*modern|modern.*grid/i, UtilityPole],
@@ -71,429 +75,1347 @@ const ICON_RULES: [RegExp, LucideIcon][] = [
     [/reliab/i, Gauge],
 ];
 
-function getAreaIcon(name: string): LucideIcon {
-    return ICON_RULES.find(([re]) => re.test(name))?.[1] ?? Zap;
+const TILE_COLORS = [
+    {
+        background: 'bg-slate-700',
+        foreground: 'text-white',
+        accent: 'text-slate-300',
+    },
+    {
+        background: 'bg-slate-600',
+        foreground: 'text-white',
+        accent: 'text-slate-300',
+    },
+    {
+        background: 'bg-slate-500',
+        foreground: 'text-white',
+        accent: 'text-slate-200',
+    },
+    {
+        background: 'bg-slate-400',
+        foreground: 'text-white',
+        accent: 'text-white',
+    },
+    {
+        background: 'bg-slate-600',
+        foreground: 'text-white',
+        accent: 'text-slate-300',
+    },
+    {
+        background: 'bg-slate-500',
+        foreground: 'text-white',
+        accent: 'text-slate-200',
+    },
+    {
+        background: 'bg-slate-400',
+        foreground: 'text-white',
+        accent: 'text-white',
+    },
+    {
+        background: 'bg-slate-300',
+        foreground: 'text-slate-800',
+        accent: 'text-slate-600',
+    },
+];
+
+function truncateName(name: string, maxLength = 40): string {
+    if (!name || name.length <= maxLength) return name;
+
+    return name.slice(0, maxLength).trimEnd() + '…';
 }
 
-function AreaIcon({ icon: Icon }: { icon: LucideIcon }) {
-    return (
-        <Icon
-            className="absolute -bottom-[14%] -right-[3%] h-[110%] w-auto text-white opacity-5 pointer-events-none"
-            strokeWidth={1}
-            aria-hidden="true"
-        />
+function shortenAreaName(name: string): string {
+    return name.replace(/\band\b/gi, '&');
+}
+
+function getAreaIcon(name: string): LucideIcon {
+    return ICON_RULES.find(([regex]) => regex.test(name))?.[1] ?? Zap;
+}
+
+function getTileColor(index: number) {
+    return TILE_COLORS[index % TILE_COLORS.length];
+}
+
+function getTileTypography(rect: TreemapRect) {
+    const area = rect.width * rect.height;
+
+    if (rect.width < 15 || rect.height < 19) {
+        return {
+            size: 'text-[11px] sm:text-xs',
+            padding: 'p-3',
+            showIcon: false,
+            showArrow: false,
+            compact: true,
+        };
+    }
+
+    if (area < 450 || rect.width < 23) {
+        return {
+            size: 'text-xs lg:text-sm',
+            padding: 'p-3 lg:p-4',
+            showIcon: false,
+            showArrow: true,
+            compact: true,
+        };
+    }
+
+    if (area < 1100) {
+        return {
+            size: 'text-sm lg:text-base',
+            padding: 'p-4 lg:p-5',
+            showIcon: true,
+            showArrow: true,
+            compact: false,
+        };
+    }
+
+    return {
+        size: 'text-base lg:text-xl xl:text-2xl',
+        padding: 'p-5 lg:p-7',
+        showIcon: true,
+        showArrow: true,
+        compact: false,
+    };
+}
+
+function worstAspectRatio(
+    row: LayoutNode[],
+    sideLength: number
+): number {
+    if (!row.length || sideLength <= 0) {
+        return Infinity;
+    }
+
+    const values = row.map(item => item.value);
+
+    const sum = values.reduce((total, value) => total + value, 0);
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+
+    if (min <= 0 || sum <= 0) {
+        return Infinity;
+    }
+
+    const sideSquared = sideLength * sideLength;
+    const sumSquared = sum * sum;
+
+    return Math.max(
+        (sideSquared * max) / sumSquared,
+        sumSquared / (sideSquared * min)
     );
 }
 
-function sumFunding(arr: { funding: number }[]): number {
-    return arr.reduce((s, a) => s + a.funding, 0);
+function createTreemapLayout(
+    areas: AreaWithIcon[],
+    width = 100,
+    height = 100
+): TreemapItem[] {
+    if (!areas.length) {
+        return [];
+    }
+
+    const positiveFunding = areas
+        .map(area => Number(area.funding) || 0)
+        .filter(value => value > 0);
+
+    const smallestFunding = positiveFunding.length
+        ? Math.min(...positiveFunding)
+        : 1;
+
+    const fallbackFunding = Math.max(smallestFunding * 0.15, 1);
+
+    const nodes: LayoutNode[] = areas.map((area, index) => ({
+        area,
+        index,
+        value: Math.max(Number(area.funding) || 0, fallbackFunding),
+    }));
+
+    const totalFunding = nodes.reduce(
+        (total, node) => total + node.value,
+        0
+    );
+
+    const scale = (width * height) / totalFunding;
+
+    const remaining = nodes
+        .map(node => ({
+            ...node,
+            value: node.value * scale,
+        }))
+        .sort((a, b) => b.value - a.value);
+
+    const results: TreemapItem[] = [];
+
+    let x = 0;
+    let y = 0;
+    let remainingWidth = width;
+    let remainingHeight = height;
+
+    function layoutRow(row: LayoutNode[]) {
+        if (!row.length) return;
+
+        const rowArea = row.reduce(
+            (total, node) => total + node.value,
+            0
+        );
+
+        const horizontal = remainingWidth >= remainingHeight;
+
+        if (horizontal) {
+            const rowWidth =
+                remainingHeight > 0
+                    ? rowArea / remainingHeight
+                    : 0;
+
+            let currentY = y;
+
+            row.forEach((node, index) => {
+                const nodeHeight =
+                    rowWidth > 0
+                        ? node.value / rowWidth
+                        : 0;
+
+                const finalHeight =
+                    index === row.length - 1
+                        ? y + remainingHeight - currentY
+                        : nodeHeight;
+
+                results.push({
+                    area: node.area,
+                    index: node.index,
+                    rect: {
+                        x,
+                        y: currentY,
+                        width: rowWidth,
+                        height: finalHeight,
+                    },
+                });
+
+                currentY += finalHeight;
+            });
+
+            x += rowWidth;
+            remainingWidth -= rowWidth;
+        } else {
+            const rowHeight =
+                remainingWidth > 0
+                    ? rowArea / remainingWidth
+                    : 0;
+
+            let currentX = x;
+
+            row.forEach((node, index) => {
+                const nodeWidth =
+                    rowHeight > 0
+                        ? node.value / rowHeight
+                        : 0;
+
+                const finalWidth =
+                    index === row.length - 1
+                        ? x + remainingWidth - currentX
+                        : nodeWidth;
+
+                results.push({
+                    area: node.area,
+                    index: node.index,
+                    rect: {
+                        x: currentX,
+                        y,
+                        width: finalWidth,
+                        height: rowHeight,
+                    },
+                });
+
+                currentX += finalWidth;
+            });
+
+            y += rowHeight;
+            remainingHeight -= rowHeight;
+        }
+    }
+
+    let row: LayoutNode[] = [];
+
+    while (remaining.length > 0) {
+        const next = remaining[0];
+
+        if (!row.length) {
+            row.push(next);
+            remaining.shift();
+            continue;
+        }
+
+        const sideLength = Math.min(
+            remainingWidth,
+            remainingHeight
+        );
+
+        const currentRatio = worstAspectRatio(
+            row,
+            sideLength
+        );
+
+        const nextRatio = worstAspectRatio(
+            [...row, next],
+            sideLength
+        );
+
+        if (nextRatio <= currentRatio) {
+            row.push(next);
+            remaining.shift();
+        } else {
+            layoutRow(row);
+            row = [];
+        }
+    }
+
+    if (row.length) {
+        layoutRow(row);
+    }
+
+    return results;
+}
+
+interface InvestmentTileProps {
+    item: TreemapItem;
+    onSelect: (area: InvestmentArea) => void;
+    isSelected: boolean;
+    hasSelection: boolean;
+    index: number;
+}
+
+function InvestmentTile({
+                            item,
+                            onSelect,
+                            isSelected,
+                            hasSelection,
+                            index,
+                        }: InvestmentTileProps) {
+    const { area, rect } = item;
+
+    const color = getTileColor(item.index);
+    const typography = getTileTypography(rect);
+    const shouldReduceMotion = useReducedMotion();
+
+    const isLarge =
+        rect.width * rect.height > 900 &&
+        rect.width > 20 &&
+        rect.height > 20;
+
+    const isDarkText = color.foreground !== 'text-white';
+
+    return (
+        <motion.button
+            type="button"
+            layout
+            initial={
+                shouldReduceMotion
+                    ? false
+                    : {
+                        opacity: 0,
+                        scale: 0.97,
+                    }
+            }
+            whileInView={{
+                opacity: 1,
+                scale: 1,
+            }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{
+                duration: shouldReduceMotion ? 0 : 0.45,
+                delay: shouldReduceMotion
+                    ? 0
+                    : Math.min(index * 0.035, 0.3),
+                ease: [0.22, 1, 0.36, 1],
+            }}
+            onClick={() => onSelect(area)}
+            aria-label={`Explore ${area.name}`}
+            aria-pressed={isSelected}
+            className={`
+                absolute
+                group
+                overflow-hidden
+                rounded-[6px]
+                text-left
+                outline-none
+                focus-visible:ring-2
+                focus-visible:ring-slate-900
+                focus-visible:ring-offset-2
+                transition-opacity
+                duration-300
+                ${
+                hasSelection && !isSelected
+                    ? 'opacity-60'
+                    : 'opacity-100'
+            }
+            `}
+            style={{
+                left: `${rect.x}%`,
+                top: `${rect.y}%`,
+                width: `${rect.width}%`,
+                height: `${rect.height}%`,
+                padding: '4px',
+                zIndex: isSelected ? 10 : 1,
+            }}
+        >
+            <div
+                className={`
+                    relative
+                    flex
+                    h-full
+                    w-full
+                    flex-col
+                    justify-between
+                    overflow-hidden
+                    rounded-[5px]
+                    ${typography.padding}
+                    ${color.background}
+                    ${color.foreground}
+                    transition-[filter]
+                    duration-300
+                    group-hover:brightness-105
+                    group-focus-visible:brightness-105
+                    ${
+                    isSelected
+                        ? isDarkText
+                            ? 'ring-2 ring-inset ring-slate-900/40'
+                            : 'ring-2 ring-inset ring-white/70'
+                        : ''
+                }
+                `}
+            >
+                {isLarge &&
+                    createElement(area.Icon, {
+                        'aria-hidden': true,
+                        strokeWidth: 0.7,
+                        className: `
+                            pointer-events-none
+                            absolute
+                            -right-8
+                            -bottom-10
+                            h-[90%]
+                            w-auto
+                            max-w-none
+                            transition-all
+                            duration-700
+                            ease-out
+                            group-hover:-translate-x-3
+                            group-hover:-translate-y-3
+                            group-hover:rotate-[-8deg]
+                            ${
+                            isDarkText
+                                ? 'text-slate-900/[0.10] group-hover:text-slate-900/[0.15]'
+                                : 'text-white/[0.13] group-hover:text-white/[0.18]'
+                        }
+                        `,
+                    })}
+
+                <div className="relative z-10 flex items-start justify-between gap-2">
+                    {typography.showIcon ? (
+                        <div
+                            className={`
+                                flex
+                                h-9
+                                w-9
+                                shrink-0
+                                items-center
+                                justify-center
+                                rounded-md
+                                border
+                                backdrop-blur-sm
+                                transition-colors
+                                duration-300
+                                ${
+                                isDarkText
+                                    ? 'border-slate-900/10 bg-slate-900/[0.07] group-hover:bg-slate-900/[0.11]'
+                                    : 'border-white/20 bg-white/[0.10] group-hover:bg-white/[0.17]'
+                            }
+                            `}
+                        >
+                            {createElement(area.Icon, {
+                                className: `h-[18px] w-[18px] ${color.accent}`,
+                                strokeWidth: 1.5,
+                            })}
+                        </div>
+                    ) : (
+                        <div />
+                    )}
+
+                    {typography.showArrow && (
+                        <ArrowUpRight
+                            className={`
+                                h-4
+                                w-4
+                                shrink-0
+                                transition-all
+                                duration-300
+                                group-hover:translate-x-0.5
+                                group-hover:-translate-y-0.5
+                                ${
+                                isDarkText
+                                    ? 'text-slate-700/60 group-hover:text-slate-900'
+                                    : 'text-white/60 group-hover:text-white'
+                            }
+                            `}
+                            strokeWidth={1.5}
+                        />
+                    )}
+                </div>
+
+                <div className="relative z-10 min-w-0">
+                    <h3
+                        className={`
+                            ${typography.size}
+                            ${color.foreground}
+                            font-medium
+                            leading-[1.15]
+                            tracking-[-0.025em]
+                            break-words
+                            [overflow-wrap:anywhere]
+                        `}
+                    >
+                        {shortenAreaName(area.name)}
+                    </h3>
+
+                    {!typography.compact && (
+                        <div
+                            className={`
+                                mt-3
+                                flex
+                                items-center
+                                gap-1.5
+                                text-[11px]
+                                font-medium
+                                opacity-0
+                                translate-y-1
+                                transition-all
+                                duration-300
+                                group-hover:opacity-100
+                                group-hover:translate-y-0
+                                ${
+                                isDarkText
+                                    ? 'text-slate-700'
+                                    : 'text-white/80'
+                            }
+                            `}
+                        >
+                            Explore projects
+
+                            <ArrowRight
+                                className="h-3 w-3"
+                                strokeWidth={1.5}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+        </motion.button>
+    );
+}
+
+function InvestmentDetailPanel({
+                                   area,
+                                   onClose,
+                               }: DetailPanelProps) {
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        closeButtonRef.current?.focus();
+    }, []);
+
+    return (
+        <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="investment-detail-title"
+            initial={{
+                opacity: 0,
+                x: 24,
+            }}
+            animate={{
+                opacity: 1,
+                x: 0,
+            }}
+            exit={{
+                opacity: 0,
+                x: 24,
+            }}
+            transition={{
+                duration: 0.25,
+                ease: [0.22, 1, 0.36, 1],
+            }}
+            className="
+                fixed
+                inset-y-0
+                right-0
+                z-[60]
+                flex
+                w-full
+                max-w-[460px]
+                flex-col
+                overflow-hidden
+                border-l
+                border-slate-200
+                bg-white
+                shadow-2xl
+            "
+        >
+            <div className="border-b border-slate-100 px-6 py-6 sm:px-8">
+                <div className="mb-8 flex items-center justify-between">
+                    <span
+                        className="
+                            text-[10px]
+                            font-semibold
+                            uppercase
+                            tracking-[0.2em]
+                            text-slate-400
+                        "
+                    >
+                        Investment Area
+                    </span>
+
+                    <button
+                        ref={closeButtonRef}
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Close investment details"
+                        className="
+                            flex
+                            h-9
+                            w-9
+                            items-center
+                            justify-center
+                            rounded-full
+                            border
+                            border-slate-200
+                            text-slate-500
+                            transition-colors
+                            hover:border-slate-300
+                            hover:bg-slate-50
+                            hover:text-slate-900
+                            focus-visible:outline
+                            focus-visible:outline-2
+                            focus-visible:outline-offset-2
+                            focus-visible:outline-slate-500
+                        "
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+
+                <div
+                    className="
+                        mb-5
+                        flex
+                        h-12
+                        w-12
+                        items-center
+                        justify-center
+                        rounded-xl
+                        bg-slate-700
+                        text-white
+                    "
+                >
+                    {createElement(getAreaIcon(area.name), {
+                        className: 'h-6 w-6',
+                        strokeWidth: 1.4,
+                    })}
+                </div>
+
+                <h3
+                    id="investment-detail-title"
+                    className="
+                        max-w-sm
+                        text-3xl
+                        font-semibold
+                        leading-tight
+                        tracking-tight
+                        text-slate-900
+                    "
+                >
+                    {area.name}
+                </h3>
+
+                <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                    Explore projects associated with this investment area.
+                </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8">
+                <div className="mb-5 flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-slate-900">
+                        Featured Projects
+                    </h4>
+
+                    <Layers3
+                        className="h-4 w-4 text-slate-400"
+                        strokeWidth={1.5}
+                    />
+                </div>
+
+                {area.projects.length === 0 ? (
+                    <div
+                        className="
+                            rounded-xl
+                            border
+                            border-dashed
+                            border-slate-200
+                            px-5
+                            py-10
+                            text-center
+                        "
+                    >
+                        <p className="text-sm text-slate-500">
+                            No project details available.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-slate-100">
+                        {area.projects.map((project, index) => (
+                            <Link
+                                key={project.id}
+                                href={`/projects/${project.id}`}
+                                onClick={onClose}
+                                className="
+                                    group
+                                    flex
+                                    items-start
+                                    justify-between
+                                    gap-4
+                                    py-4
+                                    transition-colors
+                                    hover:text-slate-900
+                                "
+                            >
+                                <div className="flex min-w-0 gap-4">
+                                    <span
+                                        className="
+                                            pt-0.5
+                                            text-[11px]
+                                            font-medium
+                                            tabular-nums
+                                            text-slate-400
+                                        "
+                                    >
+                                        {String(index + 1).padStart(2, '0')}
+                                    </span>
+
+                                    <span
+                                        className="
+                                            text-sm
+                                            font-medium
+                                            leading-relaxed
+                                            text-slate-700
+                                            transition-colors
+                                            group-hover:text-slate-900
+                                        "
+                                    >
+                                        {truncateName(project.name, 75)}
+                                    </span>
+                                </div>
+
+                                <ArrowUpRight
+                                    className="
+                                        mt-0.5
+                                        h-4
+                                        w-4
+                                        shrink-0
+                                        text-slate-300
+                                        transition-all
+                                        group-hover:-translate-y-0.5
+                                        group-hover:translate-x-0.5
+                                        group-hover:text-slate-700
+                                    "
+                                />
+                            </Link>
+                        ))}
+                    </div>
+                )}
+
+                <p className="mt-6 text-xs leading-relaxed text-slate-400">
+                    Some projects may be associated with multiple
+                    investment areas.
+                </p>
+            </div>
+
+            <div className="border-t border-slate-100 bg-slate-50/70 p-6 sm:px-8">
+                <Link
+                    href={`/projects?investmentAreaId=${area.id}`}
+                    onClick={onClose}
+                    className="
+                        group
+                        flex
+                        w-full
+                        items-center
+                        justify-between
+                        rounded-lg
+                        bg-slate-700
+                        px-5
+                        py-4
+                        text-sm
+                        font-medium
+                        text-white
+                        transition-colors
+                        hover:bg-slate-800
+                    "
+                >
+                    View All Projects
+
+                    <ArrowUpRight
+                        className="
+                            h-4
+                            w-4
+                            transition-transform
+                            group-hover:translate-x-0.5
+                            group-hover:-translate-y-0.5
+                        "
+                    />
+                </Link>
+
+                <Link
+                    href={`/projects?view=spending&investmentAreaId=${area.id}`}
+                    onClick={onClose}
+                    className="
+                        group
+                        mt-4
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                        text-xs
+                        font-medium
+                        text-slate-500
+                        transition-colors
+                        hover:text-slate-900
+                    "
+                >
+                    Compare in Spending Insights
+
+                    <ArrowRight
+                        className="
+                            h-3.5
+                            w-3.5
+                            transition-transform
+                            group-hover:translate-x-0.5
+                        "
+                    />
+                </Link>
+            </div>
+        </motion.div>
+    );
+}
+
+interface MobileInvestmentCardProps {
+    area: AreaWithIcon;
+    index: number;
+    onSelect: (area: InvestmentArea) => void;
+}
+
+function MobileInvestmentCard({
+                                  area,
+                                  index,
+                                  onSelect,
+                              }: MobileInvestmentCardProps) {
+    const color = getTileColor(index);
+    const isDarkText = color.foreground !== 'text-white';
+
+    return (
+        <motion.button
+            type="button"
+            initial={{
+                opacity: 0,
+                y: 16,
+            }}
+            whileInView={{
+                opacity: 1,
+                y: 0,
+            }}
+            viewport={{ once: true }}
+            transition={{
+                duration: 0.4,
+                delay: index * 0.05,
+            }}
+            onClick={() => onSelect(area)}
+            aria-label={`Explore ${area.name}`}
+            className={`
+                group
+                relative
+                flex
+                min-h-[150px]
+                w-full
+                flex-col
+                justify-between
+                overflow-hidden
+                rounded-lg
+                p-5
+                text-left
+                ${color.background}
+                ${color.foreground}
+                transition-transform
+                duration-300
+                active:scale-[0.99]
+                focus-visible:outline
+                focus-visible:outline-2
+                focus-visible:outline-offset-2
+                focus-visible:outline-slate-500
+            `}
+        >
+            {createElement(area.Icon, {
+                'aria-hidden': true,
+                className: `
+                    pointer-events-none
+                    absolute
+                    -bottom-6
+                    -right-6
+                    h-36
+                    w-36
+                    ${
+                    isDarkText
+                        ? 'text-slate-900/[0.10]'
+                        : 'text-white/[0.13]'
+                }
+                `,
+                strokeWidth: 0.8,
+            })}
+
+            <div className="relative z-10 flex items-start justify-between">
+                {createElement(area.Icon, {
+                    className: `h-5 w-5 ${color.accent}`,
+                    strokeWidth: 1.5,
+                })}
+
+                <ArrowUpRight
+                    className={`h-4 w-4 ${
+                        isDarkText
+                            ? 'text-slate-700/60'
+                            : 'text-white/70'
+                    }`}
+                    strokeWidth={1.5}
+                />
+            </div>
+
+            <div className="relative z-10">
+                <h3
+                    className={`
+                        max-w-[85%]
+                        text-lg
+                        font-medium
+                        leading-tight
+                        tracking-tight
+                        ${color.foreground}
+                    `}
+                >
+                    {shortenAreaName(area.name)}
+                </h3>
+            </div>
+        </motion.button>
+    );
 }
 
 export function InvestmentAreas() {
     const { data, loading } = useInvestmentAreas();
 
-    const areas = data?.areas ?? [];
-    // NOTE: data.total is still not a reliable "true total" of investment
-    // areas — it's derived as areas.length from the API's own query, so if
-    // that query is ever limited again below the real count, `total` would
-    // understate it the same way it did before. We don't use it for display;
-    // `areas.length` (the raw fetched list, pre-slice) is what drives
-    // `showMoreTile` below, since that only needs to know whether more rows
-    // came back than we're showing — not the exact real-world total.
+    const [selectedArea, setSelectedArea] =
+        useState<InvestmentArea | null>(null);
 
-    const [selectedArea, setSelectedArea] = useState<InvestmentArea | null>(null);
-    const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
-    const [showBelow, setShowBelow] = useState(false);
+    const triggerRef = useRef<HTMLElement | null>(null);
 
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    const handleAreaClick = (
-        area: InvestmentArea,
-        event: React.MouseEvent<HTMLDivElement>
-    ) => {
-        const target = event.currentTarget;
-        const rect = target.getBoundingClientRect();
-        const containerRect = containerRef.current?.getBoundingClientRect();
-
-        if (!containerRect) return;
-
-        const top = rect.top - containerRect.top;
-        const isMobile = window.innerWidth < 768;
-        const left = isMobile
-            ? containerRect.width / 2
-            : rect.left - containerRect.left + rect.width / 2;
-
-        setShowBelow(rect.top < 250);
-        setPopupPosition({ top, left });
-        setSelectedArea(area);
-    };
-
-    // Reserve the last grid slot for a "see more" tile whenever there are
-    // more investment areas than DESKTOP_TILE_COUNT can show.
-    const MORE_TILE_WIDTH_PCT = 22;
-    const showMoreTile = areas.length > DESKTOP_TILE_COUNT;
-    const realAreaCount = showMoreTile ? DESKTOP_TILE_COUNT : DESKTOP_FULL_COUNT;
-
-    const topAreas = areas.slice(0, realAreaCount);
-
-    const areasWithIcon: AreaWithIcon[] = topAreas.map(area => ({
-        ...area,
-        Icon: getAreaIcon(area.name),
-    }));
-
-    const hasFullDesktopLayout = areasWithIcon.length >= realAreaCount;
-
-    const row1 = areasWithIcon.slice(0, DESKTOP_ROW_SIZE);
-    const row2 = areasWithIcon.slice(DESKTOP_ROW_SIZE, DESKTOP_ROW_SIZE * 2);
-    const row3 = areasWithIcon.slice(DESKTOP_ROW_SIZE * 2, realAreaCount);
-
-    const rowTotals = {
-        r1: sumFunding(row1),
-        r2: sumFunding(row2),
-        r3: sumFunding(row3),
-    };
-
-    const totalRows = rowTotals.r1 + rowTotals.r2 + rowTotals.r3;
-
-    const rowHeights =
-        totalRows > 0
-            ? {
-                r1: (rowTotals.r1 / totalRows) * 100,
-                r2: (rowTotals.r2 / totalRows) * 100,
-                r3: (rowTotals.r3 / totalRows) * 100,
-            }
-            : { r1: 33, r2: 33, r3: 34 };
-
-    const row3AvailablePct = showMoreTile ? 100 - MORE_TILE_WIDTH_PCT : 100;
-
-    const rowWidths = {
-        r1: row1.map(a => (rowTotals.r1 > 0 ? (a.funding / rowTotals.r1) * 100 : 50)),
-        r2: row2.map(a => (rowTotals.r2 > 0 ? (a.funding / rowTotals.r2) * 100 : 50)),
-        r3: row3.map(a =>
-            rowTotals.r3 > 0
-                ? (a.funding / rowTotals.r3) * row3AvailablePct
-                : row3AvailablePct / (row3.length || 1),
-        ),
-    };
-
-    const mobileAreas = areasWithIcon.slice(0, MOBILE_TILE_COUNT);
-    const mRowA = mobileAreas.slice(0, 2);
-    const mRowB = mobileAreas.slice(2, 3);
-
-    const mTotals = {
-        a: sumFunding(mRowA),
-        b: sumFunding(mRowB),
-    };
-
-    const mTotal = mTotals.a + mTotals.b;
-
-    const mHeights =
-        mTotal > 0
-            ? {
-                a: (mTotals.a / mTotal) * 100,
-                b: (mTotals.b / mTotal) * 100,
-            }
-            : { a: 60, b: 40 };
-
-    const mWidthsA = mRowA.map(a =>
-        mTotals.a > 0 ? (a.funding / mTotals.a) * 100 : 50
+    const areas = useMemo(
+        () => data?.areas ?? [],
+        [data?.areas]
     );
+
+    const areasWithIcon = useMemo<AreaWithIcon[]>(
+        () =>
+            areas.map(area => ({
+                ...area,
+                Icon: getAreaIcon(area.name),
+            })),
+        [areas]
+    );
+
+    const desktopAreas = useMemo(
+        () => areasWithIcon.slice(0, DESKTOP_TILE_COUNT),
+        [areasWithIcon]
+    );
+
+    const mobileAreas = useMemo(
+        () => areasWithIcon.slice(0, MOBILE_TILE_COUNT),
+        [areasWithIcon]
+    );
+
+    const desktopLayout = useMemo(
+        () => createTreemapLayout(desktopAreas),
+        [desktopAreas]
+    );
+
+    const hasMoreAreas = areasWithIcon.length > DESKTOP_TILE_COUNT;
+
+    const handleSelect = useCallback((area: InvestmentArea) => {
+        triggerRef.current =
+            document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
+
+        setSelectedArea(area);
+    }, []);
+
+    const handleClose = useCallback(() => {
+        setSelectedArea(null);
+
+        requestAnimationFrame(() => {
+            triggerRef.current?.focus();
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!selectedArea) return;
+
+        const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                handleClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedArea, handleClose]);
+
+    useEffect(() => {
+        if (!selectedArea) return;
+
+        const previousOverflow = document.body.style.overflow;
+
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [selectedArea]);
 
     if (loading) {
         return (
-            <section className="py-2 bg-white relative">
-                <div className="">
-                    <div className="header ">
-                        <div className="h-9 w-64 bg-slate-200 rounded animate-pulse mb-4" />
-                        <div className="h-4 w-full max-w-2xl bg-slate-200 rounded animate-pulse" />
-                    </div>
+            <section className="relative bg-white py-8">
+                <div className="mb-8">
+                    <div className="mb-4 h-10 w-72 animate-pulse rounded bg-slate-200" />
 
-                    <div className="hidden md:block bg-slate-100 p-1.5 rounded-lg aspect-[16/5] animate-pulse" />
-                    <div className="md:hidden bg-slate-100 p-1.5 rounded-lg aspect-[4/4] animate-pulse" />
+                    <div className="h-4 w-full max-w-xl animate-pulse rounded bg-slate-100" />
+                </div>
+
+                <div
+                    className="
+                        hidden
+                        min-h-[510px]
+                        animate-pulse
+                        rounded-lg
+                        bg-slate-100
+                        md:block
+                    "
+                />
+
+                <div className="space-y-3 md:hidden">
+                    {[1, 2, 3].map(item => (
+                        <div
+                            key={item}
+                            className="
+                                h-[150px]
+                                animate-pulse
+                                rounded-lg
+                                bg-slate-100
+                            "
+                        />
+                    ))}
                 </div>
             </section>
         );
     }
 
-    if (areasWithIcon.length === 0) {
+    if (!areasWithIcon.length) {
         return null;
     }
 
     return (
-        <section className="py-2 bg-white relative">
-            <div className="">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="header "
+        <section className="relative overflow-hidden bg-white py-8 md:py-12">
+            <motion.div
+                initial={{
+                    opacity: 0,
+                    y: 16,
+                }}
+                whileInView={{
+                    opacity: 1,
+                    y: 0,
+                }}
+                viewport={{ once: true }}
+                transition={{
+                    duration: 0.6,
+                    ease: [0.22, 1, 0.36, 1],
+                }}
+                className="mb-8 md:mb-10"
+            >
+                <div className="mb-5 flex items-center gap-3">
+                    <span className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500 sm:text-sm">
+                        Explore the Portfolio
+                    </span>
+                </div>
+
+                <div
+                    className="
+                        flex
+                        flex-col
+                        gap-6
+                        lg:flex-row
+                        lg:items-end
+                        lg:justify-between
+                    "
                 >
-                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold leading-[0.95] tracking-tight text-slate-900 my-4">
-                        Investment Areas
-                    </h2>
+                    <div>
+                        <h2
+                            className="
+                                text-4xl
+                                font-semibold
+                                leading-[0.98]
+                                tracking-[-0.045em]
+                                text-slate-900
+                                sm:text-5xl
+                                md:text-6xl
+                            "
+                        >
+                            Investment Areas
+                        </h2>
 
-                    <p className="mt-5 max-w-2xl text-lg font-light leading-relaxed text-slate-500 pb-4">
-                        Explore the investment areas that organize our portfolio. From grid modernization and resilient infrastructure to transportation, buildings, and industry. Each area brings together the projects and funding driving that work.                    </p>
-                </motion.div>
-
-                <motion.div
-                    ref={containerRef}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="mb-0 md:mb-8 relative"
-                >
-                    <AnimatePresence>
-                        {selectedArea && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-40"
-                                onClick={() => setSelectedArea(null)}
-                            />
-                        )}
-                    </AnimatePresence>
-
-                    <AnimatePresence>
-                        {selectedArea && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                transition={{ duration: 0.2 }}
-                                className={`absolute -translate-x-1/2 w-[calc(100%-2rem)] md:w-full max-w-md bg-white rounded-lg shadow-xl border border-slate-200 z-50 overflow-hidden ${
-                                    showBelow ? 'translate-y-0 mt-2' : '-translate-y-full mb-4'
-                                }`}
-                                style={{
-                                    top: `${popupPosition.top}px`,
-                                    left: `${popupPosition.left}px`,
-                                }}
-                            >
-                                <div className="bg-slate-50 border-b border-slate-200 px-4 py-3">
-                                    <h3 className="text-sm font-semibold text-slate-900">
-                                        {selectedArea.name}
-                                    </h3>
-
-                                    <p className="text-xs text-slate-600 mt-0.5">
-                                        Top {selectedArea.projects.length} of{' '}
-                                        {selectedArea.projectCount.toLocaleString()} projects
-                                    </p>
-
-                                    <p className="text-[11px] text-slate-400 mt-1">
-                                        Some of these projects may also fall under other investment areas.
-                                    </p>
-                                </div>
-
-                                <div className="p-3">
-                                    {selectedArea.projects.length === 0 ? (
-                                        <p className="text-xs text-slate-500 py-2">
-                                            No project details available.
-                                        </p>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {selectedArea.projects.map(project => (
-                                                <Link
-                                                    key={project.id}
-                                                    href={`/projects/${project.id}`}
-                                                    className="flex items-center justify-between gap-3 text-xs py-1.5 hover:bg-slate-50 rounded px-2 -mx-2"
-                                                    onClick={() => setSelectedArea(null)}
-                                                >
-                                                    <span className="text-slate-700 truncate flex-1">
-                                                        {truncateName(project.name, 35)}
-                                                    </span>
-
-                                                    <span className="font-semibold text-slate-900 whitespace-nowrap tabular-nums">
-                                                        {formatFunding(project.funding)}
-                                                    </span>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    <div className="mt-3 pt-3 border-t border-slate-200 flex flex-col gap-1.5">
-                                        <Link
-                                            href={`/projects?investmentAreaId=${selectedArea.id}`}
-                                            className="text-xs font-medium text-slate-900 hover:text-slate-700 inline-flex items-center gap-1 group"
-                                            onClick={() => setSelectedArea(null)}
-                                        >
-                                            View all {selectedArea.name.toLowerCase()} projects
-                                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                        </Link>
-
-                                        <Link
-                                            href={`/projects?view=spending&investmentAreaId=${selectedArea.id}`}
-                                            className="text-xs font-medium text-slate-600 hover:text-slate-800 inline-flex items-center gap-1 group"
-                                            onClick={() => setSelectedArea(null)}
-                                        >
-                                            Compare in Spending Insights
-                                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                        </Link>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {/* Desktop treemap */}
-                    {hasFullDesktopLayout && (
-                        <div className="hidden md:block bg-slate-100 p-1.5 rounded-lg aspect-[16/7]">
-                            <div className="flex flex-col h-full gap-1.5">
-                                <div
-                                    className="flex gap-1.5"
-                                    style={{ height: `${rowHeights.r1}%` }}
-                                >
-                                    {row1.map((area, i) => (
-                                        <motion.div
-                                            key={area.id}
-                                            onClick={e => handleAreaClick(area, e)}
-                                            className={`${COLOR_CLASSES[i % COLOR_CLASSES.length]} relative overflow-hidden rounded p-3 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
-                                            style={{ width: `${rowWidths.r1[i]}%` }}
-                                        >
-                                            <AreaIcon icon={area.Icon} />
-
-                                            <div className="text-white font-medium text-sm">
-                                                {shortenAreaName(area.name)}
-                                            </div>
-
-                                            <div className="text-white/60 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                                                Click to view top projects
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-
-                                <div
-                                    className="flex gap-1.5"
-                                    style={{ height: `${rowHeights.r2}%` }}
-                                >
-                                    {row2.map((area, i) => (
-                                        <motion.div
-                                            key={area.id}
-                                            onClick={e => handleAreaClick(area, e)}
-                                            className={`${COLOR_CLASSES[(DESKTOP_ROW_SIZE + i) % COLOR_CLASSES.length]} relative overflow-hidden rounded p-3 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
-                                            style={{ width: `${rowWidths.r2[i]}%` }}
-                                        >
-                                            <AreaIcon icon={area.Icon} />
-
-                                            <div className="text-white font-medium text-sm">
-                                                {shortenAreaName(area.name)}
-                                            </div>
-
-                                            <div className="text-white/60 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                                                Click to view top projects
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-
-                                <div
-                                    className="flex gap-1.5"
-                                    style={{ height: `${rowHeights.r3}%` }}
-                                >
-                                    {row3.map((area, i) => (
-                                        <motion.div
-                                            key={area.id}
-                                            onClick={e => handleAreaClick(area, e)}
-                                            className={`${COLOR_CLASSES[(DESKTOP_ROW_SIZE * 2 + i) % COLOR_CLASSES.length]} relative overflow-hidden rounded p-2.5 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer group`}
-                                            style={{ width: `${rowWidths.r3[i]}%` }}
-                                        >
-                                            <AreaIcon icon={area.Icon} />
-
-                                            <div className="text-white font-medium text-xs">
-                                                {shortenAreaName(area.name)}
-                                            </div>
-                                        </motion.div>
-                                    ))}
-
-                                    {showMoreTile && (
-                                        <Link
-                                            href="/projects?view=spending"
-                                            className="relative overflow-hidden rounded border-2 border-dashed border-slate-300 bg-white p-2.5 flex flex-col items-center justify-center gap-1 text-center hover:border-slate-400 hover:bg-slate-50 transition-colors group"
-                                            style={{ width: `${MORE_TILE_WIDTH_PCT}%` }}
-                                        >
-                                            <span className="text-slate-500 font-semibold text-xs">
-                                                More areas
-                                            </span>
-                                            <span className="text-slate-400 text-[10px] inline-flex items-center gap-0.5">
-                                                See all
-                                                <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                                            </span>
-                                        </Link>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Mobile treemap */}
-                    {mobileAreas.length >= 3 && (
-                        <div className="md:hidden bg-slate-100 rounded-lg aspect-[4/4]">
-                            <div className="flex flex-col h-full gap-1.5">
-                                <div
-                                    className="flex gap-1.5"
-                                    style={{ height: `${mHeights.a}%` }}
-                                >
-                                    {mRowA.map((area, idx) => (
-                                        <motion.div
-                                            key={area.id}
-                                            initial={{ opacity: 0 }}
-                                            whileInView={{ opacity: 1 }}
-                                            viewport={{ once: true }}
-                                            transition={{
-                                                duration: 0.45,
-                                                delay: 0.1 + idx * 0.05,
-                                            }}
-                                            onClick={e => handleAreaClick(area, e)}
-                                            className={`${COLOR_CLASSES[idx]} relative overflow-hidden rounded p-3 flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer`}
-                                            style={{ width: `${mWidthsA[idx]}%` }}
-                                        >
-                                            <AreaIcon icon={area.Icon} />
-
-                                            <div className="text-white font-medium text-sm leading-tight">
-                                                {shortenAreaName(area.name)}
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-
-                                <div style={{ height: `${mHeights.b}%` }}>
-                                    <motion.div
-                                        key={mRowB[0].id}
-                                        initial={{ opacity: 0 }}
-                                        whileInView={{ opacity: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ duration: 0.45, delay: 0.2 }}
-                                        onClick={e => handleAreaClick(mRowB[0], e)}
-                                        className={`${COLOR_CLASSES[2]} relative overflow-hidden rounded p-3 h-full flex flex-col justify-between hover:opacity-90 transition-opacity cursor-pointer`}
-                                    >
-                                        <AreaIcon icon={mRowB[0].Icon} />
-
-                                        <div className="text-white font-medium text-sm leading-tight">
-                                            {shortenAreaName(mRowB[0].name)}
-                                        </div>
-                                    </motion.div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                        <p
+                            className="
+                                mt-5
+                                max-w-2xl
+                                text-base
+                                font-light
+                                leading-relaxed
+                                text-slate-500
+                                md:text-lg
+                            "
+                        >
+                            Explore the investment areas shaping our
+                            portfolio, from grid modernization and resilient
+                            infrastructure to transportation, buildings,
+                            and industry.
+                        </p>
+                    </div>
 
                     <Link
                         href="/projects?view=spending"
-                        className="md:hidden flex w-full mt-2 bg-slate-300 p-4 flex-col justify-center items-center hover:opacity-90 transition-opacity rounded"
+                        className="
+                            group
+                            hidden
+                            shrink-0
+                            items-center
+                            gap-3
+                            pb-1
+                            text-sm
+                            font-medium
+                            text-slate-700
+                            transition-colors
+                            hover:text-slate-950
+                            md:inline-flex
+                        "
                     >
-                        <span className="text-white font-medium text-sm text-center">
+                        Explore all areas
+
+                        <span
+                            className="
+                                flex
+                                h-9
+                                w-9
+                                items-center
+                                justify-center
+                                rounded-full
+                                border
+                                border-slate-200
+                                transition-all
+                                duration-300
+                                group-hover:border-slate-900
+                                group-hover:bg-slate-900
+                                group-hover:text-white
+                            "
+                        >
+                            <ArrowUpRight
+                                className="h-4 w-4"
+                                strokeWidth={1.5}
+                            />
+                        </span>
+                    </Link>
+                </div>
+            </motion.div>
+
+            <div className="hidden md:block">
+                <div
+                    className="
+                        relative
+                        w-full
+                        overflow-hidden
+                        rounded-lg
+                        bg-white
+                    "
+                    style={{
+                        height: DESKTOP_MIN_HEIGHT,
+                    }}
+                >
+                    {desktopLayout.map((item, index) => (
+                        <InvestmentTile
+                            key={item.area.id}
+                            item={item}
+                            index={index}
+                            onSelect={handleSelect}
+                            isSelected={
+                                selectedArea?.id === item.area.id
+                            }
+                            hasSelection={selectedArea !== null}
+                        />
+                    ))}
+                </div>
+
+                <div
+                    className="
+                        mt-4
+                        flex
+                        items-center
+                        justify-between
+                        gap-4
+                        border-t
+                        border-slate-100
+                        pt-4
+                    "
+                >
+                    <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-1">
+                            <span className="h-2 w-2 rounded-sm bg-slate-700" />
+                            <span className="h-2 w-2 rounded-sm bg-slate-500" />
+                            <span className="h-2 w-2 rounded-sm bg-slate-300" />
+                        </div>
+
+                        <span className="text-xs text-slate-400">
+                            Tile size represents relative investment funding
+                        </span>
+                    </div>
+
+                    <span className="text-xs text-slate-400">
+                        Select an area to explore projects
+                    </span>
+                </div>
+
+                {hasMoreAreas && (
+                    <div className="mt-3 text-right">
+                        <Link
+                            href="/projects?view=spending"
+                            className="
+                                inline-flex
+                                items-center
+                                gap-1
+                                text-xs
+                                font-medium
+                                text-slate-600
+                                transition-colors
+                                hover:text-slate-900
+                            "
+                        >
+                            View additional investment areas
+
+                            <ChevronRight className="h-3.5 w-3.5" />
+                        </Link>
+                    </div>
+                )}
+            </div>
+
+            <div className="space-y-2.5 md:hidden">
+                {mobileAreas.map((area, index) => (
+                    <MobileInvestmentCard
+                        key={area.id}
+                        area={area}
+                        index={index}
+                        onSelect={handleSelect}
+                    />
+                ))}
+
+                <Link
+                    href="/projects?view=spending"
+                    className="
+                        group
+                        flex
+                        min-h-[74px]
+                        w-full
+                        items-center
+                        justify-between
+                        rounded-lg
+                        border
+                        border-slate-200
+                        bg-slate-50
+                        px-5
+                        transition-colors
+                        hover:border-slate-300
+                        hover:bg-slate-100
+                    "
+                >
+                    <div>
+                        <span
+                            className="
+                                block
+                                text-sm
+                                font-semibold
+                                text-slate-900
+                            "
+                        >
                             View All Investment Areas
                         </span>
 
-                        <span className="text-white/80 text-xs mt-1">
-                            See more categories
+                        <span className="mt-1 block text-xs text-slate-500">
+                            Explore the full portfolio
                         </span>
-                    </Link>
-                </motion.div>
+                    </div>
+
+                    <ArrowUpRight
+                        className="
+                            h-5
+                            w-5
+                            text-slate-500
+                            transition-transform
+                            group-hover:translate-x-0.5
+                            group-hover:-translate-y-0.5
+                        "
+                        strokeWidth={1.5}
+                    />
+                </Link>
             </div>
+
+            <AnimatePresence>
+                {selectedArea && (
+                    <>
+                        <motion.div
+                            key="investment-backdrop"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="
+                                fixed
+                                inset-0
+                                z-[55]
+                                bg-slate-950/35
+                                backdrop-blur-[2px]
+                            "
+                            onClick={handleClose}
+                            aria-hidden="true"
+                        />
+
+                        <InvestmentDetailPanel
+                            key={selectedArea.id}
+                            area={selectedArea}
+                            onClose={handleClose}
+                        />
+                    </>
+                )}
+            </AnimatePresence>
         </section>
     );
 }

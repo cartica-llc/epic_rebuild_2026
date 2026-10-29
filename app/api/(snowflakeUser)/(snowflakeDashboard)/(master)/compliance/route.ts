@@ -1,4 +1,4 @@
-// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/program-program-compliance/route.ts
+// app/api/(snowflakeUser)/(snowflakeDashboard)/(master)/compliance/route.ts
 
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
