@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/projectDetailPageRoutes/[id]/details/awardbands.ts
+// app/api/(snowflakePublic)/projectDetailPageRoutes/[id]/details/route.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
@@ -28,8 +28,9 @@ interface DetailRow {
     PERSON_CONTACT_EMAIL: string | null;
     PROJECT_WEBSITE_ADDRESS_URL: string | null;
 
-    SENATE_DISTRICT_NAME: string | null;
-    ASSEMBLY_DISTRICT_NAME: string | null;
+    // The district ID *is* the district number (same as the lookups route).
+    SENATE_DISTRICT_NUMBER: number | string | null;
+    ASSEMBLY_DISTRICT_NUMBER: number | string | null;
 
     STANDARDS: boolean | number | null;
     CYBER_SECURITY_CONSIDERATIONS: boolean | number | null;
@@ -58,11 +59,9 @@ export async function GET(_req: Request, { params }: RouteContext) {
         // (as named in the mockup). Switch to the *_AFTER_* columns once
         // that's the preferred display mode.
         //
-        // NOTE on district table names: the schema has a top-level
-        // SENATE_DISTRICT and ASSEMBLY_DISTRICT table. Column name for the
-        // display value is unknown — assuming *_NAME convention matching
-        // PROJECT_TYPE_NAME, INVESTMENT_AREA_NAME, etc. If these alias names
-        // come back NULL, DESC TABLE each and update the aliases.
+        // NOTE on district display: show the actual district number, not the
+        // *_NAME description. In SENATE_DISTRICT / ASSEMBLY_DISTRICT the ID is
+        // the district number (the projectsList lookups route uses it the same way).
         const rows = (await query(`
             SELECT
                 pd.PROJECT_DETAIL_ID,
@@ -87,8 +86,8 @@ export async function GET(_req: Request, { params }: RouteContext) {
                 p.PERSON_CONTACT_EMAIL,
                 p.PROJECT_WEBSITE_ADDRESS_URL,
 
-                sd.SENATE_DISTRICT_NAME,
-                ad.ASSEMBLY_DISTRICT_NAME,
+                sd.SENATE_DISTRICT_ID AS SENATE_DISTRICT_NUMBER,
+                ad.ASSEMBLY_DISTRICT_ID AS ASSEMBLY_DISTRICT_NUMBER,
 
                 p.STANDARDS,
                 p.CYBER_SECURITY_CONSIDERATIONS,
@@ -211,7 +210,6 @@ export async function GET(_req: Request, { params }: RouteContext) {
             marketBarriers: r.MARKET_BARRIERS,
             policyAndRegulatoryBarriers: r.POLICY_AND_REGULATORY_BARRIERS,
             cybersecurityConsiderationsNar: r.CYBER_SECURITY_NARRATIVE,
-            // No IS_FINAL_REPORT_EXISTS_AT_SERVER column — presence of URL is the flag
             isFinalReportExistsAtServer: !!r.FINAL_REPORT_URL,
             finalReportUrl: r.FINAL_REPORT_URL,
 
@@ -220,8 +218,10 @@ export async function GET(_req: Request, { params }: RouteContext) {
             contactPersonEmail: r.PERSON_CONTACT_EMAIL,
             projectWebsite: r.PROJECT_WEBSITE_ADDRESS_URL,
 
-            senateDistrictBefore: r.SENATE_DISTRICT_NAME,
-            assemblyDistrictBefore: r.ASSEMBLY_DISTRICT_NAME,
+            senateDistrictBefore:
+                r.SENATE_DISTRICT_NUMBER != null ? String(r.SENATE_DISTRICT_NUMBER) : null,
+            assemblyDistrictBefore:
+                r.ASSEMBLY_DISTRICT_NUMBER != null ? String(r.ASSEMBLY_DISTRICT_NUMBER) : null,
 
             standards: toBool(r.STANDARDS),
             cyberSecurityConsiderations: toBool(r.CYBER_SECURITY_CONSIDERATIONS),

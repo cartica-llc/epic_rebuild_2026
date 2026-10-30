@@ -10,6 +10,7 @@ import {
     SectionCard,
 } from '../shared/SectionCard';
 import { formatMoneyShort, formatPct } from '../shared/format';
+import { InfoHint } from '../shared/InfoHint';
 
 interface LeverageResponse {
     totals: {
@@ -188,15 +189,7 @@ function Card({
         <div className="rounded-md border border-slate-200 bg-white p-4">
             <p className="flex items-center gap-1 text-[11px] uppercase tracking-wide text-slate-500">
                 {label}
-                {hint ? (
-                    <span
-                        className="inline-flex h-3.5 w-3.5 flex-shrink-0 cursor-help items-center justify-center rounded-full border border-slate-300 text-[9px] normal-case not-italic text-slate-400"
-                        title={hint}
-                        aria-label={hint}
-                    >
-                        i
-                    </span>
-                ) : null}
+                {hint ? <InfoHint text={hint} /> : null}
             </p>
             {loading ? (
                 <div className="mt-2 h-7 w-24 animate-pulse rounded bg-slate-100" />

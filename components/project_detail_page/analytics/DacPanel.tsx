@@ -4,6 +4,8 @@ import { clamp, fmtP } from '../shared/format';
 
 export const MIN_DAC = 25;
 
+const DAC_SOURCE_NOTE = 'Self-reported by administrator, not verified';
+
 type Props = {
     isDac: boolean;
     isLi: boolean;
@@ -74,13 +76,11 @@ export function DacPanel({ isDac, isLi, dac }: Props) {
                                 style={{ left: `${MIN_DAC}%` }}
                             />
                         </div>
-                        <div className="mt-1 flex justify-between text-[10px] text-slate-400">
-                            <span>
+                        <div className="mt-1 flex justify-between gap-3 text-[10px] text-slate-400">
+                            <span className="shrink-0">
                                 {s.dacN} DAC of {s.totN}
                             </span>
-                            <span>
-                                {ok ? `Meets ${MIN_DAC}% target` : `Below ${MIN_DAC}%`}
-                            </span>
+                            <span className="text-right italic">{DAC_SOURCE_NOTE}</span>
                         </div>
                     </div>
                 );
