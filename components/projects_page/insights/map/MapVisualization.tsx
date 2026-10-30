@@ -173,12 +173,6 @@ export function MapVisualization({
         };
     }, [projects, selectedId]);
 
-    /**
-     * Fly the camera to the selected project whenever `selectedId` changes
-     * — including selections that originate from clicks in the project list,
-     * not just from the map itself. Skip when the selection is cleared, and
-     * be defensive in case the project doesn't have valid coordinates.
-     */
     useEffect(() => {
         if (selectedId == null) return;
         const project = projects.find((p) => p.id === selectedId);
@@ -362,9 +356,10 @@ export function MapVisualization({
                             offset={12}
                             closeButton={false}
                             closeOnClick={false}
+                            maxWidth="none"
                             className="map-hover-popup"
                         >
-                            <div className="min-w-[220px] max-w-[320px] rounded-md bg-slate-800 p-3 text-slate-50">
+                            <div className="w-[280px] max-w-[calc(100vw-2rem)] rounded-md bg-slate-800 p-3 text-slate-50">
                                 <p className="text-sm font-semibold leading-tight">
                                     {hovered.projectName ?? 'Untitled project'}
                                 </p>
@@ -388,7 +383,7 @@ export function MapVisualization({
                                         </span>
                                     )}
                                 </div>
-                                <div className="mt-2.5 flex gap-5">
+                                <div className="mt-2.5 grid grid-cols-3 gap-3">
                                     <FundingFigure
                                         label="Committed"
                                         value={hovered.committedFunding}
@@ -448,11 +443,11 @@ export function MapVisualization({
 
 function FundingFigure({ label, value }: { label: string; value: number }) {
     return (
-        <div>
-            <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+        <div className="min-w-0">
+            <p className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-400">
                 {label}
             </p>
-            <p className="mt-0.5 text-xs font-semibold text-slate-50">
+            <p className="mt-0.5 truncate text-xs font-semibold text-slate-50">
                 {formatMoneyShort(value)}
             </p>
         </div>

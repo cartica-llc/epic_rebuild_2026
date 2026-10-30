@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/(projects_insights)/spending/awards/awardbands.ts
+// app/api/(snowflakePublic)/(projects_insights)/spending/awards/route.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
@@ -29,8 +29,6 @@ interface SummaryRow {
 
 const AMOUNT_COL = 'fd.COMMITED_FUNDING_AMT';
 
-// Build CASE expressions from the shared band definitions so the SQL
-// stays in lockstep with the URL-building helper on the client.
 function buildBandLabelCase(): string {
     const whens = AWARD_BANDS
         .filter((b) => b.max !== null)
@@ -57,12 +55,12 @@ function buildBandOrderCase(): string {
 
 export async function GET(req: Request) {
     const url = new URL(req.url);
-    const { period, area } = readInsightFilters(url);
-    const { whereClause, areaJoin } = buildFilterSql({ period, area });
+    const { period, area, org } = readInsightFilters(url);
+    const { whereClause, areaJoin } = buildFilterSql({ period, area, org });
 
     try {
         console.log(
-            `[spending/awards] querying Snowflake | period=${period ?? 'all'} | area=${area ?? 'all'} | ${new Date().toISOString()}`
+            `[spending/awards] querying Snowflake | period=${period ?? 'all'} | area=${area ?? 'all'} | org=${org ?? 'all'} | ${new Date().toISOString()}`
         );
 
         const [bandRows, summaryRows] = await Promise.all([

@@ -51,7 +51,7 @@ export function ProxyTooltip({ explanation, factors }: ProxyTooltipProps) {
 
 export const SIGNAL_PROXY_EXPLANATION = {
     explanation:
-        'A 0-5 score derived from project evidence as self-reported by the grantee — not an official commercialization field, and not independently verified or validated by CPUC.',
+        'A 0-5 score derived from project evidence as self-reported by the project lead — not an official commercialization field, and not independently verified or validated by CPUC.',
     factors: [
         'Final report present',
         'Project status indicates completion',
@@ -63,7 +63,7 @@ export const SIGNAL_PROXY_EXPLANATION = {
 
 export const MATURITY_PROXY_EXPLANATION = {
     explanation:
-        'Derived from development stages (TRL levels and stage names) self-reported by the grantee — not independently verified or validated by CPUC. The most advanced stage wins when multiple are assigned.',
+        'Derived from development stages (TRL levels and stage names) self-reported by the project lead — not independently verified or validated by CPUC. The most advanced stage wins when multiple are assigned.',
     factors: [
         'TRL 9 → Possible near-market',
         'TRL 7-8 + Precommercial → Possible validation stage',

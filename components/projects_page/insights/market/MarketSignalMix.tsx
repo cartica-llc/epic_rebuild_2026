@@ -38,7 +38,7 @@ export function MarketSignalMix({
             <header className="mb-5">
                 <div className="flex items-center gap-1.5">
                     <h4 className="text-sm font-semibold text-slate-900">
-                        Portfolio composition
+                        Projects by Development Stage
                     </h4>
                     <ProxyTooltip {...MATURITY_PROXY_EXPLANATION} />
                 </div>

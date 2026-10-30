@@ -5,8 +5,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
+import type { ProgramAdminOption } from './useLearningsFilterOptions';
 
 interface FilterValues {
+    org: string;
     area: string;
     proceeding: string;
     status: string;
@@ -16,26 +18,38 @@ interface FilterOptions {
     investmentAreas: string[];
     cpucProceedings: string[];
     statuses: string[];
+    programAdmins?: ProgramAdminOption[];
 }
 
 interface LearningsFiltersProps {
     values: FilterValues;
     options: FilterOptions;
     optionsLoading?: boolean;
+    onOrgChange: (v: string) => void;
     onAreaChange: (v: string) => void;
     onProceedingChange: (v: string) => void;
     onStatusChange: (v: string) => void;
+}
+
+interface SelectOption {
+    value: string;
+    label: string;
 }
 
 interface SelectFieldProps {
     label: string;
     value: string;
     onChange: (v: string) => void;
-    options: string[];
+    options: SelectOption[];
+    allLabel?: string;
     disabled?: boolean;
 }
 
-function SelectField({ label, value, onChange, options, disabled }: SelectFieldProps) {
+// Most lists are plain strings where the value and label are the same.
+const toOptions = (list: string[] = []): SelectOption[] =>
+    list.map((v) => ({ value: v, label: v }));
+
+function SelectField({ label, value, onChange, options, allLabel = 'All', disabled }: SelectFieldProps) {
     return (
         <div>
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-widest text-slate-400">
@@ -48,10 +62,10 @@ function SelectField({ label, value, onChange, options, disabled }: SelectFieldP
                     disabled={disabled}
                     className="w-full appearance-none rounded-md border border-slate-200 bg-white px-3 py-2.5 pr-8 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
                 >
-                    <option value="">All</option>
+                    <option value="">{allLabel}</option>
                     {options.map((opt) => (
-                        <option key={opt} value={opt}>
-                            {opt}
+                        <option key={opt.value} value={opt.value}>
+                            {opt.label}
                         </option>
                     ))}
                 </select>
@@ -62,16 +76,22 @@ function SelectField({ label, value, onChange, options, disabled }: SelectFieldP
 }
 
 export function LearningsFilters({
-    values,
-    options,
-    optionsLoading,
-    onAreaChange,
-    onProceedingChange,
-    onStatusChange,
-}: LearningsFiltersProps) {
+                                     values,
+                                     options,
+                                     optionsLoading,
+                                     onOrgChange,
+                                     onAreaChange,
+                                     onProceedingChange,
+                                     onStatusChange,
+                                 }: LearningsFiltersProps) {
     const [open, setOpen] = useState(false);
 
-    const activeCount = [values.area, values.proceeding, values.status].filter(Boolean).length;
+    const activeCount = [values.org, values.area, values.proceeding, values.status].filter(Boolean).length;
+
+    const orgOptions: SelectOption[] = (options.programAdmins ?? []).map((o) => ({
+        value: String(o.id),
+        label: o.name,
+    }));
 
     return (
         <div>
@@ -112,26 +132,34 @@ export function LearningsFilters({
                         className="overflow-hidden"
                     >
                         <div className="mt-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                <SelectField
+                                    label="Program Administrator"
+                                    value={values.org}
+                                    onChange={onOrgChange}
+                                    options={orgOptions}
+                                    allLabel="All Orgs"
+                                    disabled={optionsLoading}
+                                />
                                 <SelectField
                                     label="Investment Area"
                                     value={values.area}
                                     onChange={onAreaChange}
-                                    options={options.investmentAreas}
+                                    options={toOptions(options.investmentAreas)}
                                     disabled={optionsLoading}
                                 />
                                 <SelectField
                                     label="CPUC Proceeding"
                                     value={values.proceeding}
                                     onChange={onProceedingChange}
-                                    options={options.cpucProceedings}
+                                    options={toOptions(options.cpucProceedings)}
                                     disabled={optionsLoading}
                                 />
                                 <SelectField
                                     label="Project Status"
                                     value={values.status}
                                     onChange={onStatusChange}
-                                    options={options.statuses}
+                                    options={toOptions(options.statuses)}
                                     disabled={optionsLoading}
                                 />
                             </div>

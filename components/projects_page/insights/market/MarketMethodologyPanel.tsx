@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { ChevronDown, AlertCircle } from 'lucide-react';
 
+
 export function MarketMethodologyPanel() {
     const [open, setOpen] = useState(false);
 
@@ -59,10 +60,10 @@ function MaturityMethodology() {
         <section>
             <header className="mb-3">
                 <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-700">
-                    Maturity stage
+                    Development stage
                 </h5>
                 <p className="mt-1 text-[11px] text-slate-500">
-                    Derived from development stages self-reported by the grantee, not
+                    Derived from development stages self-reported by the project lead, not
                     independently verified by CPUC. When a project has multiple stages,
                     the most advanced one wins.
                 </p>
@@ -110,7 +111,7 @@ function SignalMethodology() {
         <section>
             <header className="mb-3">
                 <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-700">
-                    Signal score (0–5)
+                    Maturity Signal (0–5)
                 </h5>
                 <p className="mt-1 text-[11px] text-slate-500">
                     A point is added for each piece of self-reported evidence below. The
@@ -139,7 +140,7 @@ function SignalMethodology() {
                 </p>
                 <ul className="space-y-1.5 text-[11px]">
                     <BandRow
-                        band="Possible high potential"
+                        band="Mature/Near-mature"
                         range="4–5 points"
                         color="bg-emerald-700"
                     />

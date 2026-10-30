@@ -14,7 +14,7 @@ interface SpendingTabBarProps {
 const TABS: { key: SpendingTab; label: string }[] = [
     { key: 'overview', label: 'Spending Overview' },
     { key: 'leverage', label: 'Leverage & Match' },
-    { key: 'awards', label: 'Award Size' },
+    { key: 'awards', label: 'Project Size' },
     { key: 'community', label: 'Community Investments' },
 ];
 

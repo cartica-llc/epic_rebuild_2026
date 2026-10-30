@@ -59,7 +59,7 @@ export function MarketProjectsTable({
         if (hasActiveFilters) {
             return `${visibleProjects.length} project${visibleProjects.length === 1 ? '' : 's'} match the current filters.`;
         }
-        return 'Sorted by highest signal score across the full portfolio.';
+        return 'Sorted by highest Maturity Signal score across the full portfolio';
     };
 
     return (
@@ -67,7 +67,7 @@ export function MarketProjectsTable({
             <header className="mb-5">
                 <div className="flex items-center gap-1.5">
                     <h4 className="text-sm font-semibold text-slate-900">
-                        Possible high-potential projects
+                        Mature/Near-mature projects
                     </h4>
                     <ProxyTooltip {...SIGNAL_PROXY_EXPLANATION} />
                 </div>

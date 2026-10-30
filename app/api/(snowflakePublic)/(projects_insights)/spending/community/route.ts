@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/(projects_insights)/spending/community/awardbands.ts
+// app/api/(snowflakePublic)/(projects_insights)/spending/community/route.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
@@ -33,8 +33,8 @@ interface ByAreaRow {
 
 export async function GET(req: Request) {
     const url = new URL(req.url);
-    const { period, area } = readInsightFilters(url);
-    const { whereClause, areaJoin } = buildFilterSql({ period, area });
+    const { period, area, org } = readInsightFilters(url);
+    const { whereClause, areaJoin } = buildFilterSql({ period, area, org });
     const groupingAreaFilter = buildGroupingAreaFilter(area);
 
     try {

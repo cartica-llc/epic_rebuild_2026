@@ -9,6 +9,7 @@ import { SpendingFilters } from './spending/SpendingFilters';
 import { SpendingTabBar, type SpendingTab } from './spending/SpendingTabBar';
 import { useSpendingFilters } from './spending/useSpendingFilters';
 import { useSpendingFilterOptions } from './spending/useSpendingFilterOptions';
+import { useOrgOptions } from './spending/useOrgOptions';
 import { ChartSkeleton } from './spending/shared/SectionCard';
 
 const tabSkeleton = () => (
@@ -37,32 +38,27 @@ const CommunityRequirementsTab = dynamic(
 
 export function Insight_SpendingAnalysis() {
     const [activeTab, setActiveTab] = useState<SpendingTab>('overview');
-    const { filters, setPeriod, setArea, reset, queryString } = useSpendingFilters();
+    const { filters, setOrg, setPeriod, setArea, reset, queryString } = useSpendingFilters();
     const { periods, areas, loading: optionsLoading } = useSpendingFilterOptions();
+    const { orgs, loading: orgsLoading } = useOrgOptions();
 
     return (
         <div className="bg-white">
             {/* Header strip */}
             <div className="relative bg-white px-4 py-6 md:px-6 md:py-8">
                 <div className="space-y-5">
-                    <SpendingHeader  />
+                    <SpendingHeader />
 
                     <SpendingFilters
-
                         filters={filters}
-
+                        orgs={orgs}
                         periods={periods}
-
                         areas={areas}
-
+                        onOrgChange={setOrg}
                         onPeriodChange={setPeriod}
-
                         onAreaChange={setArea}
-
                         onReset={reset}
-
-                        optionsLoading={optionsLoading}
-
+                        optionsLoading={optionsLoading || orgsLoading}
                     />
 
                     <div className="h-px w-full bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200" />
@@ -80,7 +76,6 @@ export function Insight_SpendingAnalysis() {
                     />
                 </div>
             </div>
-
 
             <div className="px-4 py-5 md:px-6 md:py-6">
                 {activeTab === 'overview' && (

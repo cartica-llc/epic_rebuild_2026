@@ -9,6 +9,14 @@ import { UserStatusBadge } from "@/components/dashboard/masterAdmin/users/userTa
 import type { CognitoUser, UserFormData } from "@/app/(dashboard)/dashboard/master/users/config"
 
 
+const ORG_LABELS: Record<string, string> = {
+    EPC: "CEC",
+}
+
+function orgLabel(org: string): string {
+    return ORG_LABELS[org.trim().toUpperCase()] ?? org
+}
+
 interface UserFormProps {
     mode: "create" | "edit"
     roles: string[]
@@ -255,7 +263,7 @@ export function UserForm({
                                             >
                                                 {organizations.map((org) => (
                                                     <option key={org} value={org}>
-                                                        {org}
+                                                        {orgLabel(org)}
                                                     </option>
                                                 ))}
                                             </select>

@@ -35,9 +35,9 @@ export default function AwardSizeTab({ queryString }: Props) {
     return (
         <div className="space-y-5">
             <p className="text-xs text-slate-500">
-                An <span className="font-medium text-slate-700">award</span> is the committed
-                funding amount for a single project. This tab shows how award sizes are
-                distributed across the projects matching your filters — from the smallest awards
+                <span className="font-medium text-slate-700">Project Size</span> is the committed
+                funding amount for a single project. This tab shows how project sizes are
+                distributed across the projects matching your filters — from the smallest project
                 to the largest.
             </p>
 
@@ -49,19 +49,19 @@ export default function AwardSizeTab({ queryString }: Props) {
                     hint="Number of projects with committed funding that match the current filters."
                 />
                 <Card
-                    label="Average Award"
+                    label="Average Project Size"
                     value={formatMoneyShort(data?.summary.average ?? 0)}
                     loading={loading}
                     hint="Total committed funding divided by the number of projects. A few very large awards can pull this up."
                 />
                 <Card
-                    label="Median Award"
+                    label="Median Project Size"
                     value={formatMoneyShort(data?.summary.median ?? 0)}
                     loading={loading}
                     hint="The middle award amount when all projects are ranked by committed funding — less affected by unusually large or small awards than the average."
                 />
                 <Card
-                    label="Largest Award"
+                    label="Largest Project Size"
                     value={formatMoneyShort(data?.summary.max ?? 0)}
                     loading={loading}
                     hint="The single largest committed-funding amount among the filtered projects."
@@ -69,7 +69,7 @@ export default function AwardSizeTab({ queryString }: Props) {
             </div>
 
             <SectionCard
-                title="Distribution by award size"
+                title="Distribution by project size"
                 description="Number of projects in each committed-funding band, from smallest to largest. Click a count to view the projects in that band."
             >
                 {loading ? (

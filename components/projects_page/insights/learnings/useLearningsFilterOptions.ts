@@ -4,10 +4,16 @@
 
 import { useEffect, useState } from 'react';
 
+export interface ProgramAdminOption {
+    id: number;
+    name: string;
+}
+
 interface FilterOptions {
     investmentAreas: string[];
     cpucProceedings: string[];
     statuses: string[];
+    programAdmins: ProgramAdminOption[];
 }
 
 interface State {
@@ -20,6 +26,7 @@ const EMPTY: FilterOptions = {
     investmentAreas: [],
     cpucProceedings: [],
     statuses: [],
+    programAdmins: [],
 };
 
 /**
@@ -42,9 +49,10 @@ export function useLearningsFilterOptions() {
                 if (!res.ok) throw new Error(`Request failed (${res.status})`);
                 return res.json();
             })
-            .then((json: FilterOptions) => {
+            .then((json: Partial<FilterOptions>) => {
                 if (cancelled) return;
-                setState({ options: json, loading: false, error: null });
+                // Fill any missing keys so consumers can always .map() safely.
+                setState({ options: { ...EMPTY, ...json }, loading: false, error: null });
             })
             .catch((err: unknown) => {
                 if (cancelled) return;

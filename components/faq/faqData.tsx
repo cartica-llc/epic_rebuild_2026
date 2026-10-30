@@ -20,13 +20,7 @@ export const faqItems: FAQItem[] = [
             "The EPIC program is administered by the CEC, SDG&E, PG&E, and SCE and overseen by the CPUC's Energy Division staff. In its annual reports, each EPIC administrator provides updates on project status, administrator coordination, public engagement, and budget. The EPIC program administrators also hold public workshops to maintain public transparency and gain stakeholder input throughout the EPIC funding process.",
         category: "program",
     },
-    {
-        id: "epic-accomplishments",
-        question: "What has EPIC accomplished?",
-        answer:
-            "To date, more than 45 EPIC-funded technologies and related services have been successfully commercialized, including smarter electric vehicle chargers, better battery chemistries, more intuitive energy and water management software, and others. An additional 60 EPIC-funded utility projects have been successfully commercialized or transitioned to the CPUC's General Rate Case for follow-on funding, including technologies for wildfire mitigation, energy storage, distributed resources, big data, and others. EPIC is advancing energy equity by investing over 40 percent of technology demonstration and deployment funds in disadvantaged vulnerable communities. The CPUC is working to expand outreach and engagement in these communities to better understand needs, challenges, and ways that EPIC funds can be best invested for all Californians.",
-        category: "program",
-    },
+
     {
         id: "picg",
         question: "What is the Policy + Innovation Coordination Group?",

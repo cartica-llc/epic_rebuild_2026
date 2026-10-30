@@ -24,6 +24,7 @@ export function Insight_Learnings() {
     const [selectedArea, setSelectedArea] = useState('');
     const [selectedProceeding, setSelectedProceeding] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('');
+    const [selectedOrg, setSelectedOrg] = useState('');
     const [selectedLens, setSelectedLens] = useState<NarrativeLens | null>(null);
 
     const { options, loading: optionsLoading } = useLearningsFilterOptions();
@@ -35,13 +36,14 @@ export function Insight_Learnings() {
             area: selectedArea,
             proceeding: selectedProceeding,
             status: selectedStatus,
+            org: selectedOrg,
         }),
-        [searchTerm, selectedLens, selectedArea, selectedProceeding, selectedStatus],
+        [searchTerm, selectedLens, selectedArea, selectedProceeding, selectedStatus, selectedOrg],
     );
 
     const { data, loading, error, hasSearchIntent } = useLearningsSearch(searchParams);
 
-    const activeFilterCount = [selectedArea, selectedProceeding, selectedStatus].filter(
+    const activeFilterCount = [selectedOrg, selectedArea, selectedProceeding, selectedStatus].filter(
         Boolean,
     ).length;
 
@@ -50,6 +52,7 @@ export function Insight_Learnings() {
         setSelectedArea('');
         setSelectedProceeding('');
         setSelectedStatus('');
+        setSelectedOrg('');
         setSelectedLens(null);
     }, []);
 
@@ -70,12 +73,14 @@ export function Insight_Learnings() {
 
                     <LearningsFilters
                         values={{
+                            org: selectedOrg,
                             area: selectedArea,
                             proceeding: selectedProceeding,
                             status: selectedStatus,
                         }}
                         options={options}
                         optionsLoading={optionsLoading}
+                        onOrgChange={setSelectedOrg}
                         onAreaChange={setSelectedArea}
                         onProceedingChange={setSelectedProceeding}
                         onStatusChange={setSelectedStatus}

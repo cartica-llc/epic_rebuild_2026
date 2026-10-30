@@ -5,10 +5,17 @@
 import { ChevronDown } from 'lucide-react';
 import type { SpendingFilters as Filters } from './useSpendingFilters';
 
+export interface OrgOption {
+    id: number;
+    name: string;
+}
+
 interface SpendingFiltersProps {
     filters: Filters;
-    periods: string[];
-    areas: string[];
+    orgs?: OrgOption[];
+    periods?: string[];
+    areas?: string[];
+    onOrgChange: (o: string) => void;
     onPeriodChange: (p: string) => void;
     onAreaChange: (a: string) => void;
     onReset: () => void;
@@ -52,8 +59,10 @@ function SelectField({ label, value, onChange, options, disabled }: SelectFieldP
 
 export function SpendingFilters({
                                     filters,
-                                    periods,
-                                    areas,
+                                    orgs = [],
+                                    periods = [],
+                                    areas = [],
+                                    onOrgChange,
                                     onPeriodChange,
                                     onAreaChange,
                                     onReset,
@@ -61,6 +70,19 @@ export function SpendingFilters({
                                 }: SpendingFiltersProps) {
     return (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+                <SelectField
+                    label="Organization"
+                    value={filters.org ?? 'all'}
+                    onChange={onOrgChange}
+                    disabled={optionsLoading}
+                    options={[
+                        { value: 'all', label: 'All Orgs' },
+                        ...orgs.map((o) => ({ value: String(o.id), label: o.name })),
+                    ]}
+                />
+            </div>
+
             <SelectField
                 label="EPIC Period"
                 value={filters.period}

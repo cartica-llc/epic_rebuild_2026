@@ -6,6 +6,8 @@ const SCHEMA = process.env.DEV_SNOWFLAKE_SCHEMA;
 
 export const T = `${DB}.${SCHEMA}`;
 
+const PROGRAM_ADMIN_FK = 'p.PROGRAM_ADMIN_PROGRAM_ADMIN_ID';
+
 const escape = (v: string) => v.replace(/'/g, "''");
 
 
@@ -18,15 +20,27 @@ export function readInsightFilters(url: URL) {
     const area =
         areaRaw && areaRaw !== 'all' && areaRaw.trim() !== '' ? areaRaw : null;
 
-    return { period, area };
+    const orgRaw = url.searchParams.get('org')?.trim() ?? '';
+    const orgNum = orgRaw !== '' && orgRaw !== 'all' ? Number(orgRaw) : NaN;
+    const org = Number.isInteger(orgNum) && orgNum >= 0 ? orgNum : null;
+
+    return { period, area, org };
 }
 
 
-export function buildFilterSql(opts: { period: string | null; area: string | null }) {
+export function buildFilterSql(opts: {
+    period: string | null;
+    area: string | null;
+    org?: number | null;
+}) {
     const wheres: string[] = ['COALESCE(p.IS_ACTIVE, 1) = 1'];
 
     if (opts.period) {
         wheres.push(`ipp.PERIOD_NAME = '${escape(opts.period)}'`);
+    }
+
+    if (opts.org !== null && opts.org !== undefined) {
+        wheres.push(`${PROGRAM_ADMIN_FK} = ${opts.org}`);
     }
 
     let areaJoin = '';

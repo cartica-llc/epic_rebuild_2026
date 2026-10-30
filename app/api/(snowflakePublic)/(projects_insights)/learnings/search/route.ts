@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/(projects_insights)/learnings/search/awardbands.ts
+// app/api/(snowflakePublic)/(projects_insights)/learnings/search/route.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
@@ -6,6 +6,9 @@ import { T, toNum, applyInsightCache } from '../../_shared';
 
 const HARD_LIMIT = 200;
 const NARRATIVE_TRUNCATE = 1200; // chars — server-side cap to keep payload small
+
+// FK on PROJECT that points to PROGRAM_ADMIN.PROGRAM_ADMIN_ID (same as spending insights).
+const PROGRAM_ADMIN_FK = 'p.PROGRAM_ADMIN_PROGRAM_ADMIN_ID';
 
 type NarrativeLens = 'innovations' | 'barriers' | 'learnings' | 'summary';
 
@@ -40,12 +43,19 @@ function readSearchParams(url: URL) {
     const proceeding = (url.searchParams.get('proceeding') ?? '').trim();
     const status = (url.searchParams.get('status') ?? '').trim();
 
+    // Org is a PROGRAM_ADMIN_ID — accept any non-negative integer (CEC is 0).
+    // Guard against '' explicitly, since Number('') === 0.
+    const orgRaw = (url.searchParams.get('org') ?? '').trim();
+    const orgNum = orgRaw !== '' && orgRaw !== 'all' ? Number(orgRaw) : NaN;
+    const org = Number.isInteger(orgNum) && orgNum >= 0 ? orgNum : null;
+
     return {
         q,
         lens,
         area: area || null,
         proceeding: proceeding || null,
         status: status || null,
+        org,
     };
 }
 
@@ -113,7 +123,7 @@ function buildNarrativeSelect(lens: NarrativeLens | null): string {
 
 export async function GET(req: Request) {
     const url = new URL(req.url);
-    const { q, lens, area, proceeding, status } = readSearchParams(url);
+    const { q, lens, area, proceeding, status, org } = readSearchParams(url);
 
     // Build the WHERE/HAVING clauses dynamically.
     const wheres: string[] = ['COALESCE(p.IS_ACTIVE, 1) = 1'];
@@ -134,6 +144,11 @@ export async function GET(req: Request) {
 
     if (status) {
         wheres.push(`p.PROJECT_STATUS = '${escape(status)}'`);
+    }
+
+    if (org !== null) {
+        // Safe to interpolate: validated as a non-negative integer in readSearchParams.
+        wheres.push(`${PROGRAM_ADMIN_FK} = ${org}`);
     }
 
     // Area filter via EXISTS so we don't disrupt the LISTAGG aggregation.
@@ -237,14 +252,14 @@ export async function GET(req: Request) {
 
 //cache applied
         return applyInsightCache(
-         NextResponse.json({
-            projects,
-            totalCommitted,
-            count: projects.length,
-            truncated: rows.length === HARD_LIMIT,
-            limit: HARD_LIMIT,
-        }),
-    );
+            NextResponse.json({
+                projects,
+                totalCommitted,
+                count: projects.length,
+                truncated: rows.length === HARD_LIMIT,
+                limit: HARD_LIMIT,
+            }),
+        );
 
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
