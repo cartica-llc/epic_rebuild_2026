@@ -1,4 +1,4 @@
-// ─── api/projectsList/exportAll/awardbands.ts ──────────────
+// ─── api/projectsList/exportAll/route.ts ──────────────
 // Entire Database export — 4-sheet .xlsx (Projects, Details, Finances, Metrics)
 
 import { NextResponse } from 'next/server';
@@ -188,6 +188,7 @@ SELECT
     p.PROJECT_ID, p.PROJECT_NUMBER,
     COALESCE(pm.ELECTRICITY_SYSTEM_RELIABILITY_IMPACTS, '') AS RELIABILITY_IMPACTS,
     COALESCE(pm.ELECTRICITY_SYSTEM_SAFETY_IMPACTS, '') AS SAFETY_IMPACTS,
+    COALESCE(pm.GHG_IMPACTS, '') AS GHG_IMPACTS,
     COALESCE(pm.ENVIRONMENTAL_IMPACTS_NON_GHG, '') AS ENVIRONMENTAL_IMPACTS,
     COALESCE(pm.PROJECTED_PROJECT_BENEFITS, '') AS PROJECTED_BENEFITS,
     COALESCE(pm.RATEPAYERS_BENEFITS, '') AS RATEPAYER_BENEFITS,
@@ -195,8 +196,7 @@ SELECT
     COALESCE(pm.ENERGY_IMPACTS, '') AS ENERGY_IMPACTS,
     COALESCE(pm.INFRASTRUCTURE_COST_REDUCTIONS_AND_ECONOMIC_BENEFITS, '') AS INFRASTRUCTURE_BENEFITS,
     COALESCE(pm.OTHER_IMPACTS, '') AS OTHER_IMPACTS,
-    COALESCE(pm.INFORMATION_DISSEMINATION, '') AS INFO_DISSEMINATION,
-    COALESCE(pm.GHG_IMPACTS, '') AS GHG_IMPACTS
+    COALESCE(pm.INFORMATION_DISSEMINATION, '') AS INFO_DISSEMINATION
 FROM ${t}.PROJECT p
 LEFT JOIN ${t}.PROJECT_METRIC pm ON pm.PROJECT_METRIC_ID = p.PROJECT_METRIC_PROJECT_METRIC_ID
 WHERE COALESCE(p.IS_ACTIVE, 1) = 1
@@ -283,6 +283,7 @@ ORDER BY p.PROJECT_ID DESC
             { header: 'Project Number', key: 'PROJECT_NUMBER', width: 18 },
             { header: 'Reliability Impacts', key: 'RELIABILITY_IMPACTS', width: 40 },
             { header: 'Safety Impacts', key: 'SAFETY_IMPACTS', width: 40 },
+            { header: 'GHG Impacts', key: 'GHG_IMPACTS', width: 40 },
             { header: 'Environmental Impacts', key: 'ENVIRONMENTAL_IMPACTS', width: 40 },
             { header: 'Projected Benefits', key: 'PROJECTED_BENEFITS', width: 40 },
             { header: 'Ratepayer Benefits', key: 'RATEPAYER_BENEFITS', width: 40 },
@@ -291,7 +292,6 @@ ORDER BY p.PROJECT_ID DESC
             { header: 'Infrastructure & Economic', key: 'INFRASTRUCTURE_BENEFITS', width: 40 },
             { header: 'Other Impacts', key: 'OTHER_IMPACTS', width: 40 },
             { header: 'Info Dissemination', key: 'INFO_DISSEMINATION', width: 40 },
-            { header: 'GHG Impacts', key: 'GHG_IMPACTS', width: 40 },
         ], metricsRows);
 
         const arrayBuffer = await wb.xlsx.writeBuffer();

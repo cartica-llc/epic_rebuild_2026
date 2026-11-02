@@ -13,6 +13,7 @@ import {
 
 interface TotalsRow {
     COMMITTED: number | null;
+    ENCUMBERED: number | null;
     CONTRACTED: number | null;
     EXPENDED: number | null;
     PROJECT_COUNT: number | null;
@@ -22,6 +23,7 @@ interface ByAreaRow {
     INVESTMENT_AREA_ID: number | null;
     INVESTMENT_AREA_NAME: string | null;
     COMMITTED: number | null;
+    ENCUMBERED: number | null;
     CONTRACTED: number | null;
     EXPENDED: number | null;
 }
@@ -30,6 +32,7 @@ interface ByPeriodRow {
     PERIOD_ID: number | null;
     PERIOD_NAME: string | null;
     COMMITTED: number | null;
+    ENCUMBERED: number | null;
     CONTRACTED: number | null;
     EXPENDED: number | null;
 }
@@ -38,6 +41,7 @@ interface TopLeadRow {
     COMPANY_ID: number | null;
     COMPANY_NAME: string | null;
     COMMITTED: number | null;
+    ENCUMBERED: number | null;
     CONTRACTED: number | null;
     EXPENDED: number | null;
     PROJECT_COUNT: number | null;
@@ -55,6 +59,7 @@ export async function GET(req: Request) {
                 query(`
                     SELECT
                         SUM(COALESCE(fd.COMMITED_FUNDING_AMT, 0))      AS COMMITTED,
+                        SUM(COALESCE(fd.ENCUMBERED_FUNDING_AMT, 0))    AS ENCUMBERED,
                         SUM(COALESCE(fd.CONTRACT_AMOUNT, 0))           AS CONTRACTED,
                         SUM(COALESCE(fd.FUNDS_EXPENDED_TO_DATE, 0))    AS EXPENDED,
                         COUNT(DISTINCT p.PROJECT_ID)                   AS PROJECT_COUNT
@@ -74,6 +79,7 @@ export async function GET(req: Request) {
                         ia.INVESTMENT_AREA_ID,
                         ia.INVESTMENT_AREA_NAME,
                         SUM(COALESCE(fd.COMMITED_FUNDING_AMT, 0))      AS COMMITTED,
+                        SUM(COALESCE(fd.ENCUMBERED_FUNDING_AMT, 0))    AS ENCUMBERED,
                         SUM(COALESCE(fd.CONTRACT_AMOUNT, 0))           AS CONTRACTED,
                         SUM(COALESCE(fd.FUNDS_EXPENDED_TO_DATE, 0))    AS EXPENDED
                     FROM ${T}.PROJECT p
@@ -100,6 +106,7 @@ export async function GET(req: Request) {
                         ipp.PERIOD_ID,
                         ipp.PERIOD_NAME,
                         SUM(COALESCE(fd.COMMITED_FUNDING_AMT, 0))      AS COMMITTED,
+                        SUM(COALESCE(fd.ENCUMBERED_FUNDING_AMT, 0))    AS ENCUMBERED,
                         SUM(COALESCE(fd.CONTRACT_AMOUNT, 0))           AS CONTRACTED,
                         SUM(COALESCE(fd.FUNDS_EXPENDED_TO_DATE, 0))    AS EXPENDED
                     FROM ${T}.PROJECT p
@@ -120,6 +127,7 @@ export async function GET(req: Request) {
                         c.COMPANY_ID,
                         c.COMPANY_NAME,
                         SUM(COALESCE(fd.COMMITED_FUNDING_AMT, 0))      AS COMMITTED,
+                        SUM(COALESCE(fd.ENCUMBERED_FUNDING_AMT, 0))    AS ENCUMBERED,
                         SUM(COALESCE(fd.CONTRACT_AMOUNT, 0))           AS CONTRACTED,
                         SUM(COALESCE(fd.FUNDS_EXPENDED_TO_DATE, 0))    AS EXPENDED,
                         COUNT(DISTINCT p.PROJECT_ID)                   AS PROJECT_COUNT
@@ -144,6 +152,7 @@ export async function GET(req: Request) {
         const body = {
             totals: {
                 committed: toNum(totalsRow?.COMMITTED),
+                encumbered: toNum(totalsRow?.ENCUMBERED),
                 contracted: toNum(totalsRow?.CONTRACTED),
                 expended: toNum(totalsRow?.EXPENDED),
                 projectCount: toNum(totalsRow?.PROJECT_COUNT),
@@ -154,6 +163,7 @@ export async function GET(req: Request) {
                     id: r.INVESTMENT_AREA_ID!,
                     name: r.INVESTMENT_AREA_NAME ?? 'Unknown',
                     committed: toNum(r.COMMITTED),
+                    encumbered: toNum(r.ENCUMBERED),
                     contracted: toNum(r.CONTRACTED),
                     expended: toNum(r.EXPENDED),
                 })),
@@ -163,6 +173,7 @@ export async function GET(req: Request) {
                     id: r.PERIOD_ID!,
                     period: r.PERIOD_NAME!,
                     committed: toNum(r.COMMITTED),
+                    encumbered: toNum(r.ENCUMBERED),
                     contracted: toNum(r.CONTRACTED),
                     expended: toNum(r.EXPENDED),
                 })),
@@ -172,6 +183,7 @@ export async function GET(req: Request) {
                     id: r.COMPANY_ID!,
                     name: r.COMPANY_NAME ?? 'Unknown',
                     committed: toNum(r.COMMITTED),
+                    encumbered: toNum(r.ENCUMBERED),
                     contracted: toNum(r.CONTRACTED),
                     expended: toNum(r.EXPENDED),
                     projectCount: toNum(r.PROJECT_COUNT),

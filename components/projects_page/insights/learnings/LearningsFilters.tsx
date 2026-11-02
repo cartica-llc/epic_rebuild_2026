@@ -5,10 +5,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
-import type { ProgramAdminOption } from './useLearningsFilterOptions';
+import type { IdNameOption } from './useLearningsFilterOptions';
 
 interface FilterValues {
     org: string;
+    projectType: string;
     area: string;
     proceeding: string;
     status: string;
@@ -18,7 +19,8 @@ interface FilterOptions {
     investmentAreas: string[];
     cpucProceedings: string[];
     statuses: string[];
-    programAdmins?: ProgramAdminOption[];
+    programAdmins?: IdNameOption[];
+    projectTypes?: IdNameOption[];
 }
 
 interface LearningsFiltersProps {
@@ -26,6 +28,7 @@ interface LearningsFiltersProps {
     options: FilterOptions;
     optionsLoading?: boolean;
     onOrgChange: (v: string) => void;
+    onProjectTypeChange: (v: string) => void;
     onAreaChange: (v: string) => void;
     onProceedingChange: (v: string) => void;
     onStatusChange: (v: string) => void;
@@ -45,9 +48,11 @@ interface SelectFieldProps {
     disabled?: boolean;
 }
 
-// Most lists are plain strings where the value and label are the same.
 const toOptions = (list: string[] = []): SelectOption[] =>
     list.map((v) => ({ value: v, label: v }));
+
+const toIdOptions = (list: IdNameOption[] = []): SelectOption[] =>
+    list.map((o) => ({ value: String(o.id), label: o.name }));
 
 function SelectField({ label, value, onChange, options, allLabel = 'All', disabled }: SelectFieldProps) {
     return (
@@ -80,18 +85,20 @@ export function LearningsFilters({
                                      options,
                                      optionsLoading,
                                      onOrgChange,
+                                     onProjectTypeChange,
                                      onAreaChange,
                                      onProceedingChange,
                                      onStatusChange,
                                  }: LearningsFiltersProps) {
     const [open, setOpen] = useState(false);
 
-    const activeCount = [values.org, values.area, values.proceeding, values.status].filter(Boolean).length;
-
-    const orgOptions: SelectOption[] = (options.programAdmins ?? []).map((o) => ({
-        value: String(o.id),
-        label: o.name,
-    }));
+    const activeCount = [
+        values.org,
+        values.projectType,
+        values.area,
+        values.proceeding,
+        values.status,
+    ].filter(Boolean).length;
 
     return (
         <div>
@@ -132,13 +139,21 @@ export function LearningsFilters({
                         className="overflow-hidden"
                     >
                         <div className="mt-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                                 <SelectField
                                     label="Program Administrator"
                                     value={values.org}
                                     onChange={onOrgChange}
-                                    options={orgOptions}
+                                    options={toIdOptions(options.programAdmins)}
                                     allLabel="All Orgs"
+                                    disabled={optionsLoading}
+                                />
+                                <SelectField
+                                    label="Project Type"
+                                    value={values.projectType}
+                                    onChange={onProjectTypeChange}
+                                    options={toIdOptions(options.projectTypes)}
+                                    allLabel="All Types"
                                     disabled={optionsLoading}
                                 />
                                 <SelectField

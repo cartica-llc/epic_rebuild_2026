@@ -14,7 +14,9 @@ import { FundingProgress } from '../FundingProgress';
 import { formatCount, formatMoneyShort } from '../shared/format';
 import {
     FUNDING_COLORS,
+    LAYERS,
     LAYER_LABEL,
+    layersLargestFirst,
     valueForLayer,
     type FundingLayer,
 } from '../shared/fundingLayers';
@@ -22,6 +24,7 @@ import {
 interface OverviewResponse {
     totals: {
         committed: number;
+        encumbered: number;
         contracted: number;
         expended: number;
         projectCount: number;
@@ -30,6 +33,7 @@ interface OverviewResponse {
         id: number;
         name: string;
         committed: number;
+        encumbered: number;
         contracted: number;
         expended: number;
     }[];
@@ -37,6 +41,7 @@ interface OverviewResponse {
         id: number;
         period: string;
         committed: number;
+        encumbered: number;
         contracted: number;
         expended: number;
     }[];
@@ -44,6 +49,7 @@ interface OverviewResponse {
         id: number;
         name: string;
         committed: number;
+        encumbered: number;
         contracted: number;
         expended: number;
         projectCount: number;
@@ -53,8 +59,6 @@ interface OverviewResponse {
 interface Props {
     queryString: string;
 }
-
-const LAYERS: FundingLayer[] = ['committed', 'contracted', 'expended'];
 
 export default function SpendingOverviewTab({ queryString }: Props) {
     const { data, loading, error } = useInsightFetch<OverviewResponse>(
@@ -113,6 +117,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                             label: a.name,
                             href: `/projects?investmentAreaId=${a.id}`,
                             committed: a.committed,
+                            encumbered: a.encumbered,
                             contracted: a.contracted,
                             expended: a.expended,
                         }))}
@@ -126,7 +131,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                 description={
                     isolated
                         ? `${LAYER_LABEL[isolated][0].toUpperCase()}${LAYER_LABEL[isolated].slice(1)} amount per period.`
-                        : 'Committed vs. contracted vs. expended per period.'
+                        : 'Committed vs. encumbered vs. contracted vs. expended per period.'
                 }
             >
                 <ChartLegend isolated={isolated} onIsolate={setIsolated} />
@@ -142,6 +147,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                             label: p.period,
                             href: `/projects?investmentPeriodId=${p.id}`,
                             committed: p.committed,
+                            encumbered: p.encumbered,
                             contracted: p.contracted,
                             expended: p.expended,
                         }))}
@@ -171,6 +177,7 @@ export default function SpendingOverviewTab({ queryString }: Props) {
                             label: l.name,
                             href: `/projects?leadCompanyId=${l.id}`,
                             committed: l.committed,
+                            encumbered: l.encumbered,
                             contracted: l.contracted,
                             expended: l.expended,
                             sublabel: `${formatCount(l.projectCount)} project${l.projectCount === 1 ? '' : 's'}`,
@@ -226,6 +233,7 @@ function ChartLegend({ isolated, onIsolate }: ChartLegendProps) {
 interface NestedRow {
     label: string;
     committed: number;
+    encumbered: number;
     contracted: number;
     expended: number;
     sublabel?: string;
@@ -243,13 +251,13 @@ function NestedBarList({ rows, isolated }: NestedBarListProps) {
     return (
         <ul className="space-y-3">
             {rows.map((r) => {
-                const committedPct = max > 0 ? (r.committed / max) * 100 : 0;
-                const contractedPct = max > 0 ? (r.contracted / max) * 100 : 0;
-                const expendedPct = max > 0 ? (r.expended / max) * 100 : 0;
+                // Widths are relative to the largest committed amount in the list.
+                // Capped at 100% since a few projects report more encumbered than committed.
+                const widthFor = (layer: FundingLayer) =>
+                    max > 0 ? Math.min(100, (valueForLayer(r, layer) / max) * 100) : 0;
 
-                const showCommitted = isolated === null || isolated === 'committed';
-                const showContracted = isolated === null || isolated === 'contracted';
-                const showExpended = isolated === null || isolated === 'expended';
+                const visible = LAYERS.filter((l) => isolated === null || isolated === l);
+                const drawOrder = layersLargestFirst(r, visible);
 
                 // The right-side amount label tracks the isolated layer when one is active.
                 const labelValue = valueForLayer(r, isolated);
@@ -285,27 +293,14 @@ function NestedBarList({ rows, isolated }: NestedBarListProps) {
                         </div>
 
                         <div className="relative h-2.5 overflow-hidden rounded-sm bg-slate-50 ring-1 ring-inset ring-slate-200">
-                            {showCommitted && (
+                            {drawOrder.map((layer) => (
                                 <div
-                                    className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS.committed.bar}`}
-                                    style={{ width: `${committedPct}%` }}
+                                    key={layer}
+                                    className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS[layer].bar}`}
+                                    style={{ width: `${widthFor(layer)}%` }}
                                     aria-hidden="true"
                                 />
-                            )}
-                            {showContracted && (
-                                <div
-                                    className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS.contracted.bar}`}
-                                    style={{ width: `${contractedPct}%` }}
-                                    aria-hidden="true"
-                                />
-                            )}
-                            {showExpended && (
-                                <div
-                                    className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS.expended.bar}`}
-                                    style={{ width: `${expendedPct}%` }}
-                                    aria-hidden="true"
-                                />
-                            )}
+                            ))}
                         </div>
                     </li>
                 );

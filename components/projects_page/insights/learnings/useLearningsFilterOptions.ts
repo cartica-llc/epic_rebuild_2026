@@ -4,16 +4,19 @@
 
 import { useEffect, useState } from 'react';
 
-export interface ProgramAdminOption {
+export interface IdNameOption {
     id: number;
     name: string;
 }
+
+export type ProgramAdminOption = IdNameOption;
 
 interface FilterOptions {
     investmentAreas: string[];
     cpucProceedings: string[];
     statuses: string[];
-    programAdmins: ProgramAdminOption[];
+    programAdmins: IdNameOption[];
+    projectTypes: IdNameOption[];
 }
 
 interface State {
@@ -27,6 +30,7 @@ const EMPTY: FilterOptions = {
     cpucProceedings: [],
     statuses: [],
     programAdmins: [],
+    projectTypes: [],
 };
 
 /**

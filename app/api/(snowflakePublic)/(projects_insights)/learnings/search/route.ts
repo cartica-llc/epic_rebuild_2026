@@ -5,10 +5,10 @@ import { query } from '@/lib/snowflake';
 import { T, toNum, applyInsightCache } from '../../_shared';
 
 const HARD_LIMIT = 200;
-const NARRATIVE_TRUNCATE = 1200; // chars — server-side cap to keep payload small
-
-// FK on PROJECT that points to PROGRAM_ADMIN.PROGRAM_ADMIN_ID (same as spending insights).
+const NARRATIVE_TRUNCATE = 1200;
 const PROGRAM_ADMIN_FK = 'p.PROGRAM_ADMIN_PROGRAM_ADMIN_ID';
+
+const PROJECT_TYPE_FK = 'p.PROJECT_TYPE_PROJECT_TYPE_ID';
 
 type NarrativeLens = 'innovations' | 'barriers' | 'learnings' | 'summary';
 
@@ -27,6 +27,13 @@ interface SearchRow {
 
 const escape = (v: string) => v.replace(/'/g, "''");
 
+
+function readIdParam(url: URL, key: string): number | null {
+    const raw = (url.searchParams.get(key) ?? '').trim();
+    const n = raw !== '' && raw !== 'all' ? Number(raw) : NaN;
+    return Number.isInteger(n) && n >= 0 ? n : null;
+}
+
 function readSearchParams(url: URL) {
     const q = (url.searchParams.get('q') ?? '').trim();
 
@@ -43,11 +50,8 @@ function readSearchParams(url: URL) {
     const proceeding = (url.searchParams.get('proceeding') ?? '').trim();
     const status = (url.searchParams.get('status') ?? '').trim();
 
-    // Org is a PROGRAM_ADMIN_ID — accept any non-negative integer (CEC is 0).
-    // Guard against '' explicitly, since Number('') === 0.
-    const orgRaw = (url.searchParams.get('org') ?? '').trim();
-    const orgNum = orgRaw !== '' && orgRaw !== 'all' ? Number(orgRaw) : NaN;
-    const org = Number.isInteger(orgNum) && orgNum >= 0 ? orgNum : null;
+    const org = readIdParam(url, 'org'); // PROGRAM_ADMIN_ID
+    const projectType = readIdParam(url, 'projectType'); // PROJECT_TYPE_ID
 
     return {
         q,
@@ -56,6 +60,7 @@ function readSearchParams(url: URL) {
         proceeding: proceeding || null,
         status: status || null,
         org,
+        projectType,
     };
 }
 
@@ -104,7 +109,6 @@ function buildNarrativeSelect(lens: NarrativeLens | null): string {
                 CASE WHEN TRIM(COALESCE(pd.SUMMARY_PROJECT_DESCRIPTION, '')) <> '' THEN 'summary' ELSE NULL END AS NARRATIVE_SOURCE
             `;
         default:
-            // No lens selected — pick the first non-empty among summary → innovations → learnings.
             return `
                 COALESCE(
                     NULLIF(TRIM(pd.SUMMARY_PROJECT_DESCRIPTION), ''),
@@ -123,7 +127,7 @@ function buildNarrativeSelect(lens: NarrativeLens | null): string {
 
 export async function GET(req: Request) {
     const url = new URL(req.url);
-    const { q, lens, area, proceeding, status, org } = readSearchParams(url);
+    const { q, lens, area, proceeding, status, org, projectType } = readSearchParams(url);
 
     // Build the WHERE/HAVING clauses dynamically.
     const wheres: string[] = ['COALESCE(p.IS_ACTIVE, 1) = 1'];
@@ -147,8 +151,11 @@ export async function GET(req: Request) {
     }
 
     if (org !== null) {
-        // Safe to interpolate: validated as a non-negative integer in readSearchParams.
         wheres.push(`${PROGRAM_ADMIN_FK} = ${org}`);
+    }
+
+    if (projectType !== null) {
+        wheres.push(`${PROJECT_TYPE_FK} = ${projectType}`);
     }
 
     // Area filter via EXISTS so we don't disrupt the LISTAGG aggregation.

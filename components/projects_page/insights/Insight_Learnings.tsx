@@ -25,6 +25,7 @@ export function Insight_Learnings() {
     const [selectedProceeding, setSelectedProceeding] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('');
     const [selectedOrg, setSelectedOrg] = useState('');
+    const [selectedProjectType, setSelectedProjectType] = useState('');
     const [selectedLens, setSelectedLens] = useState<NarrativeLens | null>(null);
 
     const { options, loading: optionsLoading } = useLearningsFilterOptions();
@@ -37,15 +38,28 @@ export function Insight_Learnings() {
             proceeding: selectedProceeding,
             status: selectedStatus,
             org: selectedOrg,
+            projectType: selectedProjectType,
         }),
-        [searchTerm, selectedLens, selectedArea, selectedProceeding, selectedStatus, selectedOrg],
+        [
+            searchTerm,
+            selectedLens,
+            selectedArea,
+            selectedProceeding,
+            selectedStatus,
+            selectedOrg,
+            selectedProjectType,
+        ],
     );
 
     const { data, loading, error, hasSearchIntent } = useLearningsSearch(searchParams);
 
-    const activeFilterCount = [selectedOrg, selectedArea, selectedProceeding, selectedStatus].filter(
-        Boolean,
-    ).length;
+    const activeFilterCount = [
+        selectedOrg,
+        selectedProjectType,
+        selectedArea,
+        selectedProceeding,
+        selectedStatus,
+    ].filter(Boolean).length;
 
     const reset = useCallback(() => {
         setSearchTerm('');
@@ -53,6 +67,7 @@ export function Insight_Learnings() {
         setSelectedProceeding('');
         setSelectedStatus('');
         setSelectedOrg('');
+        setSelectedProjectType('');
         setSelectedLens(null);
     }, []);
 
@@ -74,6 +89,7 @@ export function Insight_Learnings() {
                     <LearningsFilters
                         values={{
                             org: selectedOrg,
+                            projectType: selectedProjectType,
                             area: selectedArea,
                             proceeding: selectedProceeding,
                             status: selectedStatus,
@@ -81,6 +97,7 @@ export function Insight_Learnings() {
                         options={options}
                         optionsLoading={optionsLoading}
                         onOrgChange={setSelectedOrg}
+                        onProjectTypeChange={setSelectedProjectType}
                         onAreaChange={setSelectedArea}
                         onProceedingChange={setSelectedProceeding}
                         onStatusChange={setSelectedStatus}

@@ -6,11 +6,11 @@ import { T } from '../../_shared';
 
 interface NameRow { NAME: string }
 interface ProceedingRow { LABEL: string }
-interface ProgramAdminRow { ID: number; NAME: string }
+interface IdNameRow { ID: number; NAME: string }
 
 export async function GET() {
     try {
-        const [areas, proceedings, statuses, programAdmins] = (await Promise.all([
+        const [areas, proceedings, statuses, programAdmins, projectTypes] = (await Promise.all([
             query(`
                 SELECT INVESTMENT_AREA_NAME AS NAME
                 FROM ${T}.INVESTMENT_AREA
@@ -36,13 +36,20 @@ export async function GET() {
                 WHERE PROGRAM_ADMIN_NAME IS NOT NULL
                 ORDER BY NAME
             `),
-        ])) as [NameRow[], ProceedingRow[], NameRow[], ProgramAdminRow[]];
+            query(`
+                SELECT PROJECT_TYPE_ID AS ID, PROJECT_TYPE_NAME AS NAME
+                FROM ${T}.PROJECT_TYPE
+                WHERE PROJECT_TYPE_NAME IS NOT NULL
+                ORDER BY NAME
+            `),
+        ])) as [NameRow[], ProceedingRow[], NameRow[], IdNameRow[], IdNameRow[]];
 
         const body = {
             investmentAreas: areas.map((r) => r.NAME),
             cpucProceedings: proceedings.map((r) => r.LABEL),
             statuses: statuses.map((r) => r.NAME),
             programAdmins: programAdmins.map((r) => ({ id: r.ID, name: r.NAME })),
+            projectTypes: projectTypes.map((r) => ({ id: r.ID, name: r.NAME })),
         };
 
         const res = NextResponse.json(body);

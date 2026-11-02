@@ -5,13 +5,15 @@
 import { formatCount, formatMoneyFull, formatMoneyShort, formatPct } from './shared/format';
 import {
     FUNDING_COLORS,
+    LAYERS,
+    LAYER_LABEL,
+    layersLargestFirst,
+    valueForLayer,
     type FundingLayer,
+    type FundingValues,
 } from './shared/fundingLayers';
 
-interface Totals {
-    committed: number;
-    contracted: number;
-    expended: number;
+interface Totals extends FundingValues {
     projectCount: number;
 }
 
@@ -22,68 +24,71 @@ interface FundingProgressProps {
     onIsolate: (layer: FundingLayer | null) => void;
 }
 
+const LABEL: Record<FundingLayer, string> = {
+    committed: 'Committed',
+    encumbered: 'Encumbered',
+    contracted: 'Contracted',
+    expended: 'Expended',
+};
+
+const pctOf = (part: number, whole: number) => (whole > 0 ? (part / whole) * 100 : 0);
+
 export function FundingProgress({
                                     totals,
                                     loading,
                                     isolated,
                                     onIsolate,
                                 }: FundingProgressProps) {
-    const committed = totals?.committed ?? 0;
-    const contracted = totals?.contracted ?? 0;
-    const expended = totals?.expended ?? 0;
+    const values: FundingValues = {
+        committed: totals?.committed ?? 0,
+        encumbered: totals?.encumbered ?? 0,
+        contracted: totals?.contracted ?? 0,
+        expended: totals?.expended ?? 0,
+    };
+    const { committed, encumbered, contracted, expended } = values;
 
-    const contractedWidth = committed > 0 ? (contracted / committed) * 100 : 0;
-    const expendedWidth = committed > 0 ? (expended / committed) * 100 : 0;
-    const contractedOfCommitted = committed > 0 ? (contracted / committed) * 100 : 0;
-    const expendedOfContracted = contracted > 0 ? (expended / contracted) * 100 : 0;
+    // Short "how far along" note under each figure.
+    const sublabels: Partial<Record<FundingLayer, string>> = {
+        encumbered: committed > 0 ? `${formatPct(pctOf(encumbered, committed), 0)} of committed` : undefined,
+        contracted: committed > 0 ? `${formatPct(pctOf(contracted, committed), 0)} of committed` : undefined,
+        expended: contracted > 0 ? `${formatPct(pctOf(expended, contracted), 0)} of contracted` : undefined,
+    };
 
     const toggle = (layer: FundingLayer) =>
         onIsolate(isolated === layer ? null : layer);
 
-    const showCommitted = isolated === null || isolated === 'committed';
-    const showContracted = isolated === null || isolated === 'contracted';
-    const showExpended = isolated === null || isolated === 'expended';
+    const visible = LAYERS.filter((l) => isolated === null || isolated === l);
+    const drawOrder = layersLargestFirst(values, visible);
+
+    // Bar widths are relative to committed (the full bar). A few projects report
+    // more encumbered than committed, so cap at 100% to keep the bar in bounds.
+    const widthFor = (layer: FundingLayer) =>
+        layer === 'committed' ? 100 : Math.min(100, pctOf(valueForLayer(values, layer), committed));
+
+    const ariaSummary = loading
+        ? 'Loading funding breakdown'
+        : isolated
+            ? `Showing ${isolated} only: ${formatMoneyShort(valueForLayer(values, isolated))}`
+            : `Of ${formatMoneyShort(committed)} committed, ${formatMoneyShort(encumbered)} encumbered, ${formatMoneyShort(contracted)} contracted and ${formatMoneyShort(expended)} expended`;
 
     return (
         <section
             aria-label="Funding overview"
             className="rounded-md border border-slate-200 bg-white p-5 md:p-6"
         >
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-                <MetricButton
-                    label="Committed"
-                    value={committed}
-                    layer="committed"
-                    isolated={isolated}
-                    onClick={toggle}
-                    loading={loading}
-                />
-                <MetricButton
-                    label="Contracted"
-                    value={contracted}
-                    sublabel={
-                        committed > 0
-                            ? `${formatPct(contractedOfCommitted, 0)} of committed`
-                            : undefined
-                    }
-                    layer="contracted"
-                    isolated={isolated}
-                    onClick={toggle}
-                    loading={loading}
-                />
-                <MetricButton
-                    label="Expended"
-                    value={expended}
-                    sublabel={
-                        contracted > 0
-                            ? `${formatPct(expendedOfContracted, 0)} of contracted`
-                            : undefined
-                    }
-                    layer="expended"
-                    isolated={isolated}
-                    onClick={toggle}
-                    loading={loading}
-                />
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
+                {LAYERS.map((layer) => (
+                    <MetricButton
+                        key={layer}
+                        label={LABEL[layer]}
+                        value={valueForLayer(values, layer)}
+                        sublabel={sublabels[layer]}
+                        layer={layer}
+                        isolated={isolated}
+                        onClick={toggle}
+                        loading={loading}
+                    />
+                ))}
                 <ProjectsDisplay
                     value={totals?.projectCount ?? 0}
                     loading={loading}
@@ -94,54 +99,32 @@ export function FundingProgress({
                 <div
                     className="relative h-3 overflow-hidden rounded-full bg-slate-50 ring-1 ring-inset ring-slate-200"
                     role="img"
-                    aria-label={
-                        loading
-                            ? 'Loading funding breakdown'
-                            : isolated
-                                ? `Showing ${isolated} only: ${formatMoneyShort(
-                                    isolated === 'committed'
-                                        ? committed
-                                        : isolated === 'contracted'
-                                            ? contracted
-                                            : expended,
-                                )}`
-                                : `Of ${formatMoneyShort(committed)} committed, ${formatMoneyShort(contracted)} contracted and ${formatMoneyShort(expended)} expended`
-                    }
+                    aria-label={ariaSummary}
                 >
                     {loading ? (
                         <div className="h-full w-full animate-pulse bg-slate-200" />
                     ) : (
-                        <>
-                            {showCommitted && (
-                                <div
-                                    className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS.committed.bar}`}
-                                    style={{ width: '100%' }}
-                                    aria-hidden="true"
-                                />
-                            )}
-                            {showContracted && (
-                                <div
-                                    className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS.contracted.bar}`}
-                                    style={{ width: `${contractedWidth}%` }}
-                                    aria-hidden="true"
-                                />
-                            )}
-                            {showExpended && (
-                                <div
-                                    className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS.expended.bar}`}
-                                    style={{ width: `${expendedWidth}%` }}
-                                    aria-hidden="true"
-                                />
-                            )}
-                        </>
+                        drawOrder.map((layer) => (
+                            <div
+                                key={layer}
+                                className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS[layer].bar}`}
+                                style={{ width: `${widthFor(layer)}%` }}
+                                aria-hidden="true"
+                            />
+                        ))
                     )}
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-1.5">
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] text-slate-500">
-                        <LegendDot color={FUNDING_COLORS.committed.dot} label="Committed" muted={isolated !== null && isolated !== 'committed'} />
-                        <LegendDot color={FUNDING_COLORS.contracted.dot} label="Contracted" muted={isolated !== null && isolated !== 'contracted'} />
-                        <LegendDot color={FUNDING_COLORS.expended.dot} label="Expended" muted={isolated !== null && isolated !== 'expended'} />
+                        {LAYERS.map((layer) => (
+                            <LegendDot
+                                key={layer}
+                                color={FUNDING_COLORS[layer].dot}
+                                label={LABEL[layer]}
+                                muted={isolated !== null && isolated !== layer}
+                            />
+                        ))}
                     </div>
 
                     {isolated && (
@@ -189,7 +172,7 @@ function MetricButton({
             onClick={() => onClick(layer)}
             disabled={loading}
             aria-pressed={isActive}
-            aria-label={`${isActive ? 'Hide' : 'Show only'} ${label} on the funding bar`}
+            aria-label={`${isActive ? 'Hide' : 'Show only'} ${LAYER_LABEL[layer]} on the funding bar`}
             className={`flex flex-col group -mx-2 -my-1.5 rounded-md px-2 py-1.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                 isDimmed ? 'opacity-50' : 'opacity-100'
             } ${

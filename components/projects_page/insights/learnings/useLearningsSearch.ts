@@ -13,8 +13,8 @@ export interface SearchParams {
     area: string;
     proceeding: string;
     status: string;
-    // PROGRAM_ADMIN_ID as a string ('' = All Orgs). CEC is '0', so check against ''.
     org: string;
+    projectType: string;
 }
 
 export interface SearchResponse {
@@ -40,7 +40,9 @@ const EMPTY_RESPONSE: SearchResponse = {
 };
 
 function hasIntent(p: Omit<SearchParams, 'lens'>): boolean {
-    return Boolean(p.q.trim() || p.area || p.proceeding || p.status || p.org !== '');
+    return Boolean(
+        p.q.trim() || p.area || p.proceeding || p.status || p.org !== '' || p.projectType !== '',
+    );
 }
 
 function buildUrl(p: SearchParams): string {
@@ -52,6 +54,7 @@ function buildUrl(p: SearchParams): string {
     if (p.proceeding) searchParams.set('proceeding', p.proceeding);
     if (p.status) searchParams.set('status', p.status);
     if (p.org !== '') searchParams.set('org', p.org);
+    if (p.projectType !== '') searchParams.set('projectType', p.projectType);
 
     return `/api/learnings/search?${searchParams.toString()}`;
 }
@@ -59,15 +62,16 @@ function buildUrl(p: SearchParams): string {
 export function useLearningsSearch(params: SearchParams) {
     const { q, lens, area, proceeding, status } = params;
     const org = params.org ?? '';
+    const projectType = params.projectType ?? '';
 
     const hasSearchIntent = useMemo(
-        () => hasIntent({ q, area, proceeding, status, org }),
-        [q, area, proceeding, status, org]
+        () => hasIntent({ q, area, proceeding, status, org, projectType }),
+        [q, area, proceeding, status, org, projectType]
     );
 
     const requestUrl = useMemo(
-        () => buildUrl({ q, lens, area, proceeding, status, org }),
-        [q, lens, area, proceeding, status, org]
+        () => buildUrl({ q, lens, area, proceeding, status, org, projectType }),
+        [q, lens, area, proceeding, status, org, projectType]
     );
 
     const [state, setState] = useState<State>({
