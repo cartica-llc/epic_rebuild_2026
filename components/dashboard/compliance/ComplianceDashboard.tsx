@@ -1,3 +1,5 @@
+// components/dashboard/compliance/ComplianceDashboard.tsx
+
 'use client';
 
 import React from 'react';
@@ -34,6 +36,7 @@ import {
 export interface ComplianceDashboardProps {
     projects: ComplianceProject[];
     today?: Date;
+    /** Hide the Program Admin dropdown — used by the program-admin view where every row is one org. */
     hideAdminFilter?: boolean;
 }
 
@@ -44,12 +47,11 @@ function projectEditHref(projectId: number): string {
 type ViewFilter = 'out-of-compliance' | 'compliant';
 
 const VIEW_LABELS: Record<ViewFilter, string> = {
-    'out-of-compliance': 'Out of program-compliance',
+    'out-of-compliance': 'Out of compliance',
     compliant: 'Compliant',
 };
 
 export function ComplianceDashboard({ projects, today, hideAdminFilter = false }: ComplianceDashboardProps) {
-
     const [todayRef] = React.useState<Date>(() => today ?? new Date());
 
     const [statusFilter, setStatusFilter] = React.useState('All');
@@ -119,7 +121,7 @@ export function ComplianceDashboard({ projects, today, hideAdminFilter = false }
         const closedComplete = enriched.filter(
             (p) =>
                 p.compliance.level === 'green' &&
-                p.compliance.stageResults.some((s) => s.stage === 'End'),
+                p.compliance.stageResults.some((s) => s.stage === 'Closeout'),
         ).length;
 
         return { compliant, flagged, outOfCompliance, closedComplete, total: enriched.length };
@@ -193,7 +195,6 @@ export function ComplianceDashboard({ projects, today, hideAdminFilter = false }
         if (isExporting) return;
         setIsExporting(true);
         try {
-
             const set = filtered.length > 0 ? filtered : baseSet;
             await exportComplianceToExcel(set, todayRef);
         } catch (err) {
@@ -224,7 +225,7 @@ export function ComplianceDashboard({ projects, today, hideAdminFilter = false }
                             : `${totals.total > 0 ? Math.round((totals.compliant / totals.total) * 100) : 0}% of portfolio`
                     }
                     accent="green"
-                    help="Projects with every required field filled for their applicable timing tiers. Includes closed-out projects with all Initial, Annual, and End fields complete. Click to filter."
+                    help="Projects with every required field filled for their applicable timing tiers. Includes closed-out projects with all Entry, Active, After-1st-Annual and Closeout fields complete. Click to filter."
                     onClick={() => handleViewFilter('compliant')}
                     active={viewFilter === 'compliant'}
                 />
@@ -306,15 +307,17 @@ export function ComplianceDashboard({ projects, today, hideAdminFilter = false }
                                 ...filterOptions.periods.map((p) => ({ value: p, label: p })),
                             ]}
                         />
-                        <FilterSelect
-                            aria-label="Program Administrator"
-                            value={adminFilter}
-                            onChange={handleAdminFilter}
-                            options={[
-                                { value: 'All', label: 'All Admins' },
-                                ...filterOptions.admins.map((a) => ({ value: a, label: a })),
-                            ]}
-                        />
+                        {!hideAdminFilter && (
+                            <FilterSelect
+                                aria-label="Program Administrator"
+                                value={adminFilter}
+                                onChange={handleAdminFilter}
+                                options={[
+                                    { value: 'All', label: 'All Admins' },
+                                    ...filterOptions.admins.map((a) => ({ value: a, label: a })),
+                                ]}
+                            />
+                        )}
                         <FlagFilterMenu value={flagFilter} onChange={handleFlagFilter} projects={preFlagFiltered} />
                     </div>
                 )}
@@ -333,7 +336,6 @@ export function ComplianceDashboard({ projects, today, hideAdminFilter = false }
                 {paginated.length === 0 ? (
                     <div className="px-6 py-16 text-center">
                         {baseSet.length === 0 ? (
-
                             viewFilter === 'out-of-compliance' ? (
                                 <>
                                     <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
@@ -366,7 +368,6 @@ export function ComplianceDashboard({ projects, today, hideAdminFilter = false }
                 ) : (
                     <>
                         <div className="hidden lg:block">
-
                             <table className="w-full table-fixed text-left text-xs">
                                 <colgroup>
                                     <col className="w-8" />

@@ -1,7 +1,9 @@
+// components/dashboard/compliance/ProjectDrillDown.tsx
+
 'use client';
 
 import React from 'react';
-import { CalendarCheck, CheckCircle2, ChevronDown, RefreshCw, XCircle } from 'lucide-react';
+import { CalendarCheck, CalendarClock, CheckCircle2, ChevronDown, RefreshCw, XCircle } from 'lucide-react';
 
 import type { ClusterName, FieldScore } from './comprehensivenessRubric';
 import { STAGE_REQUIREMENTS } from './fieldRequirements';
@@ -155,8 +157,39 @@ function DataConsistencySection({ project }: { project: EnrichedProject }) {
     );
 }
 
+function FirstAnnualNotYetDue({ project, today }: { project: EnrichedProject; today: Date }) {
+    const dueDate = project.compliance.firstAnnualDueDate;
+    const stageDef = STAGE_REQUIREMENTS.find((s) => s.stage === 'After 1st Annual');
+    if (!stageDef) return null;
+
+    const { filled, total } = stageCompliance(project, stageDef);
+
+    return (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 border-dashed bg-white px-3 py-2 text-[11px]">
+            <CalendarClock className="h-4 w-4 text-slate-400" />
+            <span className="font-bold text-slate-600">After 1st Annual</span>
+            <span className="text-slate-500">
+                — not yet due
+                {dueDate ? (
+                    <>
+                        {' '}· required from{' '}
+                        <span className="font-medium text-slate-700">{formatDate(dueDate)}</span>
+                        {' '}(in {daysBetween(today, dueDate)}d)
+                    </>
+                ) : (
+                    <> · no start date on record, so the due date can&apos;t be computed</>
+                )}
+            </span>
+            <span className="ml-auto font-mono font-bold tabular-nums text-slate-500">
+                {filled}/{total} filled early
+            </span>
+        </div>
+    );
+}
+
 export function ProjectDrillDown({ project, today }: { project: EnrichedProject; today: Date }) {
     const stages = applicableStages(project.projectStatus, project.projectStartDate, today);
+    const firstAnnualApplies = stages.includes('After 1st Annual');
 
     return (
         <div className="space-y-3 pt-1">
@@ -229,7 +262,7 @@ export function ProjectDrillDown({ project, today }: { project: EnrichedProject;
                         <div className="mb-2 flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
                                 <XCircle className="h-4 w-4 text-rose-600" />
-                                <span className="text-xs font-bold text-slate-800">{sName} stage</span>
+                                <span className="text-xs font-bold text-slate-800">{sName}</span>
                                 <span className="text-[11px] font-medium text-slate-600">— {missing.length} missing</span>
                             </div>
                             <span className="font-mono text-[11px] font-bold tabular-nums text-slate-600">
@@ -254,6 +287,8 @@ export function ProjectDrillDown({ project, today }: { project: EnrichedProject;
                     </div>
                 );
             })}
+
+            {!firstAnnualApplies && <FirstAnnualNotYetDue project={project} today={today} />}
 
             <ComprehensivenessSection scores={project.comprehensiveness ?? []} />
         </div>

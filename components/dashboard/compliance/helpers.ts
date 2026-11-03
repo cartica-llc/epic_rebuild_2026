@@ -1,5 +1,8 @@
+// components/dashboard/compliance/helpers.ts
+
 import {
-    ANNUAL_GATE_DAYS,
+    FIRST_ANNUAL_DUE_DAY,
+    FIRST_ANNUAL_DUE_MONTH,
     STAGE_REQUIREMENTS,
     STALE_THRESHOLD_DAYS,
 } from './fieldRequirements';
@@ -8,6 +11,7 @@ import type {
     ComplianceProject,
     ConsistencyFlag,
     EnrichedProject,
+    FieldDef,
     Flag,
     OverallCompliance,
     StageCompliance,
@@ -62,29 +66,77 @@ export function isPendingStatus(status: string): boolean {
     return k === 'pending' || k === 'awarded' || k === 'approved';
 }
 
+/**
+ * A field is required unless it is EXPLICITLY marked `required: false`.
+ * Fail-safe: if the flag is ever missing (stale file, partial paste), the
+ * field still counts rather than being silently waived.
+ */
+export function isRequiredField(f: FieldDef): boolean {
+    return f.required !== false;
+}
+
+// ── First-annual timing ──────────────────────────────────────────────
+
+/**
+ * The date the After-1st-Annual tier becomes due for a project: June 1 (see
+ * FIRST_ANNUAL_DUE_* in auditRequirements.ts) of the calendar year after the
+ * project's start year.
+ *
+ *   started 2025-03-10 → due 2026-06-01
+ *   started 2026-11-20 → due 2027-06-01
+ *
+ * The start YEAR is read in UTC because Snowflake DATE columns arrive as
+ * midnight-UTC ISO strings (a Jan 1 start read in local time would roll back
+ * a year). The due date itself is built as a LOCAL date so it formats as
+ * "Jun 1" in every US timezone.
+ */
+export function firstAnnualDueDate(projectStartDate: Date): Date {
+    const dueYear = projectStartDate.getUTCFullYear() + 1;
+    return new Date(dueYear, FIRST_ANNUAL_DUE_MONTH - 1, FIRST_ANNUAL_DUE_DAY);
+}
+
+/**
+ * True once the first annual report is due. A project with no start date can
+ * never be "past" its first annual, so its first-annual fields are treated as
+ * not yet due rather than failed.
+ */
+export function isPastFirstAnnual(projectStartDate: Date | null, today: Date): boolean {
+    if (!projectStartDate || isNaN(projectStartDate.getTime())) return false;
+    return today.getTime() >= firstAnnualDueDate(projectStartDate).getTime();
+}
+
 export function applicableStages(
     status: string,
     projectStartDate: Date | null,
     today: Date,
 ): StageName[] {
-    if (isCompletedStatus(status)) return ['Initial', 'Annual', 'End'];
-
-    const pastFirstYear = projectStartDate !== null && daysBetween(projectStartDate, today) >= ANNUAL_GATE_DAYS;
-    if (pastFirstYear) return ['Initial', 'Annual'];
-
-    return ['Initial'];
+    if (isCompletedStatus(status)) return ['Entry', 'Active', 'After 1st Annual', 'Closeout'];
+    if (isPastFirstAnnual(projectStartDate, today)) return ['Entry', 'Active', 'After 1st Annual'];
+    return ['Entry', 'Active'];
 }
 
+/**
+ * Per-stage completeness. Only required fields count toward
+ * filled/total/missing and the verdict; empty optional fields are returned
+ * separately in `optionalMissing` so they can be reported without failing
+ * the project.
+ */
 export function stageCompliance(
     project: { fieldStatus: Record<string, boolean> },
     stage: StageDef,
 ): Omit<StageCompliance, 'stage'> {
-    const missing = stage.fields.filter((f) => !project.fieldStatus[f.key]);
-    const filled = stage.fields.length - missing.length;
+    const requiredFields = stage.fields.filter(isRequiredField);
+    const optionalFields = stage.fields.filter((f) => !isRequiredField(f));
+
+    const missing = requiredFields.filter((f) => !project.fieldStatus[f.key]);
+    const optionalMissing = optionalFields.filter((f) => !project.fieldStatus[f.key]);
+    const filled = requiredFields.length - missing.length;
+
     return {
         filled,
-        total: stage.fields.length,
+        total: requiredFields.length,
         missing,
+        optionalMissing,
         complete: missing.length === 0,
     };
 }
@@ -102,7 +154,14 @@ export function overallCompliance(
     const requiredTotal = stageResults.reduce((s, r) => s + r.total, 0);
     const allComplete = stageResults.every((r) => r.complete);
     const level: ComplianceLevel = allComplete ? 'green' : 'red';
-    return { level, filledTotal, requiredTotal, stageResults };
+
+    const firstAnnualApplies = stages.includes('After 1st Annual');
+    const firstAnnualDue =
+        !firstAnnualApplies && project.projectStartDate && !isNaN(project.projectStartDate.getTime())
+            ? firstAnnualDueDate(project.projectStartDate)
+            : null;
+
+    return { level, filledTotal, requiredTotal, stageResults, firstAnnualDueDate: firstAnnualDue };
 }
 
 const DEADLINE_APPROACHING_DAYS = 45;
@@ -168,21 +227,25 @@ export function computeFlags(
     }
 
     if (isCompleted) {
-        const annualTier = STAGE_REQUIREMENTS.find((s) => s.stage === 'Annual')!;
-        const endTier = STAGE_REQUIREMENTS.find((s) => s.stage === 'End')!;
-        const annualMissing = annualTier.fields.filter((f) => !project.fieldStatus[f.key]).length;
-        const endMissing = endTier.fields.filter((f) => !project.fieldStatus[f.key]).length;
 
-        if (annualMissing > 0 || endMissing > 0) {
-            const parts: string[] = [];
-            if (annualMissing > 0) parts.push(`${annualMissing} Annual`);
-            if (endMissing > 0) parts.push(`${endMissing} End`);
+        const postEntryTiers: StageName[] = ['Active', 'After 1st Annual', 'Closeout'];
+        const parts: string[] = [];
+        let totalMissing = 0;
+        for (const tierName of postEntryTiers) {
+            const tier = STAGE_REQUIREMENTS.find((s) => s.stage === tierName)!;
+            const missing = stageCompliance(project, tier).missing.length;
+            if (missing > 0) {
+                parts.push(`${missing} ${tierName}`);
+                totalMissing += missing;
+            }
+        }
 
+        if (totalMissing > 0) {
             flags.push({
                 id: 'closed-incomplete',
                 label: 'Closed Incomplete',
                 severity: 'critical',
-                detail: `Project is closed but ${parts.join(' + ')} field${annualMissing + endMissing === 1 ? '' : 's'} still missing`,
+                detail: `Project is closed but ${parts.join(' + ')} field${totalMissing === 1 ? '' : 's'} still missing`,
             });
         }
     }
