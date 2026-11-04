@@ -57,7 +57,7 @@ const MapProjectList = dynamic(
 const EMPTY_RESPONSE: ProjectsResponse = {
     projects: [],
     count: 0,
-    totals: { committed: 0, contracted: 0, expended: 0 },
+    totals: { committed: 0, encumbered: 0, contracted: 0, expended: 0 },
     truncated: false,
     limit: 0,
 };
@@ -129,11 +129,6 @@ export function Insight_Map() {
                     loading={loading}
                 />
 
-                {/*
-                  `key` deliberately tied to queryString — guarantees a clean
-                  remount of the visualization (clearing any internal state)
-                  whenever filter params change. Defensive against stale state.
-                */}
                 <MapVisualization
                     key={queryString}
                     projects={response.projects}

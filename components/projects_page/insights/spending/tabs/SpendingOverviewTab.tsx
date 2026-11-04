@@ -2,7 +2,8 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useInsightFetch } from '../shared/useInsightFetch';
 import {
     ChartSkeleton,
@@ -11,12 +12,13 @@ import {
     SectionCard,
 } from '../shared/SectionCard';
 import { FundingProgress } from '../FundingProgress';
-import { formatCount, formatMoneyShort } from '../shared/format';
+import { formatCount, formatMoneyFull, formatMoneyShort } from '../shared/format';
 import {
     FUNDING_COLORS,
     LAYERS,
     LAYER_LABEL,
-    layersLargestFirst,
+    drawOrderFor,
+    isLayerHidden,
     valueForLayer,
     type FundingLayer,
 } from '../shared/fundingLayers';
@@ -247,64 +249,178 @@ interface NestedBarListProps {
 
 function NestedBarList({ rows, isolated }: NestedBarListProps) {
     const max = rows.reduce((m, r) => Math.max(m, r.committed), 0);
+    const [hover, setHover] = useState<{ row: NestedRow; x: number; y: number } | null>(null);
+
+    const hide = useCallback(() => setHover(null), []);
+
+    useEffect(() => {
+        if (!hover) return;
+        window.addEventListener('scroll', hide, true);
+        window.addEventListener('resize', hide);
+        return () => {
+            window.removeEventListener('scroll', hide, true);
+            window.removeEventListener('resize', hide);
+        };
+    }, [hover, hide]);
+
+    const visible = LAYERS.filter((l) => isolated === null || isolated === l);
+    const drawOrder = drawOrderFor(visible);
 
     return (
-        <ul className="space-y-3">
-            {rows.map((r) => {
-                // Widths are relative to the largest committed amount in the list.
-                // Capped at 100% since a few projects report more encumbered than committed.
-                const widthFor = (layer: FundingLayer) =>
-                    max > 0 ? Math.min(100, (valueForLayer(r, layer) / max) * 100) : 0;
+        <>
+            <ul className="space-y-3">
+                {rows.map((r) => {
+                    // Widths are relative to the largest committed amount in the list.
+                    // Capped at 100% since a few projects report more than committed.
+                    const widthFor = (layer: FundingLayer) =>
+                        max > 0 ? Math.min(100, (valueForLayer(r, layer) / max) * 100) : 0;
 
-                const visible = LAYERS.filter((l) => isolated === null || isolated === l);
-                const drawOrder = layersLargestFirst(r, visible);
+                    // The right-side amount label tracks the isolated layer when one is active.
+                    const labelValue = valueForLayer(r, isolated);
 
-                // The right-side amount label tracks the isolated layer when one is active.
-                const labelValue = valueForLayer(r, isolated);
+                    const ariaSummary = LAYERS.map(
+                        (l) => `${LAYER_LABEL[l]} ${formatMoneyShort(valueForLayer(r, l))}`,
+                    ).join(', ');
 
-                return (
-                    <li key={r.label}>
-                        <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
-                            {r.href ? (
-                                <a
-                                    href={r.href}
-                                    className="truncate rounded-sm text-slate-700 underline-offset-2 transition hover:text-slate-900 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-                                    title={`View projects for ${r.label}`}
-                                >
-                                    {r.label}
-                                </a>
-                            ) : (
-                                <span className="truncate text-slate-700">{r.label}</span>
-                            )}
-
-                            <span className="flex-shrink-0 font-medium text-slate-900">
-                                {formatMoneyShort(labelValue)}
-                                {isolated && (
-                                    <span className="ml-1 font-normal text-slate-400">
-                                        {LAYER_LABEL[isolated]}
-                                    </span>
+                    return (
+                        <li
+                            key={r.label}
+                            onMouseEnter={(e) => setHover({ row: r, x: e.clientX, y: e.clientY })}
+                            onMouseMove={(e) => setHover({ row: r, x: e.clientX, y: e.clientY })}
+                            onMouseLeave={hide}
+                        >
+                            <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
+                                {r.href ? (
+                                    <a
+                                        href={r.href}
+                                        className="truncate rounded-sm text-slate-700 underline-offset-2 transition hover:text-slate-900 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                                    >
+                                        {r.label}
+                                    </a>
+                                ) : (
+                                    <span className="truncate text-slate-700">{r.label}</span>
                                 )}
-                                {r.sublabel && (
-                                    <span className="ml-2 font-normal text-slate-400">
-                                        {r.sublabel}
+
+                                <span className="flex-shrink-0 font-medium text-slate-900">
+                                    {formatMoneyShort(labelValue)}
+                                    {isolated && (
+                                        <span className="ml-1 font-normal text-slate-400">
+                                            {LAYER_LABEL[isolated]}
+                                        </span>
+                                    )}
+                                    {r.sublabel && (
+                                        <span className="ml-2 font-normal text-slate-400">
+                                            {r.sublabel}
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+
+                            <div
+                                tabIndex={0}
+                                role="img"
+                                aria-label={`${r.label}: ${ariaSummary}`}
+                                onFocus={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    setHover({ row: r, x: rect.left + rect.width / 2, y: rect.top });
+                                }}
+                                onBlur={hide}
+                                className="relative h-2.5 cursor-default overflow-hidden rounded-sm bg-slate-50 outline-none ring-1 ring-inset ring-slate-200 focus-visible:ring-2 focus-visible:ring-slate-400"
+                            >
+                                {drawOrder.map((layer) => (
+                                    <div
+                                        key={layer}
+                                        className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS[layer].bar}`}
+                                        style={{ width: `${widthFor(layer)}%` }}
+                                        aria-hidden="true"
+                                    />
+                                ))}
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
+
+            {hover && (
+                <RowHoverCard
+                    row={hover.row}
+                    x={hover.x}
+                    y={hover.y}
+                    isolated={isolated}
+                    visible={visible}
+                />
+            )}
+        </>
+    );
+}
+
+
+// ─── Row hover card ─────────────────────────────────────────────────────
+
+const CARD_WIDTH = 240;
+const EDGE_GAP = 8;
+
+interface RowHoverCardProps {
+    row: NestedRow;
+    x: number;
+    y: number;
+    isolated: FundingLayer | null;
+    visible: FundingLayer[];
+}
+
+function RowHoverCard({ row, x, y, isolated, visible }: RowHoverCardProps) {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const [height, setHeight] = useState(0);
+
+    useEffect(() => {
+        if (ref.current) setHeight(ref.current.offsetHeight);
+    }, [row]);
+
+    if (typeof document === 'undefined') return null;
+
+    const width = Math.min(CARD_WIDTH, window.innerWidth - EDGE_GAP * 2);
+    const left = Math.max(EDGE_GAP, Math.min(x - width / 2, window.innerWidth - width - EDGE_GAP));
+    const above = y - height - 12;
+    const top = above >= EDGE_GAP ? above : y + 16;
+
+    return createPortal(
+        <div
+            ref={ref}
+            role="tooltip"
+            className="pointer-events-none fixed z-[1000] rounded-md bg-slate-900 px-3 py-2.5 text-xs text-slate-50 shadow-lg"
+            style={{ top, left, width, visibility: height ? 'visible' : 'hidden' }}
+        >
+            <p className="mb-2 truncate font-semibold">{row.label}</p>
+            <ul className="space-y-1">
+                {LAYERS.map((layer) => {
+                    const value = valueForLayer(row, layer);
+                    const dimmed = isolated !== null && isolated !== layer;
+                    const hidden = !dimmed && isLayerHidden(row, layer, visible);
+                    return (
+                        <li
+                            key={layer}
+                            className={`flex items-center justify-between gap-3 ${dimmed ? 'opacity-40' : ''}`}
+                        >
+                            <span className="flex items-center gap-1.5">
+                                <span
+                                    className={`inline-block h-2 w-2 rounded-full ${FUNDING_COLORS[layer].dot}`}
+                                    aria-hidden="true"
+                                />
+                                <span className="capitalize text-slate-300">{LAYER_LABEL[layer]}</span>
+                                {hidden && (
+                                    <span className="text-[10px] italic text-slate-500">
+                                        hidden on bar
                                     </span>
                                 )}
                             </span>
-                        </div>
-
-                        <div className="relative h-2.5 overflow-hidden rounded-sm bg-slate-50 ring-1 ring-inset ring-slate-200">
-                            {drawOrder.map((layer) => (
-                                <div
-                                    key={layer}
-                                    className={`absolute inset-y-0 left-0 transition-all duration-300 ${FUNDING_COLORS[layer].bar}`}
-                                    style={{ width: `${widthFor(layer)}%` }}
-                                    aria-hidden="true"
-                                />
-                            ))}
-                        </div>
-                    </li>
-                );
-            })}
-        </ul>
+                            <span className="font-medium tabular-nums" title={formatMoneyFull(value)}>
+                                {formatMoneyShort(value)}
+                            </span>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>,
+        document.body,
     );
 }

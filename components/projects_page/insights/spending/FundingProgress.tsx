@@ -7,7 +7,7 @@ import {
     FUNDING_COLORS,
     LAYERS,
     LAYER_LABEL,
-    layersLargestFirst,
+    drawOrderFor,
     valueForLayer,
     type FundingLayer,
     type FundingValues,
@@ -58,7 +58,7 @@ export function FundingProgress({
         onIsolate(isolated === layer ? null : layer);
 
     const visible = LAYERS.filter((l) => isolated === null || isolated === l);
-    const drawOrder = layersLargestFirst(values, visible);
+    const drawOrder = drawOrderFor(visible);
 
     // Bar widths are relative to committed (the full bar). A few projects report
     // more encumbered than committed, so cap at 100% to keep the bar in bounds.

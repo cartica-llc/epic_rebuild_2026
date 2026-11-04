@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { formatMoneyShort } from '../spending/shared/format';
+import { FUNDING_COLORS } from '../spending/shared/fundingLayers';
 import type { MapProject } from './shared/types';
 
 interface MapProjectCardProps {
@@ -93,12 +94,15 @@ function ExpandedDetails({ project }: { project: MapProject }) {
     const router = useRouter();
 
     const committed = project.committedFunding;
+    // `?? 0` guards against a cached response from before encumbered was added.
+    const encumbered = project.encumberedFunding ?? 0;
     const contracted = project.contractedFunding;
     const expended = project.expendedFunding;
     const match = project.matchFunding;
     const leveraged = project.leveragedFunds;
 
     const safeCommitted = Math.max(committed, 1);
+    const encumberedPct = (encumbered / safeCommitted) * 100;
     const contractedPct = (contracted / safeCommitted) * 100;
     const expendedPct = (expended / safeCommitted) * 100;
 
@@ -120,23 +124,31 @@ function ExpandedDetails({ project }: { project: MapProject }) {
 
                 <FunnelStage
                     label="Committed"
-                    dot="bg-slate-400 ring-1 ring-inset ring-slate-400"
-                    fill="bg-slate-400"
+                    dot={FUNDING_COLORS.committed.dot}
+                    fill={FUNDING_COLORS.committed.bar}
                     widthPct={100}
                     amount={committed}
                 />
                 <FunnelStage
+                    label="Encumbered"
+                    dot={FUNDING_COLORS.encumbered.dot}
+                    fill={FUNDING_COLORS.encumbered.bar}
+                    widthPct={encumberedPct}
+                    amount={encumbered}
+                    pctOfCommitted={encumberedPct}
+                />
+                <FunnelStage
                     label="Contracted"
-                    dot="bg-emerald-700"
-                    fill="bg-emerald-700"
+                    dot={FUNDING_COLORS.contracted.dot}
+                    fill={FUNDING_COLORS.contracted.bar}
                     widthPct={contractedPct}
                     amount={contracted}
                     pctOfCommitted={contractedPct}
                 />
                 <FunnelStage
                     label="Expended"
-                    dot="bg-emerald-400"
-                    fill="bg-emerald-400"
+                    dot={FUNDING_COLORS.expended.dot}
+                    fill={FUNDING_COLORS.expended.bar}
                     widthPct={expendedPct}
                     amount={expended}
                     pctOfCommitted={expendedPct}

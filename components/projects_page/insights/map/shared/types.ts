@@ -8,6 +8,7 @@ export interface MapProject {
     epicPeriod: string | null;
     projectLead: string | null;
     committedFunding: number;
+    encumberedFunding: number;
     contractedFunding: number;
     expendedFunding: number;
     matchFunding: number;
@@ -21,6 +22,7 @@ export interface MapProject {
 
 export interface MapTotals {
     committed: number;
+    encumbered: number;
     contracted: number;
     expended: number;
 }

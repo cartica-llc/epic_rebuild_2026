@@ -348,7 +348,7 @@ function FundingJourneyChart({ quarters }: { quarters: PublicFinanceQuarter[] })
                             ))}
                             {hovered.committedFunding != null && hovered.expendedToDate != null && (
                                 <p className="mt-1 flex justify-between gap-3 border-t border-slate-100 pt-1 text-slate-400">
-                                    <span>Headroom left</span>
+                                    <span>Funds remaining</span>
                                     <span className="font-mono tabular-nums text-slate-600">
                                         {fmtC(hovered.committedFunding - hovered.expendedToDate)}
                                     </span>
@@ -359,10 +359,6 @@ function FundingJourneyChart({ quarters }: { quarters: PublicFinanceQuarter[] })
                 )}
             </AnimatePresence>
 
-            {/* No bottom legend — the direct end-labels on each line make it
-                redundant. Bidder/contract fields intentionally live in their
-                own section (see BiddingSection below), not in this chart or
-                its tooltip. */}
         </div>
     );
 }

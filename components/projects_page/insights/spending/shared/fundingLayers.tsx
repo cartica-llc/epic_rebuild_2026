@@ -2,8 +2,10 @@
 
 export type FundingLayer = 'committed' | 'encumbered' | 'contracted' | 'expended';
 
-// Display order everywhere (cards, legends, tooltips).
+
 export const LAYERS: FundingLayer[] = ['committed', 'encumbered', 'contracted', 'expended'];
+
+export const DRAW_ORDER: FundingLayer[] = ['committed', 'encumbered', 'contracted', 'expended'];
 
 export interface FundingValues {
     committed: number;
@@ -38,14 +40,22 @@ export function valueForLayer(row: FundingValues, layer: FundingLayer | null): n
     return row.committed;
 }
 
-/**
- * The bars draw each layer on top of the last, all starting from the left.
- * Encumbered and contracted don't have a fixed size order (either can be the
- * bigger one on a given row), so draw the largest first and the smallest last.
- * That way no layer ends up fully hidden behind a bigger one.
- */
-export function layersLargestFirst(row: FundingValues, visible: FundingLayer[]): FundingLayer[] {
-    return [...visible].sort((a, b) => valueForLayer(row, b) - valueForLayer(row, a));
+export function drawOrderFor(visible: FundingLayer[]): FundingLayer[] {
+    return DRAW_ORDER.filter((l) => visible.includes(l));
+}
+
+
+export function isLayerHidden(
+    row: FundingValues,
+    layer: FundingLayer,
+    visible: FundingLayer[],
+): boolean {
+    const order = drawOrderFor(visible);
+    const idx = order.indexOf(layer);
+    if (idx === -1) return false;
+    const value = valueForLayer(row, layer);
+    if (value <= 0) return false;
+    return order.slice(idx + 1).some((above) => valueForLayer(row, above) >= value);
 }
 
 export const LAYER_LABEL: Record<FundingLayer, string> = {

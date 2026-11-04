@@ -1,4 +1,4 @@
-// app/api/(snowflakePublic)/(projects_insights)/map/projects/awardbands.ts
+// app/api/(snowflakePublic)/(projects_insights)/map/projects/route.ts
 
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/snowflake';
@@ -19,6 +19,7 @@ interface ProjectRow {
     EPIC_PERIOD: string | null;
     PROJECT_LEAD: string | null;
     COMMITTED_FUNDING: number | null;
+    ENCUMBERED_FUNDING: number | null;
     CONTRACTED_FUNDING: number | null;
     EXPENDED_FUNDING: number | null;
     MATCH_FUNDING: number | null;
@@ -97,6 +98,7 @@ export async function GET(req: Request) {
                 ipp.PERIOD_NAME                                AS EPIC_PERIOD,
                 c.COMPANY_NAME                                 AS PROJECT_LEAD,
                 COALESCE(fd.COMMITED_FUNDING_AMT, 0)           AS COMMITTED_FUNDING,
+                COALESCE(fd.ENCUMBERED_FUNDING_AMT, 0)         AS ENCUMBERED_FUNDING,
                 COALESCE(fd.CONTRACT_AMOUNT, 0)                AS CONTRACTED_FUNDING,
                 COALESCE(fd.FUNDS_EXPENDED_TO_DATE, 0)         AS EXPENDED_FUNDING,
                 COALESCE(fd.MATCH_FUNDING, 0)                  AS MATCH_FUNDING,
@@ -141,6 +143,7 @@ export async function GET(req: Request) {
             epicPeriod: r.EPIC_PERIOD,
             projectLead: r.PROJECT_LEAD,
             committedFunding: toNum(r.COMMITTED_FUNDING),
+            encumberedFunding: toNum(r.ENCUMBERED_FUNDING),
             contractedFunding: toNum(r.CONTRACTED_FUNDING),
             expendedFunding: toNum(r.EXPENDED_FUNDING),
             matchFunding: toNum(r.MATCH_FUNDING),
@@ -155,11 +158,12 @@ export async function GET(req: Request) {
         const totals = projects.reduce(
             (acc, p) => {
                 acc.committed += p.committedFunding;
+                acc.encumbered += p.encumberedFunding;
                 acc.contracted += p.contractedFunding;
                 acc.expended += p.expendedFunding;
                 return acc;
             },
-            { committed: 0, contracted: 0, expended: 0 },
+            { committed: 0, encumbered: 0, contracted: 0, expended: 0 },
         );
 
         return applyInsightCache(
