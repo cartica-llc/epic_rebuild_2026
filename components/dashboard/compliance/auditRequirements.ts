@@ -1,5 +1,6 @@
 // components/dashboard/compliance/auditRequirements.ts
 
+
 import type { Cadence, FieldDef, StageDef } from './types';
 
 interface AuditFieldSeed {
@@ -8,10 +9,11 @@ interface AuditFieldSeed {
     table: string;
     description: string;
     cadence: Cadence;
+    required?: boolean;
 }
 
 function field(seed: AuditFieldSeed): FieldDef {
-    return seed;
+    return { ...seed, required: seed.required ?? true };
 }
 
 // ── Entry — rows 1–14 ────────────────────────────────────────────────
@@ -48,7 +50,7 @@ const ACTIVE_FIELDS: FieldDef[] = [
     field({ key: 'COMMITED_FUNDING_AMT', label: 'Committed Funding', table: 'FINANCE_DETAIL', description: 'Committed funding amount for the project.', cadence: 'quarterly' }),
     field({ key: 'FUNDS_EXPENDED_TO_DATE', label: 'Funds Expended to Date', table: 'FINANCE_DETAIL', description: 'Total funds expended through current quarter.', cadence: 'quarterly' }),
     field({ key: 'LEVERAGED_FUNDS', label: 'Leveraged Funds', table: 'FINANCE_DETAIL', description: 'Leveraged funding from other sources.', cadence: 'quarterly' }),
-    field({ key: 'MATCH_FUNDING', label: 'Match Funding', table: 'FINANCE_DETAIL', description: 'Match funding recorded for the project.', cadence: 'quarterly' }),
+    field({ key: 'MATCH_FUNDING', label: 'Match Funding', table: 'FINANCE_DETAIL', description: 'Match funding recorded for the project (an entered $0 counts as recorded).', cadence: 'quarterly' }),
 ];
 
 // ── After 1st Annual — due June 1 of the year after the start year ───
@@ -61,7 +63,7 @@ const FIRST_ANNUAL_FIELDS: FieldDef[] = [
     field({ key: 'CONTRACT_AMOUNT', label: 'Contract Amount', table: 'FINANCE_DETAIL', description: 'Total contract amount.', cadence: 'once' }),
     field({ key: 'ADMIN_OVERHEAD_COST', label: 'Admin & Overhead Cost', table: 'FINANCE_DETAIL', description: 'Project administrative and overhead costs.', cadence: 'annual' }),
     field({ key: 'TOTAL_MATCH_FUNDING', label: 'Total Match Funding', table: 'FINANCE_DETAIL', description: 'Total match funding across all partners.', cadence: 'annual' }),
-    field({ key: 'MATCH_FUNDING_PARTNERS', label: 'Match Funding Partners', table: 'FINANCE_DETAIL_HAS_MATCH_FUNDING_PARTNER', description: 'List of match funding partner organizations.', cadence: 'annual' }),
+    field({ key: 'MATCH_FUNDING_PARTNERS', label: 'Match Funding Partners', table: 'FINANCE_DETAIL_HAS_MATCH_FUNDING_PARTNER', description: 'At least one partner listed — only required when the project has match funding greater than $0.', cadence: 'annual' }),
     field({ key: 'PROJECT_PARTNERS', label: 'Project Partners', table: 'PROJECT_DETAIL_HAS_PARTNER', description: 'Partner organizations on the project.', cadence: 'annual' }),
     field({ key: 'DEVELOPMENT_STAGES', label: 'Development Stages', table: 'PROJECT_HAS_DEVELOPMENT_STAGE', description: 'At least one development stage or TRL assigned.', cadence: 'annual' }),
     field({ key: 'CPUC_PROCEEDINGS', label: 'CPUC Proceedings', table: 'PROJECT_HAS_CPUC_PROCEEDING', description: 'Linked CPUC proceeding number(s).', cadence: 'annual' }),

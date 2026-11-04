@@ -1,4 +1,5 @@
 // lib/program-compliance/loadComplianceProjects.ts
+//
 
 
 import { query } from '@/lib/snowflake';
@@ -76,7 +77,6 @@ export class ComplianceScopeViolation extends Error {
     }
 }
 
-
 function scopeFilter(scope: ComplianceScope, alias: string): string {
     if (scope.kind !== 'org') return '';
     const id = scope.programAdminId;
@@ -84,6 +84,22 @@ function scopeFilter(scope: ComplianceScope, alias: string): string {
         throw new Error(`Refusing to build compliance scope with non-integer admin id: ${String(id)}`);
     }
     return `AND ${alias}.PROGRAM_ADMIN_PROGRAM_ADMIN_ID = ${id}`;
+}
+
+/**
+ * Does this project have any match funding at all?
+ *
+ * projectCreate writes FINANCE_DETAIL.MATCH_FUNDING from the form (blank →
+ * NULL, "0" → 0) and derives MATCH_FUNDING_SPLIT = match ÷ (match +
+ * committed). Older rows may only have the split. We treat "has match
+ * funding" as: MATCH_FUNDING > 0, or (MATCH_FUNDING missing and split > 0).
+ * NULL or 0 both mean "no match funding".
+ */
+function hasMatchFunding(r: Row): boolean {
+    const mf = pick(r, 'MATCH_FUNDING');
+    if (hasNumber(mf)) return Number(mf) > 0;
+    const split = pick(r, 'MATCH_FUNDING_SPLIT');
+    return hasNumber(split) && Number(split) > 0;
 }
 
 export async function loadComplianceProjects(scope: ComplianceScope): Promise<ComplianceProject[]> {
@@ -237,9 +253,7 @@ export async function loadComplianceProjects(scope: ComplianceScope): Promise<Co
     return projectRows.map((r) => {
         const projectId = num(pick(r, 'PROJECT_ID'));
 
-        // ── Belt-and-suspenders scope assertion ──
-        // The SQL already filtered. If a row still disagrees with the scope,
-        // fail the whole request rather than render it.
+
         if (scope.kind === 'org') {
             const rowAdminId = pick(r, 'PROGRAM_ADMIN_ID');
             if (!hasNumber(rowAdminId) || Number(rowAdminId) !== scope.programAdminId) {
@@ -312,16 +326,26 @@ export async function loadComplianceProjects(scope: ComplianceScope): Promise<Co
         fs.COMMITED_FUNDING_AMT = hasNumber(pick(r, 'COMMITED_FUNDING_AMT'));
         fs.FUNDS_EXPENDED_TO_DATE = hasNumber(pick(r, 'FUNDS_EXPENDED_TO_DATE'));
 
-        // MATCH_FUNDING and TOTAL_MATCH_FUNDING both read MATCH_FUNDING_SPLIT —
-        // see stageRequirements.ts; the form writes only the split column.
-        fs.MATCH_FUNDING = hasNumber(pick(r, 'MATCH_FUNDING_SPLIT'));
+        // Match funding: projectCreate writes MATCH_FUNDING directly from the
+        // form (blank → NULL, "0" → 0) and derives MATCH_FUNDING_SPLIT. Older
+        // rows may only carry the split, so accept either as "recorded".
+        const matchRecorded =
+            hasNumber(pick(r, 'MATCH_FUNDING')) || hasNumber(pick(r, 'MATCH_FUNDING_SPLIT'));
+        fs.MATCH_FUNDING = matchRecorded;
+        fs.TOTAL_MATCH_FUNDING = matchRecorded;
 
         fs.LEVERAGED_FUNDS = hasNumber(pick(r, 'LEVERAGED_FUNDS'));
         fs.CONTRACT_AMOUNT = hasNumber(pick(r, 'CONTRACT_AMOUNT'));
         fs.ENCUMBERED_FUNDING_AMT = hasNumber(pick(r, 'ENCUMBERED_FUNDING_AMT'));
         fs.ADMIN_OVERHEAD_COST = hasNumber(pick(r, 'ADMIN_AND_OVERHEAD_COST'));
-        fs.TOTAL_MATCH_FUNDING = hasNumber(pick(r, 'MATCH_FUNDING_SPLIT'));
-        fs.MATCH_FUNDING_PARTNERS = (matchPartnerMap.get(projectId) ?? 0) > 0;
+
+        // Match Funding Partners — conditional (per Andrew, Nov 3 2026):
+        // required only when the project HAS match funding. A project with no
+        // match funding (NULL or $0) has nobody to list, so it is treated as
+        // satisfied rather than missing.
+        fs.MATCH_FUNDING_PARTNERS = hasMatchFunding(r)
+            ? (matchPartnerMap.get(projectId) ?? 0) > 0
+            : true;
 
         // ── Boolean flag fields (0/1 both count as answered) ──
         fs.CPUC_DACLI =
