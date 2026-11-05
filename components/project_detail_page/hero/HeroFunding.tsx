@@ -11,18 +11,22 @@ type Props = {
     encumbered: number;
     matchFunding: number;
     leveraged: number;
+    // Still accepted so callers don't need to change; not shown while the Maturity KPI is hidden.
     maturityStage: string | null;
 };
 
-type PrimaryKey = 'committed' | 'contracted' | 'expended';
+type PrimaryKey = 'committed' | 'encumbered' | 'contracted' | 'expended';
 
 // ---------- constants ----------
 
 const COLORS = {
+    // Lightest → darkest as funds move along: committed, encumbered, contracted, then green for expended.
     committed: '#d6d3d1',
+    encumbered: '#bfbab6',
     contracted: '#a8a29e',
     expended: 'rgb(42,60,35)',
     committedActive: '#f5f5f4',
+    encumberedActive: '#eeeceb',
     contractedActive: '#e7e5e4',
     expendedActive: '#305101',
     matchFunding: '#78716c',
@@ -239,7 +243,7 @@ function ProgressBar({
             }}
             aria-label={
                 hasAny
-                    ? 'Funding progress bar showing committed, contracted, and expended values'
+                    ? 'Funding progress bar showing committed, encumbered, contracted, and expended values'
                     : 'No primary funding data available'
             }
         >
@@ -394,30 +398,33 @@ function Legend({
 }
 
 // ---------- maturity pill ----------
-
-function MaturityStat({ stage }: { stage: string | null }) {
-    const hasValue = !!stage;
-    return (
-        <div className="relative">
-            <p
-                className={[
-                    'text-[10px] font-bold uppercase tracking-[0.18em]',
-                    hasValue ? 'text-white/35' : 'text-white/20',
-                ].join(' ')}
-            >
-                Maturity
-            </p>
-            <p
-                className={[
-                    'mt-1 text-lg font-bold sm:text-xl',
-                    hasValue ? 'text-white' : 'text-white/35',
-                ].join(' ')}
-            >
-                {stage ?? '—'}
-            </p>
-        </div>
-    );
-}
+// Hidden for now: the project core route always returns maturityStage: null,
+// so this box would only ever show "—". Uncomment the component below and its
+// usage in the KPI grid once a real value is wired in.
+//
+// function MaturityStat({ stage }: { stage: string | null }) {
+//     const hasValue = !!stage;
+//     return (
+//         <div className="relative">
+//             <p
+//                 className={[
+//                     'text-[10px] font-bold uppercase tracking-[0.18em]',
+//                     hasValue ? 'text-white/35' : 'text-white/20',
+//                 ].join(' ')}
+//             >
+//                 Maturity
+//             </p>
+//             <p
+//                 className={[
+//                     'mt-1 text-lg font-bold sm:text-xl',
+//                     hasValue ? 'text-white' : 'text-white/35',
+//                 ].join(' ')}
+//             >
+//                 {stage ?? '—'}
+//             </p>
+//         </div>
+//     );
+// }
 
 // ---------- main ----------
 
@@ -428,18 +435,23 @@ export function HeroFunding({
                                 encumbered,
                                 matchFunding,
                                 leveraged,
-                                maturityStage,
                             }: Props) {
+    // Also the bar's draw order: each segment starts at the left edge and is
+    // drawn on top of the one before it. Reading the bar left to right gives
+    // Expended → Contracted → Encumbered → Committed, matching Spending Overview.
+    // If a later amount is larger (e.g. expended > encumbered), it covers the
+    // one beneath; the KPIs and legend still show every value.
     const segments: Segment[] = [
         { key: 'committed', label: 'Committed', amount: committed, color: COLORS.committed, activeColor: COLORS.committedActive },
+        { key: 'encumbered', label: 'Encumbered', amount: encumbered, color: COLORS.encumbered, activeColor: COLORS.encumberedActive },
         { key: 'contracted', label: 'Contracted', amount: contracted, color: COLORS.contracted, activeColor: COLORS.contractedActive },
         { key: 'expended', label: 'Expended', amount: expended, color: COLORS.expended, activeColor: COLORS.expendedActive },
     ];
 
     const hasPrimary = segments.some((s) => s.amount > 0);
-    const hasSecondary = encumbered > 0 || matchFunding > 0 || leveraged > 0;
+    const hasSecondary = matchFunding > 0 || leveraged > 0;
     const hasAny = hasPrimary || hasSecondary;
-    const max = Math.max(committed, contracted, expended, 1);
+    const max = Math.max(committed, encumbered, contracted, expended, 1);
 
     // Shared active state for KPI ↔ segment ↔ legend highlighting.
     // `hovered` is transient mouse state; `pinned` is the clicked/sticky state
@@ -514,7 +526,8 @@ export function HeroFunding({
                         onToggle={handleToggle}
                     />
                 ))}
-                <MaturityStat stage={maturityStage} />
+                {/* Maturity KPI hidden until there's real data — see note above MaturityStat. */}
+                {/* <MaturityStat stage={maturityStage} /> */}
             </div>
 
             {/* Progress bar */}
@@ -537,7 +550,6 @@ export function HeroFunding({
 
             {/* Secondary funding (independent, not graph-linked) */}
             <div className="mt-6 flex flex-wrap gap-8 border-t border-white/8 pt-5">
-                <SecondaryKpi label="Encumbered" amount={encumbered} />
                 <SecondaryKpi label="Match Funding" amount={matchFunding} />
                 <SecondaryKpi label="Leveraged" amount={leveraged} />
 

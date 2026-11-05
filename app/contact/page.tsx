@@ -1,150 +1,261 @@
 "use client";
 
-import React from "react";
-import { motion } from "motion/react";
+import React, { useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "motion/react";
 
-const brandGradientBorder: React.CSSProperties = {
-    background:
-        "linear-gradient(to right, rgb(2, 132, 199), rgb(5, 150, 105), rgb(225, 29, 72)) border-box",
-    border: "2px solid transparent",
-    WebkitMask:
-        "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)",
-    WebkitMaskComposite: "xor",
-    maskComposite: "exclude",
-    clipPath:
-        "polygon(0px 0px, 100% 0px, 100% 100%, 0px 100%, 0px 0px)",
+const EMAIL = "picg@theaccelerategroup.com";
+const BRAND = "linear-gradient(to right, #0284c7, #059669, #e11d48)";
+const ease = "easeOut" as const;
+
+function ContactHero() {
+    const sectionRef = useRef<HTMLElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ["start start", "end start"],
+    });
+    const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "16%"]);
+
+    return (
+        <section
+            ref={sectionRef}
+            className="relative h-[25dvh] min-h-[200px] select-none overflow-hidden"
+        >
+            <motion.div style={{ y: imgY }} className="absolute inset-0 z-[1]">
+                <motion.img
+                    src="https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1920&q=80"
+                    alt=""
+                    initial={{ scale: 1.0 }}
+                    animate={{ scale: 1.08 }}
+                    transition={{ duration: 22, ease }}
+                    className="h-[140%] w-full object-cover opacity-70 !blur-[3px]"
+                />
+            </motion.div>
+
+            <div
+                aria-hidden
+                className="absolute inset-0 z-[3]"
+                style={{
+                    background:
+                        "linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 30%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0) 85%)",
+                }}
+            />
+
+            <div
+                aria-hidden
+                className="absolute inset-0 z-[4] opacity-[0.04]"
+                style={{
+                    backgroundImage:
+                        "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(to right, rgba(255,255,255,0.5) 1px, transparent 1px)",
+                    backgroundSize: "56px 56px",
+                }}
+            />
+
+            <div className="absolute inset-x-0 bottom-0 z-10 mx-auto max-w-5xl px-6 pb-5 lg:px-8 lg:pb-8">
+                <motion.p
+                    initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    transition={{ duration: 0.7, delay: 0.15, ease }}
+                    className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-sky-600"
+                >
+                    Policy + Innovation Coordination Group
+                </motion.p>
+
+                <motion.h1
+                    initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    transition={{ duration: 0.8, delay: 0.3, ease }}
+                    className="mb-2 max-w-2xl text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl lg:text-4xl lg:leading-[1.1]"
+                >
+                    Contact{" "}
+                    <span className="bg-clip-text text-transparent" style={{ backgroundImage: BRAND }}>
+                        Us
+                    </span>
+                </motion.h1>
+
+                <motion.p
+                    initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+                    animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                    transition={{ duration: 0.7, delay: 0.5, ease }}
+                    className="max-w-md text-sm leading-relaxed text-gray-600 sm:max-w-lg sm:text-base sm:leading-relaxed"
+                >
+                    Questions or inquiries about the EPIC program can be directed to the
+                    PICG Project Coordinator.
+                </motion.p>
+            </div>
+
+            <div
+                aria-hidden
+                className="absolute bottom-0 left-0 right-0 z-[11] h-px"
+                style={{
+                    background:
+                        "linear-gradient(to right, transparent 0%, #0284c7 20%, #059669 50%, #e11d48 80%, transparent 100%)",
+                    opacity: 0.2,
+                }}
+            />
+        </section>
+    );
+}
+
+function SectionLabel({ children, dot = "bg-sky-600" }: { children: React.ReactNode; dot?: string }) {
+    return (
+        <div className="mb-10 flex items-center gap-3">
+            <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">{children}</p>
+            <span className="h-px flex-1 bg-gray-100" />
+        </div>
+    );
+}
+
+const fadeIn = {
+    initial: { opacity: 0, y: 12 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-60px" },
+    transition: { duration: 0.5, ease },
 };
 
-const teamImageUrl =
-    "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1920&q=80";
+function CopyButton() {
+    const [copied, setCopied] = useState(false);
+    return (
+        <button
+            type="button"
+            onClick={async () => {
+                try {
+                    await navigator.clipboard.writeText(EMAIL);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1800);
+                } catch {
+                }
+            }}
+            className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2"
+            aria-live="polite"
+        >
+            {copied ? "Copied" : "Copy address"}
+        </button>
+    );
+}
+
+const INCLUDE = [
+    "Your name, organization, and role",
+    "The EPIC project number, if your question concerns a specific project",
+    "The program administrator involved (CEC, PG&E, SCE, or SDG&E), if known",
+    "A short description of your question or request",
+];
+
+const RESOURCES = [
+    { title: "About EPIC", body: "Program purpose, guiding principle, and the current investment cycle.", href: "/about" },
+    { title: "Projects", body: "Search active and completed EPIC projects across all administrators.", href: "/projects" },
+];
 
 export default function ContactPage() {
     return (
         <>
-            {/*<header className="px-8 py-6">*/}
-            {/*    <div className="mx-auto flex max-w-7xl items-center gap-3">*/}
-            {/*        <Image*/}
-            {/*            src="/logo/cpuc-logo.png"*/}
-            {/*            alt="California Government Logo"*/}
-            {/*            width={32}*/}
-            {/*            height={32}*/}
-            {/*            className="h-8 w-auto object-contain"*/}
-            {/*            priority*/}
-            {/*        />*/}
+            <ContactHero />
 
-            {/*        <div className="h-4 w-px bg-slate-200" />*/}
+            <main className="mx-auto max-w-5xl px-6 pb-24 pt-14 font-sans text-gray-900 lg:px-8">
+                <section>
+                    <SectionLabel>Contact information</SectionLabel>
 
-            {/*        <p className="text-sm font-medium text-slate-500">*/}
-            {/*            EPIC Database*/}
-            {/*            <span className="mx-1 text-slate-300">/</span>*/}
-            {/*            Contact us*/}
-            {/*        </p>*/}
-            {/*    </div>*/}
-            {/*</header>*/}
+                    <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+                        <motion.h2
+                            {...fadeIn}
+                            className="max-w-md text-2xl font-semibold leading-snug tracking-tight sm:text-3xl"
+                        >
+                            Reach the PICG Project Coordinator by email.
+                        </motion.h2>
 
-            <main className="mx-auto max-w-5xl px-8 py-16 font-sans text-gray-900">
-                {/* Main contact content */}
-                <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
-                    {/* Left */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                    >
-                        <h1 className="mb-3 text-4xl font-semibold tracking-tight">
-                            Contact
-                        </h1>
+                        <motion.div {...fadeIn} transition={{ ...fadeIn.transition, delay: 0.1 }}>
+                            <dl className="divide-y divide-gray-100 border-y border-gray-100">
+                                <div className="grid grid-cols-3 gap-4 py-4">
+                                    <dt className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">Office</dt>
+                                    <dd className="col-span-2 text-[15px] text-gray-900">
+                                        Policy + Innovation Coordination Group
+                                    </dd>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4 py-4">
+                                    <dt className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">Coordinator</dt>
+                                    <dd className="col-span-2 text-[15px] text-gray-900">The Accelerate Group</dd>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4 py-4">
+                                    <dt className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">Email</dt>
+                                    <dd className="col-span-2">
+                                        <a
+                                            href={`mailto:${EMAIL}`}
+                                            className="break-all text-[15px] font-medium text-sky-700 underline decoration-sky-200 underline-offset-4 transition-colors hover:decoration-sky-700"
+                                        >
+                                            {EMAIL}
+                                        </a>
+                                    </dd>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4 py-4">
+                                    <dt className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400">Program</dt>
+                                    <dd className="col-span-2 text-[15px] text-gray-900">
+                                        Electric Program Investment Charge (EPIC)
+                                    </dd>
+                                </div>
+                            </dl>
 
-                        <p className="text-base leading-relaxed text-gray-500">
-                            Reach out to the Policy + Innovation Coordination
-                            Group Project Coordinator with any questions or
-                            inquiries about the EPIC program.
-                        </p>
-                    </motion.div>
-
-                    {/* Right — contact card */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35, delay: 0.1 }}
-                        className="relative rounded-xl bg-gray-50/50 shadow-sm"
-                    >
-                        <div
-                            className="pointer-events-none absolute inset-0 rounded-xl"
-                            style={brandGradientBorder}
-                        />
-
-                        <div className="relative z-10 p-7">
-                            <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm">
-                                <svg
-                                    className="h-5 w-5 text-gray-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth={1.5}
-                                    aria-hidden="true"
+                            <div className="mt-6 flex flex-wrap gap-3">
+                                <a
+                                    href={`mailto:${EMAIL}`}
+                                    className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                                    />
-                                </svg>
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                    </svg>
+                                    Send an email
+                                </a>
+                                <CopyButton />
                             </div>
+                        </motion.div>
+                    </div>
+                </section>
 
-                            <p className="mb-1 text-sm font-semibold text-gray-900">
-                                The Accelerate Group
-                            </p>
-
-                            <p className="mb-5 text-sm leading-relaxed text-gray-600">
-                                You can reach the Policy + Innovation
-                                Coordination Group Project Coordinator at:
-                            </p>
-
-                            <a
-                                href="mailto:picg@theaccelerategroup.com"
-                                className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
-                            >
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth={1.5}
-                                    aria-hidden="true"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                                    />
-                                </svg>
-
-                                Send an email
-                            </a>
-
-                            <p className="mt-4 break-all font-mono text-sm text-gray-400">
-                                PICG@theaccelerategroup.com
-                            </p>
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* Team image below contact content */}
-                <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="mt-16 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-sm"
+                <motion.section
+                    {...fadeIn}
+                    className="relative mt-16 rounded-xl bg-gray-50/80 px-8 py-8 sm:px-10"
                 >
-                    <img
-                        src={teamImageUrl}
-                        alt="A professional team collaborating on energy policy initiatives"
-                        loading="lazy"
-                        className="h-64 w-full object-cover rounded-lg sm:h-80 opacity-95 hover:opacity-100 transition-opacity duration-300"
-                        style={{ objectPosition: "center 30%" }}
-                    />
-                </motion.div>
+                    <span aria-hidden className="absolute bottom-5 left-0 top-5 w-[3px] rounded-full" style={{ background: "linear-gradient(to bottom, #0284c7, #059669)" }} />
+                    <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.2em] text-sky-600">
+                        Before you write
+                    </p>
+                    <p className="mb-5 max-w-2xl text-lg leading-relaxed text-gray-800">
+                        To help us route your message, please include:
+                    </p>
+                    <ul className="grid grid-cols-1 gap-x-10 gap-y-3 sm:grid-cols-2">
+                        {INCLUDE.map((item) => (
+                            <li key={item} className="flex gap-3 text-[15px] leading-relaxed text-gray-600">
+                                <svg className="mt-1 h-4 w-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                                {item}
+                            </li>
+                        ))}
+                    </ul>
+                </motion.section>
+
+                <section className="mt-20">
+                    <SectionLabel dot="bg-rose-600">Related resources</SectionLabel>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {RESOURCES.map((r, i) => (
+                            <motion.a
+                                key={r.title}
+                                href={r.href}
+                                {...fadeIn}
+                                transition={{ ...fadeIn.transition, delay: i * 0.08 }}
+                                className="group flex items-start justify-between gap-6 rounded-xl border border-gray-100 bg-white p-6 transition-colors hover:border-gray-200 hover:bg-gray-50/60"
+                            >
+                                <div>
+                                    <p className="text-base font-semibold text-gray-900">{r.title}</p>
+                                    <p className="mt-1 text-sm leading-relaxed text-gray-500">{r.body}</p>
+                                </div>
+                                <svg className="mt-1 h-4 w-4 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                </svg>
+                            </motion.a>
+                        ))}
+                    </div>
+                </section>
             </main>
         </>
     );

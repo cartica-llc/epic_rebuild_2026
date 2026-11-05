@@ -60,10 +60,7 @@ export function HeroSection({ project }: Props) {
                 style={{ backgroundImage: noiseStyle }}
             />
 
-            <HeroNav
-                projectId={project.id}
-                programAdminId={project.programAdminId}
-            />
+            <HeroNav project={project} />
 
             <div className="relative mx-auto max-w-5xl px-6 pt-6 sm:px-8">
                 <div className="flex flex-wrap items-center gap-2.5">
